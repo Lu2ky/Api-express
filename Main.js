@@ -1,8 +1,8 @@
-import {Activity} from './Activity.js';
-import {Tag} from './Tag.js';
-import {Schedule} from './Schedule.js';
-import { officialAct } from './OfficialAct.js';
-
+import {Activity} from "./Activity.js";
+import {Tag} from "./Tag.js";
+import {Schedule} from "./Schedule.js";
+import {officialAct} from "./OfficialAct.js";
+//prueba xd
 //Crear horario
 let schedule = new Schedule();
 
@@ -33,4 +33,4 @@ schedule.addActivity(a5);
 //Filtrar etiquetas
 schedule.filterActivity([1, 2]);
 
-console.log(a1.time)
+console.log(a1.time);
