@@ -88,7 +88,8 @@ app.get("/api/personal-schedule/:userId", async (req, res) => {
 
 	return res.json(PersonalActivitys);
 });
-app.get("/api/upd-personalactivityname/", async (data, res) => {
+
+app.post("/api/update-personal-activity-name/", async (data, res) => {
 	/*
     data = {
       newValue: [NEW_NAME],
@@ -103,7 +104,7 @@ app.get("/api/upd-personalactivityname/", async (data, res) => {
 	return RESULT;
 });
 
-app.get("/api/upd-personalactivitydelorre/", async (data, res) => {
+app.post("/api/remove-personal-activity/", async (data, res) => {
 	/*
     data = {
       newValue: [NEW_STATUS]
@@ -123,7 +124,7 @@ app.get("/api/upd-personalactivitydelorre/", async (data, res) => {
 	return RESULT;
 });
 
-app.get("/api/upd-personalactivitytime/", async (data, req) => {
+app.post("/api/update-personal-activity-time/", async (data, req) => {
 	/*
     data = {
       startHour: [NEW_STA_HOUR],
@@ -142,7 +143,7 @@ app.get("/api/upd-personalactivitytime/", async (data, req) => {
 		await updateEndHourOfPersonalScheduleByIdCourse(NEW_END_HOUR, ID);
 });
 
-app.get("/api/add-personal-activity/", async (data, res) => {
+app.post("/api/add-personal-activity", async (req, res) => {
 	/*
     data = {
       name: [NAME],
@@ -153,29 +154,105 @@ app.get("/api/add-personal-activity/", async (data, res) => {
       endHour: [END_HOUR]
       idUser: [ID_USER]
       idAcademicPer: [ID_ACADEMIC_PER]
+	  times: [ACTIVITY TIMES]
     }
   */
-	const NAME = data.name;
-	const TAG = data.tag;
-	const DESC = data.desc;
-	const DAY = data.day;
-	const STA_HOUR = data.startHour;
-	const END_HOUR = data.endHour;
-	const ID_USER = data.idUser;
-	const ID_ACADEMIC_PER = data.idAcademicPer;
 
-	const RESULT = await addPersonalActivity(
-		NAME,
-		TAG,
-		DESC,
-		DAY,
-		STA_HOUR,
-		END_HOUR,
-		ID_USER,
-		ID_ACADEMIC_PER
-	);
+	const NAME = req.body.Activity;
+	const DESC = req.body.IdTag;
+	const TAG = req.body.Description;
+	const DAY = req.body.Day;
+	const STA_HOUR = req.body.StartHour;
+	const END_HOUR = req.body.EndHour;
+	const ID_USER = req.body.N_iduser;
+	const ID_ACADEMIC_PER = req.body.Id_AcademicPeriod;
+	
+	const TIMES = req.body.times;
 
-	return RESULT;
+	try {
+		if (PersonalAct.hasCollisions(TIMES, STA_HOUR, END_HOUR)){
+			return res.status(400).json({
+				error: "Colisión de horarios"
+			});
+
+		}
+
+		const RESULT = await Con.addPersonalActivity(
+			NAME,
+			TAG,
+			DESC,
+			DAY,
+			STA_HOUR,
+			END_HOUR,
+			ID_USER,
+			ID_ACADEMIC_PER
+		);
+		
+		return res.status(200).json({
+			success: true,
+			data: RESULT
+		});
+
+	} catch (error) {
+		console.error(error);
+        return res.status(500).json({
+            error: "Error interno del servidor"
+        });
+	}
+});
+
+/**
+ * Se obtienen las etiquetas como un arreglo.
+ */
+app.get("/api/get-tags", async (req, res) => {
+	let data = await Con.GetTags();
+
+	let tags = data.map(eachData => {
+
+		return eachData.T_name;
+	});
+
+	return res.json(tags);
 });
 
 app.listen(PORT);
+
+//test xd
+/*
+let postData = {
+    Activity: "DESCANSO",
+    tag: "Personal",
+    desc: "[DESC]",
+    day: 1,
+    startHour: "06:00:00",
+    endHour: "08:00:00",
+    idUser: 7,
+    idAcademicPer: "[ID_ACADEMIC_PER]",
+
+    times: [
+        ["08:00:00", "09:00:00", 1],
+        ["09:00:00", "10:40:00", 0],
+        ["09:00:00", "10:00:00", 1]
+    ]
+}
+
+try {
+	const response = await fetch('http://localhost:28523/api/add-personal-activity', {
+		method: 'POST', // Specify the method
+		headers: {
+			'Content-Type': 'application/json', // Declare the content type
+		},
+		body: JSON.stringify(postData), // Convert the data object to a JSON string
+	});
+
+	if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+    }
+
+	const data = await response.text();
+    console.log(data);
+
+} catch (error) {
+	console.error("error en el fetch:", error);
+}
+*/

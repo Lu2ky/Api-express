@@ -3,34 +3,46 @@ import {Tag} from "./Tag.js";
 import {Schedule} from "./Schedule.js";
 import {officialAct} from "./OfficialAct.js";
 //prueba xd
-//Crear horario
-let schedule = new Schedule();
 
-//Crear etiquetas
-let t1 = new Tag("Theory");
-let t2 = new Tag("Art");
-let t3 = new Tag("Laboratory");
+const dateToNumber = (date) =>{
+    
+    let number = parseInt((date.slice(0, 5)).replace(":", ""));
 
-//Asignar id etiquetas
-t1.id = 1;
-t1.id = 2;
-t1.id = 3;
+    return number
+};
 
-//Crear actividades
-let a1 = new officialAct("a11", 1);
-let a2 = new Activity("a2", 2);
-let a3 = new Activity("a3", 3);
-let a4 = new Activity("a4", 1);
-let a5 = new Activity("a5", 2);
+let postData = {
+    name: "DESCANSO",
+    tag: "Personal",
+    desc: "[DESC]",
+    day: 1,
+    startHour: "06:00:00",
+    endHour: "08:00:00",
+    idUser: 7,
+    idAcademicPer: "[ID_ACADEMIC_PER]",
+    times: [
+        ["08:00:00", "09:00:00", 1],
+        ["09:00:00", "10:40:00", 0],
+        ["09:00:00", "10:00:00", 1]
+    ]
+}
 
-//Agregar actividades al horario
-schedule.addActivity(a1);
-schedule.addActivity(a2);
-schedule.addActivity(a3);
-schedule.addActivity(a4);
-schedule.addActivity(a5);
+console.log(dateToNumber(postData.endHour));
+console.log(Activity.hasCollisions(postData.times, postData.startHour, postData.endHour, postData.day));
 
-//Filtrar etiquetas
-schedule.filterActivity([1, 2]);
+fetch('localhost:28523/api/add-personal/551542', {
+    method: 'POST', // Specify the method
+    headers: {
+        'Content-Type': 'application/json', // Declare the content type
+    },
+    body: JSON.stringify(postData), // Convert the data object to a JSON string
+})
+;
 
-console.log(a1.time);
+/*
+const between = (val, izq, der) => (val < Math.max(izq, der) && val > Math.min(izq, der));
+
+console.log(between(1, 0, 3))
+
+console.log(Activity.hasCollisions(data.times, data.startHour, data.endHour, data.day));
+*/
