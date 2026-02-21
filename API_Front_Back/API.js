@@ -6,7 +6,7 @@ import { officialAct } from "../OfficialAct.js";
 import { PersonalAct } from "../PersonalAct.js";
 import express from "express";
 import cors from "cors";
-
+// PRUEBA
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 dotenv.config();
