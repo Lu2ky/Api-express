@@ -9,7 +9,7 @@ import cors from "cors";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-dotenv.config();
+dotenv.config({ path: resolve(__dirname, "../../../config/expressapiconfig.env") });
 
 const app = express();
 const PORT = 28523;
@@ -35,6 +35,8 @@ app.get("/api/official-schedule/:userId", async (req, res) => {
 		});
 	}
 });
+
+//getOfficialScheduleForFront("551542");
 
 async function getOfficialScheduleForFront(id) {
 	let data = await Con.GetOfficialScheduleByUserId(id);
