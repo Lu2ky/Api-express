@@ -72,6 +72,7 @@ export class Connection {
 			NewActivityValue: newActivityValue,
 			IdPersonalSchedule: idPersonalSchedule
 		};
+
 		try {
 			const send = await fetch(url, {
 				method: "POST",
@@ -82,10 +83,11 @@ export class Connection {
 				body: JSON.stringify(data)
 			});
 			const response = await send.json();
+
 			if (send.status == 200) {
 				return send;
 			} else {
-				throw new Error(result.error || "No se q paso papu");
+				throw new Error(response.error || "No se q paso papu");
 			}
 		} catch (error) {
 			console.error("Mira este error papu, que raro: ", error);
@@ -123,7 +125,7 @@ export class Connection {
 			if (send.status == 200) {
 				return send;
 			} else {
-				throw new Error(result.error || "Me lleva el chanfle");
+				throw new Error(response.error || "Me lleva el chanfle");
 			}
 		} catch (error) {
 			console.error("Mira este error papu, que raro: ", error);
@@ -237,19 +239,16 @@ export class Connection {
 			if (send.status == 200) {
 				return send;
 			} else {
-				throw new Error(result.error || "Me lleva el chanfle");
+				throw new Error(response.error);
 			}
 		} catch (error) {
 			console.error("Mira este error papu, que raro: ", error);
 		}
 	}
 
-	/*
-  Este metodo necesita ser probado
-*/
+
 	async addPersonalActivity(
 		activity,
-		idTag,
 		description,
 		day,
 		startHour,
@@ -267,7 +266,7 @@ export class Connection {
 		const data = {
 			Activity: activity,
 			Description: description,
-			idTag: idTag,
+			N_idTipoCurso: 7,
 			Day: day,
 			StartHour: startHour,
 			EndHour: endHour,
@@ -290,15 +289,45 @@ export class Connection {
 			if (send.status == 200) {
 				return send;
 			} else {
-				throw new Error(result.error || "Me lleva el chanfle");
+				throw new Error(response.error || "Me lleva el chanfle");
 			}
 		} catch (error) {
 			console.error("Mira este error papu, que raro: ", error);
 		}
 	}
+
+	// TO DO:
+
+	//GET TAGS
+	async GetTags() {
+		let data;
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/GetTags"
+			;
+		try {
+			const rta = await fetch(url, {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				}
+			});
+
+			if (!rta.ok) throw new Error(`Error: ${rta.status}`);
+
+			const data = await rta.json();
+			return data;
+		} catch (error) {
+
+			console.error("Mira este error papu, que raro: ", error);
+		}
+	}
+
+	//GET PERSONAL COMMENTS
+
+	//ADD PERSONAL COMMENT
 }
-
-let con = new Connection();
-let json = await con.GetPersonalScheduleByUserId("545557");
-
-console.log(json);

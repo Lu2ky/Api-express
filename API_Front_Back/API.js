@@ -6,6 +6,7 @@ import {officialAct} from "../OfficialAct.js";
 import {PersonalAct} from "../PersonalAct.js";
 import express from "express";
 import cors from "cors";
+import { stringify } from "querystring";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -17,16 +18,40 @@ app.use(cors());
 app.use(express.json());
 
 let Con = new Connection();
+
 app.get("/api/official-schedule/:userId", async (req, res) => {
+
+	const USER_ID = req.params.userId;
+
 	try {
-		const userId = req.params.userId;
-		const activities = await getOfficialScheduleForFront(userId);
+		let data = await Con.GetOfficialScheduleByUserId(USER_ID);
+		
+		const ACTIVITIES = data.map(eachData => {
+			let OfficialActivity = new officialAct(
+				eachData.Course,
+				eachData.Teacher,
+				eachData.Classroom,
+				eachData.Nrc,
+				[eachData.StartHour, eachData.EndHour, eachData.Day],
+				eachData.Tag,
+				eachData.AcademicPeriod,
+				eachData.Campus,
+				{
+					Float64: eachData.Credits.Float64,
+					Valid: eachData.Credits.Valid
+				}
+			);
+
+			return OfficialActivity.getData();
+		});
+
 
 		res.status(200).json({
 			success: true,
-			data: activities
+			data: ACTIVITIES
 		});
 	} catch (error) {
+
 		console.error("Error:", error);
 		res.status(500).json({
 			success: false,
@@ -36,39 +61,15 @@ app.get("/api/official-schedule/:userId", async (req, res) => {
 	}
 });
 
-//getOfficialScheduleForFront("551542");
-
-async function getOfficialScheduleForFront(id) {
-	let data = await Con.GetOfficialScheduleByUserId(id);
-	//console.log(data);
-	let i = 0;
-	let OfficialActivitys = data.map(eachData => {
-		let OfficialActivity = new officialAct(
-			eachData.Course,
-			eachData.Teacher,
-			eachData.Classroom,
-			eachData.Nrc,
-			[eachData.StartHour, eachData.EndHour, eachData.Day],
-			eachData.Tag,
-			eachData.AcademicPeriod,
-			eachData.Campus,
-			{
-				Float64: eachData.Credits.Float64,
-				Valid: eachData.Credits.Valid
-			}
-		);
-
-		return OfficialActivity.getData();
-	});
-	return OfficialActivitys;
-}
-
 app.get("/api/personal-schedule/:userId", async (req, res) => {
 	let data = await Con.GetPersonalScheduleByUserId(req.params.userId);
 
 	let PersonalActivitys = data
 		.map(eachData => {
-			if (eachData.IsDeleted.Bool) {
+
+			console.log(eachData.N_idcourse, eachData.IsDeleted, eachData.IsDeleted.Bool)
+
+			if (eachData.IsDeleted.Bool == true) {
 				return null;
 			}
 
@@ -88,61 +89,144 @@ app.get("/api/personal-schedule/:userId", async (req, res) => {
 
 	return res.json(PersonalActivitys);
 });
-app.get("/api/upd-personalactivityname/", async (data, res) => {
+
+app.post("/api/update-personal-activity-description", async (req, res) => {
 	/*
     data = {
-      newValue: [NEW_NAME],
-      idPersonal: [ID]
+      NewActivityValue: [NEW DESCRIPTION]
+      IdCurso: [ID]
     }
   */
-	const NEW_NAME = data.NewActivityValue;
-	const ID = data.IdPersonalSchedule;
+	const NEW_NAME = req.body.NewActivityValue;
+	const ID = req.body.IdPersonalSchedule;
 
-	const RESULT = await Con.updateNameOfPersonalScheduleByIdCourse(NEW_NAME, ID);
+	console.log(NEW_NAME, ID);
 
-	return RESULT;
-});
+	try {
+		const RESULT = await Con.updateDescriptionOfPersonalScheduleByIdCourse(
+			NEW_NAME,
+			ID
+		);
 
-app.get("/api/upd-personalactivitydelorre/", async (data, res) => {
-	/*
-    data = {
-      newValue: [NEW_STATUS]
-      idPersonal: [ID]
-    }
-  */
-	const NEW_STATUS = data.NewActivityValue;
-	if (typeof NEW_STATUS == "boolean") {
-		return;
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+
+	} catch (error) {
+		console.error(error);
+        return res.status(500).json({
+            error: "Error interno del servidor"
+        });
 	}
-	const ID = data.IdPersonalSchedule;
-	const RESULT = await Con.deleteOrRecoveryPersonalScheduleByIdCourse(
-		NEW_STATUS,
-		ID
-	);
-
-	return RESULT;
 });
 
-app.get("/api/upd-personalactivitytime/", async (data, req) => {
+app.post("/api/update-personal-activity-name", async (req, res) => {
 	/*
     data = {
-      startHour: [NEW_STA_HOUR],
-      endHour: [NEW_END_HOUR]
-      idPersonal: [ID]
+      NewActivityValue: [NEW NAME]
+      IdCurso: [ID]
     }
   */
-	const NEW_STA_HOUR = data.startHour;
-	const NEW_END_HOUR = data.endHour;
-	const ID = data.idPersonal;
+	const NEW_NAME = req.body.NewActivityValue;
+	const ID = req.body.IdPersonalSchedule;
 
-	if (NEW_STA_HOUR != undefined) {
-		await updateStartHourOfPersonalScheduleByIdCourse(NEW_STA_HOUR, ID);
+	console.log(NEW_NAME, ID);
+
+	try {
+		const RESULT = await Con.updateNameOfPersonalScheduleByIdCourse(
+			NEW_NAME,
+			ID
+		);
+
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+
+	} catch (error) {
+		console.error(error);
+        return res.status(500).json({
+            error: "Error interno del servidor"
+        });
 	}
-	if (NEW_END_HOUR != undefined)
-		await updateEndHourOfPersonalScheduleByIdCourse(NEW_END_HOUR, ID);
 });
 
-app.get("/api/add-personal-activity/", async (data, res) => {
+app.post("/api/remove-personal-activity", async (req, res) => {
+	/*
+    data = {
+      NewActivityValue: [NEW_STATUS]
+      IdCurso: [ID]
+    }
+  */
+	const NEW_STATUS = req.body.NewActivityValue;
+	const ID = req.body.IdPersonalSchedule;
+
+	try {
+		const RESULT = await Con.deleteOrRecoveryPersonalScheduleByIdCourse(
+			NEW_STATUS,
+			ID
+		);
+
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+
+	} catch (error) {
+		console.error(error);
+        return res.status(500).json({
+            error: "Error interno del servidor"
+        });
+	}
+});
+
+app.post("/api/update-personal-activity-time/", async (req, res) => {
+	/*
+    data = {
+      StartHour: [NEW_STA_HOUR],
+      EndHour: [NEW_END_HOUR]
+      IdCurso: [ID]
+	  Times: [ARRAY TIMES]
+
+	  EL TIMES NO PUEDE CONTENER EL TIEMPO DE LA ACTIVIDAD QUE SE QUIERE MODIFICAR
+    }
+  */
+	const NEW_STA_HOUR = req.body.StartHour;
+	const NEW_END_HOUR = req.body.EndHour;
+	const DAY = req.body.Day
+	const ID = req.body.IdCurso;
+
+	const TIMES = req.body.Times;
+	const RESULT = [undefined, undefined];
+
+	console.log(NEW_STA_HOUR, NEW_END_HOUR, DAY, ID)
+	try {
+
+		if (PersonalAct.hasCollisions(TIMES, NEW_STA_HOUR, NEW_END_HOUR, DAY)){
+			return res.status(400).json({
+				error: "Colisión de horarios"
+			});
+		}
+
+		RESULT[0] = await Con.updateStartHourOfPersonalScheduleByIdCourse(NEW_STA_HOUR, ID);
+		RESULT[1] = await Con.updateEndHourOfPersonalScheduleByIdCourse(NEW_END_HOUR, ID);
+
+		return res.status(200).json({
+			success: true,
+			NEW_STA_H: RESULT[0],
+			NEW_END_H: RESULT[1]
+		});
+
+	} catch (error) {
+		console.error(error);
+        return res.status(500).json({
+            error: "Error interno del servidor"
+        });
+	}
+});
+
+app.post("/api/add-personal-activity", async (req, res) => {
 	/*
     data = {
       name: [NAME],
@@ -153,29 +237,80 @@ app.get("/api/add-personal-activity/", async (data, res) => {
       endHour: [END_HOUR]
       idUser: [ID_USER]
       idAcademicPer: [ID_ACADEMIC_PER]
+	  times: [ACTIVITY TIMES]
     }
   */
-	const NAME = data.name;
-	const TAG = data.tag;
-	const DESC = data.desc;
-	const DAY = data.day;
-	const STA_HOUR = data.startHour;
-	const END_HOUR = data.endHour;
-	const ID_USER = data.idUser;
-	const ID_ACADEMIC_PER = data.idAcademicPer;
 
-	const RESULT = await addPersonalActivity(
-		NAME,
-		TAG,
-		DESC,
-		DAY,
-		STA_HOUR,
-		END_HOUR,
-		ID_USER,
-		ID_ACADEMIC_PER
-	);
+	const NAME = req.body.Activity;
+	const DESC = req.body.Description;
+	const DAY = req.body.Day;
+	const STA_HOUR = req.body.StartHour;
+	const END_HOUR = req.body.EndHour;
+	const ID_USER = req.body.N_iduser;
+	const ID_ACADEMIC_PER = req.body.Id_AcademicPeriod;
+	
+	const TIMES = req.body.Times;
 
-	return RESULT;
+	try {
+		if (PersonalAct.hasCollisions(TIMES, STA_HOUR, END_HOUR, DAY)){
+			return res.status(400).json({
+				error: "Colisión de horarios"
+			});
+		}
+
+		const RESULT = await Con.addPersonalActivity(
+			NAME,
+			DESC,
+			DAY,
+			STA_HOUR,
+			END_HOUR,
+			ID_USER,
+			ID_ACADEMIC_PER
+		);
+		
+		return res.status(200).json({
+			success: true,
+			data: RESULT
+		});
+
+	} catch (error) {
+		console.error(error);
+        return res.status(500).json({
+            error: "Error interno del servidor"
+        });
+	}
 });
+
+/**
+ * Se obtienen las etiquetas como un arreglo.
+ */
+app.get("/api/get-tags", async (req, res) => {
+	let data = await Con.GetTags();
+
+	let tags = data.map(eachData => {
+
+		return eachData.T_name;
+	});
+
+	return res.json(tags);
+});
+
+// TO DO
+
+// - Add etiqueta
+// - Edit etiqueta
+// - Delete etiqueta
+
+// - Get Comentarios [Ya está en GO]
+// - Add comentario [Ya está en GO]
+// - Edit comentario
+// - Delete comentario
+
+// - Get recordatorios
+// - Add recordatorio
+// - Edit recordatorio
+// - Delete recordatorio
+
+// - Get tiposCurso 
 
 app.listen(PORT);
