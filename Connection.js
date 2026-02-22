@@ -299,7 +299,38 @@ export class Connection {
   }
 }
 
-let con = new Connection();
-let json = await con.GetPersonalScheduleByUserId("545557");
+	// TO DO:
 
-console.log(json);
+	//GET TAGS
+	async GetTags() {
+		let data;
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/GetTags"
+			;
+		try {
+			const rta = await fetch(url, {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				}
+			});
+
+			if (!rta.ok) throw new Error(`Error: ${rta.status}`);
+
+			const data = await rta.json();
+			return data;
+		} catch (error) {
+
+			console.error("Mira este error papu, que raro: ", error);
+		}
+	}
+
+	//GET PERSONAL COMMENTS
+
+	//ADD PERSONAL COMMENT
+}

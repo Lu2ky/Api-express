@@ -91,8 +91,8 @@ app.get("/api/personal-schedule/:userId", async (req, res) => {
 app.get("/api/upd-personalactivityname/", async (data, res) => {
   /*
     data = {
-      newValue: [NEW_NAME],
-      idPersonal: [ID]
+      NewActivityValue: [NEW DESCRIPTION]
+      IdCurso: [ID]
     }
   */
   const NEW_NAME = data.NewActivityValue;
@@ -106,8 +106,8 @@ app.get("/api/upd-personalactivityname/", async (data, res) => {
 app.get("/api/upd-personalactivitydelorre/", async (data, res) => {
   /*
     data = {
-      newValue: [NEW_STATUS]
-      idPersonal: [ID]
+      NewActivityValue: [NEW NAME]
+      IdCurso: [ID]
     }
   */
   const NEW_STATUS = data.NewActivityValue;
@@ -126,9 +126,12 @@ app.get("/api/upd-personalactivitydelorre/", async (data, res) => {
 app.get("/api/upd-personalactivitytime/", async (data, req) => {
   /*
     data = {
-      startHour: [NEW_STA_HOUR],
-      endHour: [NEW_END_HOUR]
-      idPersonal: [ID]
+      StartHour: [NEW_STA_HOUR],
+      EndHour: [NEW_END_HOUR]
+      IdCurso: [ID]
+	  Times: [ARRAY TIMES]
+
+	  EL TIMES NO PUEDE CONTENER EL TIEMPO DE LA ACTIVIDAD QUE SE QUIERE MODIFICAR
     }
   */
   const NEW_STA_HOUR = data.startHour;
@@ -153,6 +156,7 @@ app.get("/api/add-personal-activity/", async (data, res) => {
       endHour: [END_HOUR]
       idUser: [ID_USER]
       idAcademicPer: [ID_ACADEMIC_PER]
+	  times: [ACTIVITY TIMES]
     }
   */
   const NAME = data.name;
