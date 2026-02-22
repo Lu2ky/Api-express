@@ -329,5 +329,80 @@ export class Connection {
 
 	//GET PERSONAL COMMENTS
 
+	async GetPersonalComments(userId) {
+		let data;
+    const url =
+        "http://" +
+        process.env.API_ADDR +
+        ":" +
+        process.env.API_PORT +
+        "/GetPersonalComments/" +
+        userId;
+
+    try {
+        const rta = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "X-API-Key": process.env.API_KEY
+            }
+        });
+
+        if (!rta.ok) throw new Error(`Error: ${rta.status}`);
+
+        const data = await rta.json();
+        return data;
+
+    } catch (error) {
+        console.error("Mira este error papu, que raro: ", error);
+    }
+}
+
 	//ADD PERSONAL COMMENT
+
+	async AddPersonalComment(
+    N_idHorario,
+    N_idUsuario,
+    N_idCurso,
+    Curso,
+    T_comentario
+) {
+
+    const url =
+        "http://" +
+        process.env.API_ADDR +
+        ":" +
+        process.env.API_PORT +
+        "/AddPersonalComment";
+
+    const data = {
+        N_idHorario,
+        N_idUsuario,
+        N_idCurso,
+        Curso,
+        T_comentario
+    };
+
+    try {
+        const send = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-API-Key": process.env.API_KEY
+            },
+            body: JSON.stringify(data)
+        });
+
+        const response = await send.json();
+
+        if (send.status === 200) {
+            return response;
+        } else {
+            throw new Error(response.error || "Error agregando comentario");
+        }
+
+    } catch (error) {
+        console.error("Mira este error papu, que raro: ", error);
+    }
+}
 }
