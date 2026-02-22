@@ -3,8 +3,7 @@ import {fileURLToPath} from "url";
 import {dirname, resolve} from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-dotenv.config();
-//{ path: resolve(__dirname, "../../config/expressapiconfig.env") }
+dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});
 
 export class Connection {
 	constructor() {}
@@ -73,6 +72,7 @@ export class Connection {
 			NewActivityValue: newActivityValue,
 			IdPersonalSchedule: idPersonalSchedule
 		};
+
 		try {
 			const send = await fetch(url, {
 				method: "POST",
@@ -83,10 +83,11 @@ export class Connection {
 				body: JSON.stringify(data)
 			});
 			const response = await send.json();
+
 			if (send.status == 200) {
 				return send;
 			} else {
-				throw new Error(result.error || "No se q paso papu");
+				throw new Error(response.error || "No se q paso papu");
 			}
 		} catch (error) {
 			console.error("Mira este error papu, que raro: ", error);
@@ -124,7 +125,7 @@ export class Connection {
 			if (send.status == 200) {
 				return send;
 			} else {
-				throw new Error(result.error || "Me lleva el chanfle");
+				throw new Error(response.error || "Me lleva el chanfle");
 			}
 		} catch (error) {
 			console.error("Mira este error papu, que raro: ", error);
@@ -238,19 +239,15 @@ export class Connection {
 			if (send.status == 200) {
 				return send;
 			} else {
-				throw new Error(result.error || "Me lleva el chanfle");
+				throw new Error(response.error);
 			}
 		} catch (error) {
 			console.error("Mira este error papu, que raro: ", error);
 		}
 	}
 
-	/*
-  Este metodo necesita ser probado
-*/
 	async addPersonalActivity(
 		activity,
-		idTag,
 		description,
 		day,
 		startHour,
@@ -268,7 +265,7 @@ export class Connection {
 		const data = {
 			Activity: activity,
 			Description: description,
-			idTag: idTag,
+			N_idTipoCurso: 7,
 			Day: day,
 			StartHour: startHour,
 			EndHour: endHour,
@@ -291,7 +288,7 @@ export class Connection {
 			if (send.status == 200) {
 				return send;
 			} else {
-				throw new Error(result.error || "Me lleva el chanfle");
+				throw new Error(response.error || "Me lleva el chanfle");
 			}
 		} catch (error) {
 			console.error("Mira este error papu, que raro: ", error);
