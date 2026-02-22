@@ -1,0 +1,21 @@
+{
+	"name": "horario-estudiantes",
+	"version": "1.0.0",
+	"type": "module",
+	"dependencies": {
+		"cors": "^2.8.6",
+		"dayjs": "^1.11.19",
+		"dotenv": "^17.3.1",
+		"express": "^5.2.1",
+		"react": "^18.0.0",
+		"react-dom": "^18.0.0"
+	},
+	"devDependencies": {
+		"vite": "^5.4.21"
+	},
+	"scripts": {
+		"dev": "vite --host 0.0.0.0 --port 5173",
+		"build": "vite build",
+		"preview": "vite preview"
+	}
+}
