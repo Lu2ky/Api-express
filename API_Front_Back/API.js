@@ -20,16 +20,40 @@ app.use(cors());
 app.use(express.json());
 
 let Con = new Connection();
+
 app.get("/api/official-schedule/:userId", async (req, res) => {
+
+	const USER_ID = req.params.userId;
+
 	try {
-		const userId = req.params.userId;
-		const activities = await getOfficialScheduleForFront(userId);
+		let data = await Con.GetOfficialScheduleByUserId(USER_ID);
+		
+		const ACTIVITIES = data.map(eachData => {
+			let OfficialActivity = new officialAct(
+				eachData.Course,
+				eachData.Teacher,
+				eachData.Classroom,
+				eachData.Nrc,
+				[eachData.StartHour, eachData.EndHour, eachData.Day],
+				eachData.Tag,
+				eachData.AcademicPeriod,
+				eachData.Campus,
+				{
+					Float64: eachData.Credits.Float64,
+					Valid: eachData.Credits.Valid
+				}
+			);
+
+			return OfficialActivity.getData();
+		});
+
 
 		res.status(200).json({
 			success: true,
-			data: activities
+			data: ACTIVITIES
 		});
 	} catch (error) {
+
 		console.error("Error:", error);
 		res.status(500).json({
 			success: false,
@@ -38,33 +62,6 @@ app.get("/api/official-schedule/:userId", async (req, res) => {
 		});
 	}
 });
-
-//getOfficialScheduleForFront("551542");
-
-async function getOfficialScheduleForFront(id) {
-	let data = await Con.GetOfficialScheduleByUserId(id);
-	//console.log(data);
-	let i = 0;
-	let OfficialActivitys = data.map(eachData => {
-		let OfficialActivity = new officialAct(
-			eachData.Course,
-			eachData.Teacher,
-			eachData.Classroom,
-			eachData.Nrc,
-			[eachData.StartHour, eachData.EndHour, eachData.Day],
-			eachData.Tag,
-			eachData.AcademicPeriod,
-			eachData.Campus,
-			{
-				Float64: eachData.Credits.Float64,
-				Valid: eachData.Credits.Valid
-			}
-		);
-
-		return OfficialActivity.getData();
-	});
-	return OfficialActivitys;
-}
 
 app.get("/api/personal-schedule/:userId", async (req, res) => {
 	let data = await Con.GetPersonalScheduleByUserId(req.params.userId);
@@ -301,5 +298,23 @@ app.get("/api/get-tags", async (req, res) => {
 
 	return res.json(tags);
 });
+
+// TO DO
+
+// - Add etiqueta
+// - Edit etiqueta
+// - Delete etiqueta
+
+// - Get Comentarios [Ya está en GO]
+// - Add comentario [Ya está en GO]
+// - Edit comentario
+// - Delete comentario
+
+// - Get recordatorios
+// - Add recordatorio
+// - Edit recordatorio
+// - Delete recordatorio
+
+// - Get tiposCurso 
 
 app.listen(PORT);
