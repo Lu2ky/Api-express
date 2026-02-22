@@ -72,6 +72,7 @@ export class Connection {
 			NewActivityValue: newActivityValue,
 			IdPersonalSchedule: idPersonalSchedule
 		};
+
 		try {
 			const send = await fetch(url, {
 				method: "POST",
@@ -82,10 +83,11 @@ export class Connection {
 				body: JSON.stringify(data)
 			});
 			const response = await send.json();
+
 			if (send.status == 200) {
 				return send;
 			} else {
-				throw new Error(result.error || "No se q paso papu");
+				throw new Error(response.error || "No se q paso papu");
 			}
 		} catch (error) {
 			console.error("Mira este error papu, que raro: ", error);
@@ -123,7 +125,7 @@ export class Connection {
 			if (send.status == 200) {
 				return send;
 			} else {
-				throw new Error(result.error || "Me lleva el chanfle");
+				throw new Error(response.error || "Me lleva el chanfle");
 			}
 		} catch (error) {
 			console.error("Mira este error papu, que raro: ", error);
@@ -237,16 +239,14 @@ export class Connection {
 			if (send.status == 200) {
 				return send;
 			} else {
-				throw new Error(result.error || "Me lleva el chanfle");
+				throw new Error(response.error);
 			}
 		} catch (error) {
 			console.error("Mira este error papu, que raro: ", error);
 		}
 	}
 
-	/*
-  Este metodo necesita ser probado
-*/
+
 	async addPersonalActivity(
 		activity,
 		description,

@@ -69,7 +69,10 @@ app.get("/api/personal-schedule/:userId", async (req, res) => {
 
 	let PersonalActivitys = data
 		.map(eachData => {
-			if (eachData.IsDeleted.Bool) {
+
+			console.log(eachData.N_idcourse, eachData.IsDeleted, eachData.IsDeleted.Bool)
+
+			if (eachData.IsDeleted.Bool == true) {
 				return null;
 			}
 
@@ -90,58 +93,140 @@ app.get("/api/personal-schedule/:userId", async (req, res) => {
 	return res.json(PersonalActivitys);
 });
 
-app.post("/api/update-personal-activity-name/", async (data, res) => {
+app.post("/api/update-personal-activity-description", async (req, res) => {
 	/*
     data = {
-      newValue: [NEW_NAME],
-      idPersonal: [ID]
+      NewActivityValue: [NEW DESCRIPTION]
+      IdCurso: [ID]
     }
   */
-	const NEW_NAME = data.NewActivityValue;
-	const ID = data.IdPersonalSchedule;
+	const NEW_NAME = req.body.NewActivityValue;
+	const ID = req.body.IdPersonalSchedule;
 
-	const RESULT = await Con.updateNameOfPersonalScheduleByIdCourse(NEW_NAME, ID);
+	console.log(NEW_NAME, ID);
 
-	return RESULT;
+	try {
+		const RESULT = await Con.updateDescriptionOfPersonalScheduleByIdCourse(
+			NEW_NAME,
+			ID
+		);
+
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+
+	} catch (error) {
+		console.error(error);
+        return res.status(500).json({
+            error: "Error interno del servidor"
+        });
+	}
 });
 
-app.post("/api/remove-personal-activity/", async (data, req) => {
+app.post("/api/update-personal-activity-name", async (req, res) => {
 	/*
     data = {
-      newValue: [NEW_STATUS]
-      idPersonal: [ID]
+      NewActivityValue: [NEW NAME]
+      IdCurso: [ID]
     }
   */
-	const NEW_STATUS = data.NewActivityValue;
-	if (typeof NEW_STATUS == "boolean") {
-		return;
-	}
-	const ID = data.IdPersonalSchedule;
-	const RESULT = await Con.deleteOrRecoveryPersonalScheduleByIdCourse(
-		NEW_STATUS,
-		ID
-	);
+	const NEW_NAME = req.body.NewActivityValue;
+	const ID = req.body.IdPersonalSchedule;
 
-	return RESULT;
+	console.log(NEW_NAME, ID);
+
+	try {
+		const RESULT = await Con.updateNameOfPersonalScheduleByIdCourse(
+			NEW_NAME,
+			ID
+		);
+
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+
+	} catch (error) {
+		console.error(error);
+        return res.status(500).json({
+            error: "Error interno del servidor"
+        });
+	}
 });
 
-app.post("/api/update-personal-activity-time/", async (data, req) => {
+app.post("/api/remove-personal-activity", async (req, res) => {
 	/*
     data = {
-      startHour: [NEW_STA_HOUR],
-      endHour: [NEW_END_HOUR]
-      idPersonal: [ID]
+      NewActivityValue: [NEW_STATUS]
+      IdCurso: [ID]
     }
   */
-	const NEW_STA_HOUR = data.startHour;
-	const NEW_END_HOUR = data.endHour;
-	const ID = data.idPersonal;
+	const NEW_STATUS = req.body.NewActivityValue;
+	const ID = req.body.IdPersonalSchedule;
 
-	if (NEW_STA_HOUR != undefined) {
-		await updateStartHourOfPersonalScheduleByIdCourse(NEW_STA_HOUR, ID);
+	try {
+		const RESULT = await Con.deleteOrRecoveryPersonalScheduleByIdCourse(
+			NEW_STATUS,
+			ID
+		);
+
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+
+	} catch (error) {
+		console.error(error);
+        return res.status(500).json({
+            error: "Error interno del servidor"
+        });
 	}
-	if (NEW_END_HOUR != undefined)
-		await updateEndHourOfPersonalScheduleByIdCourse(NEW_END_HOUR, ID);
+});
+
+app.post("/api/update-personal-activity-time/", async (req, res) => {
+	/*
+    data = {
+      StartHour: [NEW_STA_HOUR],
+      EndHour: [NEW_END_HOUR]
+      IdCurso: [ID]
+	  Times: [ARRAY TIMES]
+
+	  EL TIMES NO PUEDE CONTENER EL TIEMPO DE LA ACTIVIDAD QUE SE QUIERE MODIFICAR
+    }
+  */
+	const NEW_STA_HOUR = req.body.StartHour;
+	const NEW_END_HOUR = req.body.EndHour;
+	const DAY = req.body.Day
+	const ID = req.body.IdCurso;
+
+	const TIMES = req.body.Times;
+	const RESULT = [undefined, undefined];
+
+	console.log(NEW_STA_HOUR, NEW_END_HOUR, DAY, ID)
+	try {
+
+		if (PersonalAct.hasCollisions(TIMES, NEW_STA_HOUR, NEW_END_HOUR, DAY)){
+			return res.status(400).json({
+				error: "Colisión de horarios"
+			});
+		}
+
+		RESULT[0] = await Con.updateStartHourOfPersonalScheduleByIdCourse(NEW_STA_HOUR, ID);
+		RESULT[1] = await Con.updateEndHourOfPersonalScheduleByIdCourse(NEW_END_HOUR, ID);
+
+		return res.status(200).json({
+			success: true,
+			NEW_STA_H: RESULT[0],
+			NEW_END_H: RESULT[1]
+		});
+
+	} catch (error) {
+		console.error(error);
+        return res.status(500).json({
+            error: "Error interno del servidor"
+        });
+	}
 });
 
 app.post("/api/add-personal-activity", async (req, res) => {
@@ -167,7 +252,7 @@ app.post("/api/add-personal-activity", async (req, res) => {
 	const ID_USER = req.body.N_iduser;
 	const ID_ACADEMIC_PER = req.body.Id_AcademicPeriod;
 	
-	const TIMES = req.body.times;
+	const TIMES = req.body.Times;
 
 	try {
 		if (PersonalAct.hasCollisions(TIMES, STA_HOUR, END_HOUR, DAY)){
