@@ -7,8 +7,7 @@ export class PersonalAct extends Activity{
     get desc(){
         return this.#desc;
     }*/
-
-    id;
+   
     desc;
     classroom;
     date_start;

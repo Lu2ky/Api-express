@@ -83,10 +83,6 @@ app.get("/api/personal-schedule/:userId", async (req, res) => {
 				eachData.Dt_End.String
 			);
 
-			PersonalAct.id = eachData.N_idcourse;
-
-			console.log(eachData.N_idcourse);
-
 			return PersonalActivity.getData();
 		})
 		.filter(activity => activity !== null);
