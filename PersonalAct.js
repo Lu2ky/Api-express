@@ -37,7 +37,8 @@ export class PersonalAct extends Activity{
             times: this.times,
             Tag: this.tag,
             date_start: this.date_start,
-            date_end: this.date_end
+            date_end: this.date_end,
+            id_course: this.id,
         }
     }
 }

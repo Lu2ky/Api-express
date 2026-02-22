@@ -249,7 +249,6 @@ export class Connection {
 */
 	async addPersonalActivity(
 		activity,
-		idTag,
 		description,
 		day,
 		startHour,
@@ -267,7 +266,7 @@ export class Connection {
 		const data = {
 			Activity: activity,
 			Description: description,
-			IdTag: idTag,
+			N_idTipoCurso: 7,
 			Day: day,
 			StartHour: startHour,
 			EndHour: endHour,

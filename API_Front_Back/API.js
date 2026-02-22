@@ -6,6 +6,7 @@ import {officialAct} from "../OfficialAct.js";
 import {PersonalAct} from "../PersonalAct.js";
 import express from "express";
 import cors from "cors";
+import { stringify } from "querystring";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -82,6 +83,10 @@ app.get("/api/personal-schedule/:userId", async (req, res) => {
 				eachData.Dt_End.String
 			);
 
+			PersonalAct.id = eachData.N_idcourse;
+
+			console.log(eachData.N_idcourse);
+
 			return PersonalActivity.getData();
 		})
 		.filter(activity => activity !== null);
@@ -104,7 +109,7 @@ app.post("/api/update-personal-activity-name/", async (data, res) => {
 	return RESULT;
 });
 
-app.post("/api/remove-personal-activity/", async (data, res) => {
+app.post("/api/remove-personal-activity/", async (data, req) => {
 	/*
     data = {
       newValue: [NEW_STATUS]
@@ -159,8 +164,7 @@ app.post("/api/add-personal-activity", async (req, res) => {
   */
 
 	const NAME = req.body.Activity;
-	const DESC = req.body.IdTag;
-	const TAG = req.body.Description;
+	const DESC = req.body.Description;
 	const DAY = req.body.Day;
 	const STA_HOUR = req.body.StartHour;
 	const END_HOUR = req.body.EndHour;
@@ -170,16 +174,14 @@ app.post("/api/add-personal-activity", async (req, res) => {
 	const TIMES = req.body.times;
 
 	try {
-		if (PersonalAct.hasCollisions(TIMES, STA_HOUR, END_HOUR)){
+		if (PersonalAct.hasCollisions(TIMES, STA_HOUR, END_HOUR, DAY)){
 			return res.status(400).json({
 				error: "Colisión de horarios"
 			});
-
 		}
 
 		const RESULT = await Con.addPersonalActivity(
 			NAME,
-			TAG,
 			DESC,
 			DAY,
 			STA_HOUR,
@@ -216,43 +218,3 @@ app.get("/api/get-tags", async (req, res) => {
 });
 
 app.listen(PORT);
-
-//test xd
-/*
-let postData = {
-    Activity: "DESCANSO",
-    tag: "Personal",
-    desc: "[DESC]",
-    day: 1,
-    startHour: "06:00:00",
-    endHour: "08:00:00",
-    idUser: 7,
-    idAcademicPer: "[ID_ACADEMIC_PER]",
-
-    times: [
-        ["08:00:00", "09:00:00", 1],
-        ["09:00:00", "10:40:00", 0],
-        ["09:00:00", "10:00:00", 1]
-    ]
-}
-
-try {
-	const response = await fetch('http://localhost:28523/api/add-personal-activity', {
-		method: 'POST', // Specify the method
-		headers: {
-			'Content-Type': 'application/json', // Declare the content type
-		},
-		body: JSON.stringify(postData), // Convert the data object to a JSON string
-	});
-
-	if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
-    }
-
-	const data = await response.text();
-    console.log(data);
-
-} catch (error) {
-	console.error("error en el fetch:", error);
-}
-*/

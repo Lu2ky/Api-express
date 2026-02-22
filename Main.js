@@ -29,7 +29,7 @@ let postData = {
 
 console.log(dateToNumber(postData.endHour));
 console.log(Activity.hasCollisions(postData.times, postData.startHour, postData.endHour, postData.day));
-
+/*
 fetch('localhost:28523/api/add-personal/551542', {
     method: 'POST', // Specify the method
     headers: {
@@ -45,4 +45,45 @@ const between = (val, izq, der) => (val < Math.max(izq, der) && val > Math.min(i
 console.log(between(1, 0, 3))
 
 console.log(Activity.hasCollisions(data.times, data.startHour, data.endHour, data.day));
+*/
+
+
+//test xd
+/*
+let postData = {
+    Activity: "DESCANSO",
+	Description: "[DESC]",
+    IdTag: 10,
+    day: 1,
+    StartHour: "06:00:00",
+    EndHour: "08:00:00",
+    N_iduser: 7,
+    Id_AcademicPeriod: 1,
+
+    times: [
+        ["08:00:00", "09:00:00", 1],
+        ["09:00:00", "10:40:00", 0],
+        ["09:00:00", "10:00:00", 1]
+    ]
+}
+
+try {
+	const response = await fetch('http://localhost:28523/api/add-personal-activity', {
+		method: 'POST', // Specify the method
+		headers: {
+			'Content-Type': 'application/json', // Declare the content type
+		},
+		body: JSON.stringify(postData), // Convert the data object to a JSON string
+	});
+
+	if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+    }
+
+	const data = await response.text();
+    console.log(data);
+
+} catch (error) {
+	console.error("error en el fetch:", error);
+}
 */
