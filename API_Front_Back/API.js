@@ -7,6 +7,7 @@ import {PersonalAct} from "../PersonalAct.js";
 import express from "express";
 import cors from "cors";
 import {stringify} from "querystring";
+import {Reminder} from "../Reminder.js"
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -26,7 +27,7 @@ app.get("/api/official-schedule/:userId", async (req, res) => {
 	const USER_ID = req.params.userId;
 
 	try {
-		let data = await Con.GetOfficialScheduleByUserId(USER_ID);
+		let data = await Con.GetialScheOfficduleByUserId(USER_ID);
 		
 		const ACTIVITIES = data.map(eachData => {
 			let OfficialActivity = new officialAct(
@@ -317,4 +318,49 @@ app.get("/api/get-tags", async (req, res) => {
 
 // - Get tiposCurso 
 
+app.get("/api/reminders-by-user/:userId", async (req, res) => {
+
+	const USER_ID = req.params.userId;
+
+	try {
+		let data = await Con.GetReminders(USER_ID);
+		console.log("7w7")
+		const REMINDERS = data.map(eachData => {
+			let Reminder = new Reminder(
+				eachData.N_idRecordatorio,
+				eachData.T_nombre,
+				eachData.T_descripción,
+				eachData.Dt_fechaVencimiento,
+				eachData.B_isDeleted,
+				eachData.T_Prioridad,
+				eachData.Etiqueta
+	
+			);
+
+			return Reminder.getData();
+		});
+
+
+		res.status(200).json({
+			success: true,
+			data: ACTIVITIES
+		});
+	} catch (error) {
+
+		console.error("Error:", error);
+		res.status(500).json({
+			success: false,
+			message: "Error al obtener los recordatorios",
+			error: error.message
+		});
+	}
+});
+
+
 app.listen(PORT);
+
+
+
+
+
+
