@@ -7,6 +7,7 @@ import {PersonalAct} from "../PersonalAct.js";
 import express from "express";
 import cors from "cors";
 import {stringify} from "querystring";
+import {Reminder} from "../Reminder.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -317,4 +318,45 @@ app.get("/api/get-tags", async (req, res) => {
 
 // - Get tiposCurso 
 
+app.get("/api/reminders-by-user/:userId", async (req, res) => {
+	let data = await Con.GetReminders(req.params.userId);
+
+	let Reminders = data.map(eachData => {
+		console.log(
+			eachData.B_isDeleted,
+
+		);
+
+		if(eachData.IsDeleted?.Bool == true){
+			return null;
+		}
+
+		let reminder = new Reminder(
+				eachData.N_idToDoList,
+				eachData.N_iduser,
+				eachData.N_idRecordatorio,
+				eachData.T_nombre,
+				eachData.T_descripción,
+				eachData.Dt_fechaVencimiento,
+				eachData.B_isDeleted,
+				eachData.T_Prioridad
+
+			);
+
+			return reminder.getData();
+
+	})
+	.filter(reminder => reminder !== null);
+
+	return res.json(Reminders);
+
+});
+
+
 app.listen(PORT);
+
+
+
+
+
+

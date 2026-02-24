@@ -324,6 +324,87 @@ export class Connection {
 		}
 	}
 
+	//GET REMINDERS
+
+	async GetReminders(id){
+		const url = 
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/GetReminders/" + 
+			id;
+
+		try {
+
+			const rta = await fetch(url, {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				}
+			});
+
+			if (!rta.ok) throw new Error(`Error: ${rta.status}`);
+
+			const data = await rta.json();
+			return data;
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+
+	}
+
+	//UPDATE REMINDER
+	async AddReminders(
+		N_idUsuario,
+		N_idRecordatorio,
+		T_nombre,
+		T_descripción,
+		Dt_fechaVencimiento,
+		B_isDeleted,
+		T_Prioridad,
+		Etiqueta
+
+	){
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/updateNameReminder";
+
+		const data = {
+			NewActivityValue: newActivityValue,
+			IdPersonalSchedule: idPersonalSchedule
+			
+		};
+
+		
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+
+			const response = await send.json();
+
+			if (send.status == 200) {
+				return send;
+			} else {
+				throw new Error(response.error || "Me lleva el chanfle");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+		
+
+	}
+
 	//GET PERSONAL COMMENTS
 
 	//ADD PERSONAL COMMENT
