@@ -9,6 +9,7 @@ import cors from "cors";
 import {stringify} from "querystring";
 import {Reminder} from "../Reminder.js";
 
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 dotenv.config({
@@ -27,7 +28,7 @@ app.get("/api/official-schedule/:userId", async (req, res) => {
 	const USER_ID = req.params.userId;
 
 	try {
-		let data = await Con.GetOfficialScheduleByUserId(USER_ID);
+		let data = await Con.GetialScheOfficduleByUserId(USER_ID);
 		
 		const ACTIVITIES = data.map(eachData => {
 			let OfficialActivity = new officialAct(
@@ -334,6 +335,7 @@ app.get("/api/reminders-by-user/:userId", async (req, res) => {
 		let reminder = new Reminder(
 				eachData.N_idToDoList,
 				eachData.N_iduser,
+
 				eachData.N_idRecordatorio,
 				eachData.T_nombre,
 				eachData.T_descripción,
@@ -349,7 +351,6 @@ app.get("/api/reminders-by-user/:userId", async (req, res) => {
 	.filter(reminder => reminder !== null);
 
 	return res.json(Reminders);
-
 });
 
 
