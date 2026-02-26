@@ -52,7 +52,6 @@ async function getOfficialScheduleForFront(id) {
       eachData.Nrc,
       [eachData.StartHour, eachData.EndHour, eachData.Day],
       eachData.Tag,
-      eachData.AcademicPeriod,
       eachData.Campus,
       {
         Float64: eachData.Credits.Float64,

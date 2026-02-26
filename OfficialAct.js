@@ -18,7 +18,6 @@ export class officialAct extends Activity {
   professor_name;
   classroom;
   NRC;
-  academicPeriod;
   Campus;
   Credits;
 
@@ -29,7 +28,6 @@ export class officialAct extends Activity {
     NRC,
     times,
     tag,
-    academicPeriod,
     Campus,
     Credits
   ) {
@@ -38,7 +36,6 @@ export class officialAct extends Activity {
     this.professor_name = professor_name;
     this.classroom = classroom;
     this.NRC = NRC;
-    this.academicPeriod = academicPeriod;
     this.Campus = Campus;
     this.Credits = Credits;
   }
@@ -51,7 +48,6 @@ export class officialAct extends Activity {
       NRC: this.NRC,
       times: this.times,
       Tag: this.tag,
-      academicPeriod: this.academicPeriod,
       Campus: this.Campus,
       Credits: this.Credits
     }
