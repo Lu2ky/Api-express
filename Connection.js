@@ -8,6 +8,7 @@ dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});
 export class Connection {
 	constructor() {}
 
+	// Obtener horario oficial de estudiante
 	async GetOfficialScheduleByUserId(id) {
 		const url =
 			"http://" +
@@ -32,6 +33,7 @@ export class Connection {
 		}
 	}
 
+	// Obteber horario personal de estudiante
 	async GetPersonalScheduleByUserId(id) {
 		let data;
 		const url =
@@ -57,6 +59,7 @@ export class Connection {
 		}
 	}
 
+	// Editar nombre de actividad personal
 	async updateNameOfPersonalScheduleByIdCourse(
 		newActivityValue,
 		idPersonalSchedule
@@ -94,6 +97,7 @@ export class Connection {
 		}
 	}
 
+	// Editar decripción de actividad personal
 	async updateDescriptionOfPersonalScheduleByIdCourse(
 		newActivityValue,
 		idPersonalSchedule
@@ -132,6 +136,7 @@ export class Connection {
 		}
 	}
 
+	// Editar hora de inicio de actividad personal
 	async updateStartHourOfPersonalScheduleByIdCourse(
 		newActivityValue,
 		idPersonalSchedule
@@ -170,6 +175,7 @@ export class Connection {
 		}
 	}
 
+	// Editar hora de fin de actividad personal
 	async updateEndHourOfPersonalScheduleByIdCourse(
 		newActivityValue,
 		idPersonalSchedule
@@ -208,6 +214,7 @@ export class Connection {
 		}
 	}
 
+	// Eliminar actividad personal
 	async deleteOrRecoveryPersonalScheduleByIdCourse(
 		isDeleted,
 		idPersonalSchedule
@@ -246,6 +253,7 @@ export class Connection {
 		}
 	}
 
+	// Añadir actividad personal
 	async addPersonalActivity(
 		activity,
 		description,
@@ -295,9 +303,7 @@ export class Connection {
 		}
 	}
 
-	// TO DO:
-
-	//GET TAGS
+	// Obtener lista de etiquetas
 	async GetTags() {
 		let data;
 		const url =
@@ -324,8 +330,7 @@ export class Connection {
 		}
 	}
 
-	//GET REMINDERS
-
+	// Obtener lista de recordatorios
 	async GetReminders(id){
 		const url = 
 			"http://" +
@@ -355,32 +360,83 @@ export class Connection {
 
 	}
 
-	//UPDATE REMINDER
-	async AddReminders(
-		N_idUsuario,
-		N_idRecordatorio,
-		T_nombre,
-		T_descripción,
-		Dt_fechaVencimiento,
-		B_isDeleted,
-		T_Prioridad,
-		Etiqueta
-
+	// Añadir recordatorio
+	async addReminder(
+		idUser,
+		name,
+		desc,
+		date,
+		priory,
+		state,
+		tag1,
+		tag2,
+		tag3,
+		tag4,
+		tag5
+	
 	){
 		const url =
 			"http://" +
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/updateNameReminder";
-
+			"/addReminder";
+	
 		const data = {
-			NewActivityValue: newActivityValue,
-			IdPersonalSchedule: idPersonalSchedule
-			
+			P_usuario: idUser,
+			P_nombre: name,
+			P_descripcion: desc,
+			P_fecha: date,
+			P_prioridad: priory,
+			P_estado: state,
+			P_tag1: tag1,
+			P_tag2: tag2,
+			P_tag3: tag3,
+			P_tag4: tag4,
+			P_tag5: tag5
+
 		};
 
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+
+			const response = await send.json();
+
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "Me lleva el chanfle");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+
+	}
+
+	// Eliminar recordatorio
+	async deleteReminder(
+		idReminder
 		
+	) {
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/deleteOrRecoverReminder";
+
+		const data = {
+			N_idRecordatorio: idReminder
+
+		};
+
 		try {
 			const send = await fetch(url, {
 				method: "POST",
@@ -396,16 +452,180 @@ export class Connection {
 			if (send.status == 200) {
 				return send;
 			} else {
-				throw new Error(response.error || "Me lleva el chanfle");
+				throw new Error(response.error);
 			}
 		} catch (error) {
 			console.error("Mira este error papu, que raro: ", error);
 		}
-		
-
 	}
 
-	//GET PERSONAL COMMENTS
+	// Actualizar nombre de recordatorio
+	async updateNameReminder(
+		idToDo,
+		newName
+		
+	){
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/updateReminder";
 
-	//ADD PERSONAL COMMENT
+		const data = {
+			P_idToDo: idToDo,
+			P_nombre: newName
+		};
+
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+			const response = await send.json();
+
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se q paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+
+	};
+
+	// Actualizar descripción de recordatorio
+	async updateDescReminder(
+		idToDo,
+		newDesc
+		
+	){
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/updateReminder";
+
+		const data = {
+			P_idToDo: idToDo,
+			P_descripcion: newDesc
+		};
+
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+			const response = await send.json();
+
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se q paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+
+	};
+
+	// Actualizar fecha de recordatorio
+	async updateDateReminder(
+		idToDo,
+		newDate
+		
+	){
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/updateReminder";
+
+		const data = {
+			P_idToDo: idToDo,
+			P_fecha: newDate
+		};
+
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+			const response = await send.json();
+
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se q paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+
+	};
+
+	// Actualizar prioridad de recordatorio
+	async updatePrioryReminder(
+		idToDo,
+		newPriory
+		
+	){
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/updateReminder";
+
+		const data = {
+			P_idToDo: idToDo,
+			P_prioridad: newPriory
+		};
+
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+			const response = await send.json();
+
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se q paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+
+	};
+
+	// TO DO:
+
+	// GET TAGS
+
+	// GET PERSONAL COMMENTS
+
+	// ADD PERSONAL COMMENT
+
+	
 }
