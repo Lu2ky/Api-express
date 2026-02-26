@@ -16,7 +16,7 @@ export class Activity {
         this.times = times;
     }
 
-    static hasCollisions(timesData, hStart, hEnd, day){
+    static hasCollisions(timesData, hStart, hEnd, day, dStart, dEnd){
 
         const between = (val, izq, der) => (val < Math.max(izq, der) && val > Math.min(izq, der));
         const dateToNumber = (date) => (parseInt((date.slice(0, 5)).replace(":", "")));
@@ -26,7 +26,11 @@ export class Activity {
 		 * "times": [
          * "08:00:00", -- START_H
          * "09:40:00", -- END_H
-         * 1], -- DAY
+         *  1 -- DAY
+         *  "2026-02-21 00:00:00"
+         *  "2026-03-05 23:59:00"
+         * 
+         * ],
 		 */
         //SET ARGUMENTS TO NUMBERS
         const H_START = dateToNumber(hStart);
@@ -40,6 +44,8 @@ export class Activity {
             const DATA_START_H = dateToNumber(timesData[i][0]);
             const DATA_END_H = dateToNumber(timesData[i][1]);
             const DATA_DAY = timesData[i][2];
+            const DATA_START_D = new Date(timesData[i][3]);
+            const DATA_END_D = new Date(timesData[i][2]);
 
             //console.log(DATA_DAY, DATA_START_H, DATA_END_H)
 

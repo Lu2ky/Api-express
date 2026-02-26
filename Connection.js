@@ -4,7 +4,8 @@ import { dirname, resolve } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 //{path: resolve(__dirname, "../../config/expressapiconfig.env")}
-dotenv.config();
+//dotenv.config();
+dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});
 
 export class Connection {
   constructor() {}
@@ -55,6 +56,57 @@ export class Connection {
       return data;
     } catch (error) {
       console.error("Mira este error papu, que raro: ", error);
+    }
+  }
+
+  //  Actualizar actividad personal
+  async updatePersonalActivity(
+    idCurso,
+    nombreCurso,
+    descripcion,
+    fechaInicio,
+    fechaFin,
+    dia,
+    horaInicio,
+    horaFin
+  ) {
+    const url =
+      "http://" +
+      process.env.API_ADDR +
+      ":" +
+      process.env.API_PORT +
+      "/updatePersonalScheduleByIdCourse";
+
+    const data = {
+      P_idCurso: idCurso,
+      P_nombreCurso: nombreCurso,
+      P_descripcion: descripcion,
+      P_fechaInicio: fechaInicio,
+      P_fechaFin: fechaFin,
+      P_dia: dia,
+      P_horaInicio: horaInicio,
+      P_horaFin: horaFin
+    };
+
+    try {
+      const send = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": process.env.API_KEY,
+        },
+        body: JSON.stringify(data),
+      });
+
+      const response = await send.json();
+
+      if (send.status == 200) {
+        return send;
+      } else {
+        throw new Error(response.error || "No se q paso papu");
+      }
+    } catch (error) {
+      console.error("ERROR :sob: ", error);
     }
   }
 
