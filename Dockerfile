@@ -1,11 +1,12 @@
-FROM node:latest
 
+FROM node:25-alpine AS builder
 WORKDIR /api
+COPY package*.json ./
+RUN npm install --production
 COPY . .
+FROM node:25-alpine AS runner
+WORKDIR /api
+COPY --from=builder /api /api
 RUN touch .env
-RUN apt upgrade -y
-RUN apt update -y
-RUN npm install
 EXPOSE 28523
-CMD ["node", "./API_Front_Back/API.js"]
-
+CMD ["node", "API_Front_Back/API.js"]
