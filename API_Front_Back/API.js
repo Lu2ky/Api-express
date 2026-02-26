@@ -10,7 +10,7 @@ import { stringify } from "querystring";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-dotenv.config({ path: resolve(__dirname, "../../../config/expressapiconfig.env") });
+dotenv.config({ path: resolve(__dirname, "../.env") });
 
 const app = express();
 const PORT = 28523;
@@ -295,6 +295,70 @@ app.get("/api/get-tags", async (req, res) => {
 	return res.json(tags);
 });
 
+
+app.get("/api/get-personal-comments/:idUser/:idCourse", async (req, res) => {
+
+  const ID_USER = req.params.idUser;
+  const ID_COURSE = req.params.idCourse;
+
+  try {
+
+    const RESULT = await Con.getPersonalCommentsByUserAndCourse(
+      ID_USER,
+      ID_COURSE
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: RESULT,
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      error: "Error interno del servidor",
+    });
+  }
+});
+
+app.post("/api/add-comment", async (req, res) => {
+  
+  const N_ID_HORARIO = req.body.N_idHorario;
+  const N_ID_USUARIO = req.body.N_idUsuario;
+  const N_ID_CURSO = req.body.N_idCurso;
+  const CURSO = req.body.Curso;
+  const T_COMENTARIO = req.body.T_comentario;
+
+  try {
+
+   
+    if (!N_ID_HORARIO || !N_ID_USUARIO || !N_ID_CURSO || !T_COMENTARIO) {
+      return res.status(400).json({
+        error: "Faltan datos obligatorios",
+      });
+    }
+
+    const RESULT = await Con.addComment(
+      N_ID_HORARIO,
+      N_ID_USUARIO,
+      N_ID_CURSO,
+      CURSO,
+      T_COMENTARIO
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: RESULT,
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      error: "Error interno del servidor",
+    });
+  }
+});
+
 // TO DO
 
 // - Add etiqueta
@@ -314,3 +378,4 @@ app.get("/api/get-tags", async (req, res) => {
 // - Get tiposCurso 
 
 app.listen(PORT);
+
