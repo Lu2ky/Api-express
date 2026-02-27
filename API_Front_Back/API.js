@@ -301,9 +301,11 @@ app.get("/api/get-personal-comments/:idUser/:idCourse", async (req, res) => {
   const ID_USER = req.params.idUser;
   const ID_COURSE = req.params.idCourse;
 
+  
+
   try {
 
-    const RESULT = await Con.getPersonalCommentsByUserAndCourse(
+    const RESULT = await Con.GetPersonalComments(
       ID_USER,
       ID_COURSE
     );
@@ -329,6 +331,8 @@ app.post("/api/add-comment", async (req, res) => {
   const CURSO = req.body.Curso;
   const T_COMENTARIO = req.body.T_comentario;
 
+
+
   try {
 
    
@@ -338,7 +342,7 @@ app.post("/api/add-comment", async (req, res) => {
       });
     }
 
-    const RESULT = await Con.addComment(
+    const RESULT = await Con.addPersonalComment(
       N_ID_HORARIO,
       N_ID_USUARIO,
       N_ID_CURSO,
@@ -359,6 +363,67 @@ app.post("/api/add-comment", async (req, res) => {
   }
 });
 
+//update comment
+
+app.post("/api/update-comment", async (req, res) => {
+
+
+  const ID = req.body.N_idComentarios;
+  const NEW_COMMENT = req.body.T_comentario;
+
+  try {
+
+    if (!ID || !NEW_COMMENT) {
+      return res.status(400).json({
+        error: "Faltan datos obligatorios"
+      });
+    }
+
+    const RESULT = await Con.updatePersonalComment(
+      ID,
+      NEW_COMMENT
+    );
+
+    const success = RESULT != undefined;
+
+    return res.status(200).json({
+      success: success,
+      data: RESULT
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      error: "Error interno del servidor"
+    });
+  }
+});
+
+app.post("/api/remove-comment", async (req, res) => {
+
+  const ID = req.body.N_idComentarios;
+
+  try {
+
+    const RESULT = await Con.deletePersonalComment(ID);
+
+    const success = RESULT != undefined;
+
+    return res.status(200).json({
+      success: success,
+      data: RESULT
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      error: "Error interno del servidor"
+    });
+  }
+});
+
+
+
 // TO DO
 
 // - Add etiqueta
@@ -378,4 +443,3 @@ app.post("/api/add-comment", async (req, res) => {
 // - Get tiposCurso 
 
 app.listen(PORT);
-

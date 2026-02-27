@@ -339,6 +339,7 @@ export class Connection {
         "/GetPersonalComments/" +
         userId;
 
+		
     try {
         const rta = await fetch(url, {
             method: "GET",
@@ -360,7 +361,7 @@ export class Connection {
 
 	//ADD PERSONAL COMMENT
 
-	async AddPersonalComment(
+	async addPersonalComment(
     N_idHorario,
     N_idUsuario,
     N_idCurso,
@@ -373,7 +374,7 @@ export class Connection {
         process.env.API_ADDR +
         ":" +
         process.env.API_PORT +
-        "/AddPersonalComment";
+        "/addPersonalComment";
 
     const data = {
         N_idHorario,
@@ -405,4 +406,78 @@ export class Connection {
         console.error("Mira este error papu, que raro: ", error);
     }
 }
+
+//update personal comment
+
+// UPDATE PERSONAL COMMENT
+
+async updatePersonalComment(commentId, newComment) {
+
+    const url =
+        "http://" +
+        process.env.API_ADDR +
+        ":" +
+        process.env.API_PORT +
+        "/updatePersonalComment"; 
+
+    try {
+
+        const rta = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-API-Key": process.env.API_KEY
+            },
+            body: JSON.stringify({
+                N_idComentarios: commentId,
+                T_comentario: newComment
+            })
+        });
+
+        if (!rta.ok) throw new Error(`Error: ${rta.status}`);
+
+        const data = await rta.json();
+        return data;
+
+    } catch (error) {
+        console.error("Mira este error papu, que raro: ", error);
+    }
 }
+
+// DELETE PERSONAL COMMENT
+
+async deletePersonalComment(commentId) {
+
+    const url =
+        "http://" +
+        process.env.API_ADDR +
+        ":" +
+        process.env.API_PORT +
+        "/deletePersonalComment"; 
+
+    try {
+
+        const rta = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-API-Key": process.env.API_KEY
+            },
+            body: JSON.stringify({
+                N_idComentarios: commentId
+            })
+        });
+
+        if (!rta.ok) throw new Error(`Error: ${rta.status}`);
+
+        const data = await rta.json();
+        return data;
+
+    } catch (error) {
+        console.error("Mira este error papu, que raro: ", error);
+    }
+}
+}
+
+
+
