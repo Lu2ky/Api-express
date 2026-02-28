@@ -38,9 +38,6 @@ app.get("/api/official-schedule/:userId", async (req, res) => {
 		
 		//Procesamiento de los datos.
 		const ACTIVITIES = data.map(eachData => {
-			
-			//	Codigo de calidad (no)
-			GLOBAL_USER = eachData.N_iduser;
 
 			let OfficialActivity = new officialAct(
 				eachData.Course,
@@ -53,7 +50,6 @@ app.get("/api/official-schedule/:userId", async (req, res) => {
 					eachData.Day
 				],
 				eachData.Tag,
-				eachData.AcademicPeriod,
 				eachData.Campus,
 				eachData.Credits
 			);
@@ -242,7 +238,7 @@ app.post("/api/update-personal-activity", async (req, res) => {
 			DESC,
 			F_INICIO,
 			F_FIN,
-			DIA,
+			DAY,
 			H_INICIO,
 			H_FIN
 		)
