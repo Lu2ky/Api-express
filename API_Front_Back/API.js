@@ -213,5 +213,56 @@ app.get("/api/get-tags", async (req, res) => {
 	return res.json(tags);
 });
 
+app.get("/api/tags-by-user/:userId", async (req, res) => {
+    try {
+        const data = await Con.GetTagsByUserId(req.params.userId);
+
+        const tags = data.map(eachData => ({
+            id: eachData.N_idEtiqueta,
+            name: eachData.T_name
+        }));
+
+        return res.status(200).json({ success: true, data: tags });
+    } catch (error) {
+        console.error("Error:", error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.get("/api/tags-by-user-and-course/:userId/:courseId", async (req, res) => {
+    try {
+        const data = await Con.GetTagsByUserAndCourse(
+            req.params.userId,
+            req.params.courseId
+        );
+
+        const tags = data.map(eachData => ({
+            id: eachData.N_idEtiqueta,
+            name: eachData.T_name
+        }));
+
+        return res.status(200).json({ success: true, data: tags });
+    } catch (error) {
+        console.error("Error:", error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.post("/api/delete-tag", async (req, res) => {
+    try {
+        const { IdTag } = req.body;
+
+        if (!IdTag) {
+            return res.status(400).json({ success: false, error: "IdTag requerido" });
+        }
+
+        const result = await Con.DeleteTag(IdTag);
+        return res.status(200).json({ success: true, data: result });
+    } catch (error) {
+        console.error("Error:", error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 app.listen(PORT);
 
