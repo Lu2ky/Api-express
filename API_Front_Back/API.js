@@ -6,7 +6,9 @@ import { officialAct } from "../OfficialAct.js";
 import { PersonalAct } from "../PersonalAct.js";
 import express from "express";
 import cors from "cors";
-import { stringify } from "querystring";
+import {stringify} from "querystring";
+import {Reminder} from "../Reminder.js";
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -22,8 +24,6 @@ app.use(cors());
 app.use(express.json());
 
 let Con = new Connection();
-
-//	Obtener horario oficial
 
 app.get("/api/official-schedule/:userId", async (req, res) => {
 
@@ -71,7 +71,7 @@ app.get("/api/official-schedule/:userId", async (req, res) => {
 	}
 });
 
-//	Obtener el horario personal
+// Obtener horario personal
 app.get("/api/personal-schedule/:userId", async (req, res) => {
   let data = await Con.GetPersonalScheduleByUserId(req.params.userId);
 
@@ -102,6 +102,7 @@ app.get("/api/personal-schedule/:userId", async (req, res) => {
   	return res.json(PersonalActivitys);
 });
 
+// Editar descripción de actividad personal
 app.post("/api/add-personal-activity", async (req, res) => {
   /*
     data = {
@@ -261,7 +262,7 @@ app.post("/api/update-personal-activity", async (req, res) => {
 
 });
 
-//	Eliminar actividad personal
+// Eliminar actividad personal
 app.post("/api/remove-personal-activity", async (req, res) => {
   /*
     data = {
@@ -292,6 +293,7 @@ app.post("/api/remove-personal-activity", async (req, res) => {
 /**
  * Se obtienen las etiquetas como un arreglo.
  */
+//
 app.get("/api/get-tags", async (req, res) => {
   let data = await Con.GetTags();
 
@@ -301,6 +303,211 @@ app.get("/api/get-tags", async (req, res) => {
 
   return res.json(tags);
 });
+
+app.get("/api/reminders-by-user/:userId", async (req, res) => {
+	let data = await Con.GetReminders(req.params.userId);
+
+	let Reminders = data.map(eachData => {
+		console.log(
+			eachData.B_isDeleted,
+
+		);
+
+		if(eachData.IsDeleted?.Bool == true){
+			return null;
+		}
+
+		let reminder = new Reminder(
+				eachData.N_idToDoList,
+				eachData.N_idUsuario,
+				eachData.N_idRecordatorio,
+				eachData.T_nombre,
+				eachData.T_descripcion,
+				eachData.Dt_fechaVencimiento,
+				eachData.B_isDeleted,
+				eachData.T_Prioridad
+
+			);
+
+			return reminder.getData();
+
+	})
+	.filter(reminder => reminder !== null);
+
+	return res.json(Reminders);
+});
+
+// Añadir recordatorio
+app.post('/api/add-reminder', async (req, res) =>{
+		const IDUSER = req.body.P_usuario;
+		const NAME = req.body.P_nombre;
+		const DESC = req.body.P_descripcion;
+		const DATE = req.body.P_fecha;
+		const PRIORY = req.body.P_prioridad;
+		const TAG1 = req.body.P_tag1;
+		const TAG2 = req.body.P_tag2;
+		const TAG3 = req.body.P_tag3;
+		const TAG4 = req.body.P_tag4;
+		const TAG5 = req.body.P_tag5;
+
+		try {
+			const RESULT = await Con.addReminder(
+				IDUSER,
+				NAME,
+				DESC,
+				DATE,
+				PRIORY,
+				TAG1,
+				TAG2,
+				TAG3,
+				TAG4,
+				TAG5
+		);
+
+		return res.status(200).json({
+			success: true,
+			data: RESULT
+		});
+		} catch (error) {
+			console.error(error);
+			return res.status(500).json({
+				error: "Error interno del servidor"
+			});
+		}
+
+});
+
+// Eliminar recordatorio
+app.post("/api/remove-reminder", async (req, res) => {
+	const ID = req.body.N_idRecordatorio;
+	
+	try {
+		const RESULT = await Con.deleteReminder(
+			ID
+		);
+
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+});
+
+// Actualizar nombre de recordatorio
+app.post('/api/update-name-reminder', async (req, res) =>{
+	const ID = req.body.P_idToDo;
+	const NEW_NAME = req.body.P_nombre;
+
+	console.log(NEW_NAME, ID);
+
+	try {
+		const RESULT = await Con.updateNameReminder(
+			ID,
+			NEW_NAME
+			
+		);
+
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+
+});
+
+// Actualizar descripción de recordatorio
+app.post('/api/update-desc-reminder', async (req, res) =>{
+	const ID = req.body.P_idToDo;
+	const NEW_DESC = req.body.P_descripcion;
+
+	console.log(NEW_DESC, ID);
+
+	try {
+		const RESULT = await Con.updateDescReminder(
+			ID,
+			NEW_DESC
+			
+		);
+
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+
+});
+
+// Actualizar fecha de recordatorio
+app.post('/api/update-date-reminder', async (req, res) =>{
+	const ID = req.body.P_idToDo;
+	const NEW_DATE = req.body.P_fecha;
+
+	console.log(NEW_DATE, ID);
+
+	try {
+		const RESULT = await Con.updateDateReminder(
+			ID,
+			NEW_DATE
+			
+		);
+
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+
+});
+
+// Actualizar prioridad de recordatorio
+app.post('/api/update-priory-reminder', async (req, res) =>{
+	const ID = req.body.P_idToDo;
+	const NEW_PRIORY = req.body.P_prioridad;
+
+	console.log(NEW_PRIORY, ID);
+
+	try {
+		const RESULT = await Con.updatePrioryReminder(
+			ID,
+			NEW_PRIORY
+			
+		);
+
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+
+});
+
+// Llamado al puerto
+app.listen(PORT);
 
 // TO DO
 
@@ -313,11 +520,8 @@ app.get("/api/get-tags", async (req, res) => {
 // - Edit comentario
 // - Delete comentario
 
-// - Get recordatorios
-// - Add recordatorio
-// - Edit recordatorio
-// - Delete recordatorio
-
 // - Get tiposCurso 
 
-app.listen(PORT);
+
+
+
