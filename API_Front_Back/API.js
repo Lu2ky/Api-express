@@ -1,9 +1,9 @@
-import { Connection } from "../Connection.js";
-import { fileURLToPath } from "url";
-import { dirname, resolve } from "path";
+import {Connection} from "../Connection.js";
+import {fileURLToPath} from "url";
+import {dirname, resolve} from "path";
 import dotenv from "dotenv";
-import { officialAct } from "../OfficialAct.js";
-import { PersonalAct } from "../PersonalAct.js";
+import {officialAct} from "../OfficialAct.js";
+import {PersonalAct} from "../PersonalAct.js";
 import express from "express";
 import cors from "cors";
 import {stringify} from "querystring";
