@@ -457,7 +457,7 @@ async updatePersonalComment(commentId, newComment) {
   //	--------------------------------------- RECORDATORIOS -------------------------------------- \\
 
 	// Obtener lista de recordatorios
-	async GetReminders(id){
+	async getReminders(id){
 		const url = 
 			"http://" +
 			process.env.API_ADDR +
@@ -744,4 +744,94 @@ async updatePersonalComment(commentId, newComment) {
 		}
 
 	};
+
+	// Actualizar estado de recordatorio
+	async updateStateReminder(
+		idToDo,
+		newState
+		
+	){
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/updateReminder";
+
+		const data = {
+			P_idToDo: idToDo,
+			P_estado: newState
+		};
+
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+			const response = await send.json();
+
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se q paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+
+	};
+
+	// Actualizar etiquetas de recordatorio
+	async updateTagsReminder(
+		idToDo,
+		newTag1,
+		newTag2,
+		newTag3,
+		newTag4,
+		newTag5
+		
+	){
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/updateReminder";
+
+		const data = {
+			P_idToDo: idToDo,
+			P_tag1: newTag1,
+			P_tag2: newTag2,
+			P_tag3: newTag3,
+			P_tag4: newTag4,
+			P_tag5: newTag5
+
+		};
+
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+			const response = await send.json();
+
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se q paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+
+	};
+
 }

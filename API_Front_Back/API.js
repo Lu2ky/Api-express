@@ -27,6 +27,7 @@ let Con = new Connection();
 
 //	--------------------------------------- ACTIVIDADES -------------------------------------- \\
 
+// Obtener horario oficial
 app.get("/api/official-schedule/:userId", async (req, res) => {
 
 	//	req.params permite obtener los valoeres dados por medio de la URL
@@ -374,7 +375,7 @@ app.post("/api/add-comment", async (req, res) => {
   }
 });
 
-//update comment
+// Actaulizar comentario
 app.post("/api/update-comment", async (req, res) => {
 
   const ID = req.body.N_idComentarios;
@@ -433,6 +434,7 @@ app.post("/api/remove-comment", async (req, res) => {
 
 //	--------------------------------------- TAGS -------------------------------------- \\
 
+// Obtener etiquetas por id usuario
 app.get("/api/tags-by-user/:userId", async (req, res) => {
     try {
         const data = await Con.GetTagsByUserId(req.params.userId);
@@ -450,6 +452,7 @@ app.get("/api/tags-by-user/:userId", async (req, res) => {
     }
 });
 
+// Obtener etiquetas por id usuario e id recordatorio
 app.get("/api/tags-by-user-and-course/:userId/:courseId", async (req, res) => {
     try {
         const data = await Con.GetTagsByUserAndCourse(
@@ -470,6 +473,7 @@ app.get("/api/tags-by-user-and-course/:userId/:courseId", async (req, res) => {
     }
 });
 
+// Eliminar etiqueta
 app.post("/api/delete-tag", async (req, res) => {
     try {
         const { IdTag } = req.body.idTag;
@@ -489,7 +493,7 @@ app.post("/api/delete-tag", async (req, res) => {
 //	--------------------------------------- RECORDATORIOS -------------------------------------- \\
 
 app.get("/api/reminders-by-user/:userId", async (req, res) => {
-	let data = await Con.GetReminders(req.params.userId);
+	let data = await Con.getReminders(req.params.userId);
 
 	let Reminders = data.map(eachData => {
 		console.log(
@@ -509,7 +513,8 @@ app.get("/api/reminders-by-user/:userId", async (req, res) => {
 				eachData.T_descripcion,
 				eachData.Dt_fechaVencimiento,
 				eachData.B_isDeleted,
-				eachData.T_Prioridad
+				eachData.T_Prioridad,
+				eachData.B_estado
 
 			);
 
@@ -690,6 +695,64 @@ app.post('/api/update-priority-reminder', async (req, res) =>{
 
 });
 
+// Actualizar estado de recordatorio
+app.post('/api/update-state-reminder', async (req, res) =>{
+	const ID = req.body.P_idToDo;
+	const NEW_STATE = req.body.P_estado;
+
+	try {
+		const RESULT = await Con.updateStateReminder(
+			ID,
+			NEW_STATE
+			
+		);
+
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+
+});
+
+// Actualizar etiquetas de recordatorio
+app.post('/api/update-tags-reminder', async (req, res) =>{
+	const ID = req.body.P_idToDo;
+	const NEW_TAG1 = req.body.P_tag1;
+	const NEW_TAG2 = req.body.P_tag2;
+	const NEW_TAG3 = req.body.P_tag3;
+	const NEW_TAG4 = req.body.P_tag4;
+	const NEW_TAG5 = req.body.P_tag5;
+
+	try {
+		const RESULT = await Con.updateTagsReminder(
+			ID,
+			NEW_TAG1,
+			NEW_TAG2,
+			NEW_TAG3,
+			NEW_TAG4,
+			NEW_TAG5
+			
+		);
+
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+
+});
+
 // Llamado al puerto
 app.listen(PORT);
 
@@ -699,12 +762,6 @@ app.listen(PORT);
 // - Edit etiqueta
 // - Delete etiqueta
 
-// - Get Comentarios [Ya está en GO]
-// - Add comentario [Ya está en GO]
-// - Edit comentario
-// - Delete comentario
-
-// - Get tiposCurso 
 
 
 
