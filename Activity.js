@@ -16,7 +16,7 @@ export class Activity {
         this.times = times;
     }
 
-    static hasCollisions(timesData, hStart, hEnd, day, dStart, dEnd){
+    static hasCollisions(timesData, id, hStart, hEnd, dStart, dEnd){
 
         const between = (val, izq, der) => (val < Math.max(izq, der) && val > Math.min(izq, der));
         const dateToNumber = (date) => (parseInt((date.slice(0, 5)).replace(":", "")));
@@ -24,33 +24,39 @@ export class Activity {
 		/**
 		 * TIMES structure:
 		 * "times": [
+         *  23, -- ID de la actividad
          * "08:00:00", -- START_H
          * "09:40:00", -- END_H
-         *  1 -- DAY
          *  "2026-02-21 00:00:00"
          *  "2026-03-05 23:59:00"
-         * 
          * ],
+         * 
+         * CADA ACTIVIDAD DEBE ESTAR EN EL MISMO DÍA PORQUE ESO YA NO SE EVALÚA.
 		 */
+
         //SET ARGUMENTS TO NUMBERS
         const H_START = dateToNumber(hStart);
-        const H_END = dateToNumber(hEnd)
+        const H_END = dateToNumber(hEnd);
+        const D_START = new Date(dStart);
+        const D_END = new Date(dEnd)
 
         //for each activity time evaluate the collision
         console.log(timesData.length)
 
         for (let i = 0; i < timesData.length; i++) {
 
-            const DATA_START_H = dateToNumber(timesData[i][0]);
-            const DATA_END_H = dateToNumber(timesData[i][1]);
-            const DATA_DAY = timesData[i][2];
+            const DATA_ID = timesData[i][0];
+
+            //SAME ID OF THE ACTIVITY TO CHECK, IGNORE IT
+            if (DATA_ID == id) continue;
+
+            const DATA_START_H = dateToNumber(timesData[i][1]);
+            const DATA_END_H = dateToNumber(timesData[i][2]);
             const DATA_START_D = new Date(timesData[i][3]);
             const DATA_END_D = new Date(timesData[i][2]);
 
             //console.log(DATA_DAY, DATA_START_H, DATA_END_H)
-
-            //If the day isn't the same, ignore it
-            if (DATA_DAY != day) continue;
+            if (DATA_END_D < D_START || D_END < DATA_START_D) continue;
 
             //If the time span it's the same, then a collision exists
             if (H_START == DATA_START_H && H_END == DATA_END_H) return true;

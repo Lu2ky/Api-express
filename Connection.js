@@ -110,157 +110,6 @@ export class Connection {
     }
   }
 
-  async updateNameOfPersonalScheduleByIdCourse(
-    newActivityValue,
-    idPersonalSchedule,
-  ) {
-    const url =
-      "http://" +
-      process.env.API_ADDR +
-      ":" +
-      process.env.API_PORT +
-      "/updateNameOfPersonalScheduleByIdCourse";
-
-    const data = {
-      NewActivityValue: newActivityValue,
-      IdPersonalSchedule: idPersonalSchedule,
-    };
-
-    try {
-      const send = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": process.env.API_KEY,
-        },
-        body: JSON.stringify(data),
-      });
-      const response = await send.json();
-
-      if (send.status == 200) {
-        return send;
-      } else {
-        throw new Error(response.error || "No se q paso papu");
-      }
-    } catch (error) {
-      console.error("Mira este error papu, que raro: ", error);
-    }
-  }
-
-  async updateDescriptionOfPersonalScheduleByIdCourse(
-    newActivityValue,
-    idPersonalSchedule,
-  ) {
-    const url =
-      "http://" +
-      process.env.API_ADDR +
-      ":" +
-      process.env.API_PORT +
-      "/updateDescriptionOfPersonalScheduleByIdCourse";
-
-    const data = {
-      NewActivityValue: newActivityValue,
-      IdPersonalSchedule: idPersonalSchedule,
-    };
-
-    try {
-      const send = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": process.env.API_KEY,
-        },
-        body: JSON.stringify(data),
-      });
-
-      const response = await send.json();
-
-      if (send.status == 200) {
-        return send;
-      } else {
-        throw new Error(response.error || "Me lleva el chanfle");
-      }
-    } catch (error) {
-      console.error("Mira este error papu, que raro: ", error);
-    }
-  }
-
-  async updateStartHourOfPersonalScheduleByIdCourse(
-    newActivityValue,
-    idPersonalSchedule,
-  ) {
-    const url =
-      "http://" +
-      process.env.API_ADDR +
-      ":" +
-      process.env.API_PORT +
-      "/updateStartHourOfPersonalScheduleByIdCourse";
-
-    const data = {
-      NewActivityValue: newActivityValue,
-      IdPersonalSchedule: idPersonalSchedule,
-    };
-
-    try {
-      const send = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": process.env.API_KEY,
-        },
-        body: JSON.stringify(data),
-      });
-
-      const response = await send.json();
-
-      if (send.status == 200) {
-        return send;
-      } else {
-        throw new Error(result.error || "Me lleva el chanfle");
-      }
-    } catch (error) {
-      console.error("Mira este error papu, que raro: ", error);
-    }
-  }
-
-  async updateEndHourOfPersonalScheduleByIdCourse(
-    newActivityValue,
-    idPersonalSchedule,
-  ) {
-    const url =
-      "http://" +
-      process.env.API_ADDR +
-      ":" +
-      process.env.API_PORT +
-      "/updateEndHourOfPersonalScheduleByIdCourse";
-
-    const data = {
-      NewActivityValue: newActivityValue,
-      IdPersonalSchedule: idPersonalSchedule,
-    };
-
-    try {
-      const send = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": process.env.API_KEY,
-        },
-        body: JSON.stringify(data),
-      });
-
-      const response = await send.json();
-
-      if (send.status == 200) {
-        return send;
-      } else {
-        throw new Error(result.error || "Me lleva el chanfle");
-      }
-    } catch (error) {
-      console.error("Mira este error papu, que raro: ", error);
-    }
-  }
-
   async deleteOrRecoveryPersonalScheduleByIdCourse(
     isDeleted,
     idPersonalSchedule,
@@ -300,13 +149,15 @@ export class Connection {
   }
 
   async addPersonalActivity(
-    activity,
-    description,
-    day,
-    startHour,
-    endHour,
-    n_iduser,
-    id_academicperiod,
+    usuario,
+    nombreCurso,
+    descripcion,
+    fechaInicio,
+    fechaFin,
+    dia,
+    horaInicio,
+    horaFin,
+    periodo
   ) {
     const url =
       "http://" +
@@ -316,14 +167,15 @@ export class Connection {
       "/addPersonalActivity";
 
     const data = {
-      Activity: activity,
-      Description: description,
-      N_idTipoCurso: 7,
-      Day: day,
-      StartHour: startHour,
-      EndHour: endHour,
-      N_iduser: n_iduser,
-      Id_AcademicPeriod: id_academicperiod,
+      P_usuario: usuario,
+      P_nombreCurso: nombreCurso,
+      P_descripcion: descripcion,
+      P_fechaInicio: fechaInicio,
+      P_fechaFin: fechaFin,
+      P_dia: dia,
+      P_horaInicio: horaInicio,
+      P_horaFin: horaFin,
+      P_periodo: periodo
     };
 
     try {

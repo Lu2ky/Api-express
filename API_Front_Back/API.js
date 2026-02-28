@@ -11,12 +11,6 @@ import { stringify } from "querystring";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-let GLOBAL_USER = 7//undefined;
-let GLOBAL_SCHEDULE = undefined;
-let GLOBAL_TODOLIST = undefined;
-
-let GLOBAL_TIMES = [];
-
 //INTERCAMBIAR ESTAS DOS LINEAS SI SE QUIERE EJECUTAR EN LOCAL O SI SE SUBIRÁ A PRODUCCION
 
 //dotenv.config();	//PROD
@@ -30,10 +24,6 @@ app.use(express.json());
 let Con = new Connection();
 
 //	Obtener horario oficial
-app.get("/api/global", async (req, res) => {
-
-	res.status(200).json(GLOBAL_USER);
-});
 
 app.get("/api/official-schedule/:userId", async (req, res) => {
 
@@ -112,60 +102,131 @@ app.get("/api/personal-schedule/:userId", async (req, res) => {
   	return res.json(PersonalActivitys);
 });
 
+app.post("/api/add-personal-activity", async (req, res) => {
+  /*
+    data = {
+		id_user
+		
+		subject_name
+		description
+
+		date_start
+		date_end
+
+		hour_start
+		hour_end
+		day
+
+		id_academic_per
+
+		times: [ACTIVITY TIMES]
+
+		TIMES es un arreglo que contiene la información del tiempo de todas
+		las actividades de un día concreto y tiene la siguiente estructura
+
+		times: [
+			[ACT_ID, START_HOUR, END_HOUR, START_DATE, END_DATE],
+			...,
+			[ACT_ID, START_HOUR, END_HOUR, START_DATE, END_DATE]
+		]
+    }
+  */
+	const ID_USER = req.body.id_user;
+
+	const ID_ACADEMIC_PER = req.body.id_academic_per;
+	const NAME = req.body.subject_name;
+	const DESC = req.body.description;
+	
+	const STA_DATE = req.body.date_start;
+	const END_DATE = req.body.date_end;
+
+	const STA_HOUR = req.body.start_hour;
+	const END_HOUR = req.body.end_hour;
+	const DAY = req.body.day;
+	
+	const TIMES = req.body.times;
+
+  	try {
+		if (PersonalAct.hasCollisions(TIMES, -1, STA_HOUR, END_HOUR, STA_DATE, END_DATE)) {
+			return res.status(400).json({
+				error: "Colisión de horarios",
+			});
+    	}
+
+		const RESULT = await Con.addPersonalActivity(
+			ID_USER,
+			NAME,
+			DESC,
+			STA_DATE,
+			END_DATE,
+			DAY,
+			STA_HOUR,
+			END_HOUR,
+			ID_ACADEMIC_PER
+		);
+
+    return res.status(200).json({
+      success: true,
+      data: RESULT,
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      error: "Error interno del servidor",
+    });
+  }
+});
+
 //	Actualizar actividad personal
 app.post("/api/update-personal-activity", async (req, res) => {
 
 	/*
-		type EditPersonalActivity struct {
-			P_idCurso     int    `json:"P_idCurso"`
-			P_nombreCurso string `json:"P_nombreCurso"`
-			P_descripcion string `json:"P_descripcion"`
-			P_fechaInicio string `json:"P_fechaInicio"`
-			P_fechaFin    string `json:"P_fechaFin"`
-			P_dia         int    `json:"P_dia"`
-			P_horaInicio  string `json:"P_horaInicio"`
-			P_horaFin     string `json:"P_horaFin"`
-		}
 		{
 			id_course
 			subject_name
 			description
 			date_start
 			date_end
-			activity_time: {
-				hour_start,
-				hour_end,
-				dia
-			}
 			
+			hour_start,
+			hour_end,
+			dia
+			
+			
+			TIMES es un arreglo que contiene la información del tiempo de todas
+			las actividades de un día concreto y tiene la siguiente estructura
 
 			times: [
-				[h_start, h_end, day],
-				...
+				[ACT_ID, START_HOUR, END_HOUR, START_DATE, END_DATE],
+				...,
+				[ACT_ID, START_HOUR, END_HOUR, START_DATE, END_DATE]
 			]
-
-			EL times NO PUEDE CONTENER EL TIEMPO DE LA ACTIVIDAD QUE SE QUIERE MODIFICAR
+			
 		}
 	*/
 
 	const ID_CURSO = req.body.id_course;
-	const NOMBRE = req.body.subject_name
-	const DESC = req.body.description
-	const F_INICIO = req.body.date_start
-	const F_FIN = req.body.date_end
 
-	const H_INICIO = req.body.activity_time.hour_start
-	const H_FIN = req.body.activity_time.hour_end
-	const DIA = req.body.activity_time.day
+	const NAME = req.body.subject_name;
+	const DESC = req.body.description;
+	
+	const STA_DATE = req.body.date_start;
+	const END_DATE = req.body.date_end;
 
-	const TIMES = req.body.times_to_check
+	const STA_HOUR = req.body.start_hour;
+	const END_HOUR = req.body.end_hour;
+
+	const DAY = req.body.day;
+	
+	const TIMES = req.body.times;
 
 	try {
 		
 		//	Evitar que llegue incompleto el times.
 		if (ACT_TIME != null){
 
-			if (PersonalAct.hasCollisions(TIMES, H_INICIO, H_FIN, DIA)) {
+			if (PersonalAct.hasCollisions(TIMES, ID_CURSO, STA_HOUR, END_HOUR, STA_DATE, END_DATE)) {
 				return res.status(400).json({
 					error: "Colisión de horarios",
 				});
@@ -174,7 +235,7 @@ app.post("/api/update-personal-activity", async (req, res) => {
 
 		const RESULT = await Con.updatePersonalActivity(
 			ID_CURSO,
-			NOMBRE,
+			NAME,
 			DESC,
 			F_INICIO,
 			F_FIN,
@@ -220,69 +281,6 @@ app.post("/api/remove-personal-activity", async (req, res) => {
       success: SUCCESS,
     });
 
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      error: "Error interno del servidor",
-    });
-  }
-});
-
-app.post("/api/add-personal-activity", async (req, res) => {
-  /*
-    data = {
-		id_user
-		id_academic_per
-		subject_name
-		description
-
-		date_start
-		date_end
-
-		hour_start
-		hour_end
-		day
-
-		times_to_check: [ACTIVITY TIMES]
-    }
-  */
-	const ID_USER = GLOBAL_USER;
-
-	const ID_ACADEMIC_PER = req.body.id_academic_per;
-	const NAME = req.body.subject_name;
-	const DESC = req.body.description;
-	
-	const STA_DATE = req.body.date_start;
-	const END_DATE = req.body.date_end;
-	const STA_HOUR = req.body.StartHour;
-	const END_HOUR = req.body.EndHour;
-	const DAY = req.body.Day;
-  
-
-
-  const TIMES = req.body.Times;
-
-  try {
-    if (PersonalAct.hasCollisions(TIMES, STA_HOUR, END_HOUR, DAY)) {
-      return res.status(400).json({
-        error: "Colisión de horarios",
-      });
-    }
-
-    const RESULT = await Con.addPersonalActivity(
-      NAME,
-      DESC,
-      DAY,
-      STA_HOUR,
-      END_HOUR,
-      ID_USER,
-      ID_ACADEMIC_PER,
-    );
-
-    return res.status(200).json({
-      success: true,
-      data: RESULT,
-    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
