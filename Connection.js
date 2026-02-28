@@ -4,11 +4,15 @@ import { dirname, resolve } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 //{path: resolve(__dirname, "../../config/expressapiconfig.env")}
-dotenv.config();
+//dotenv.config();
+dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});
 
 export class Connection {
   constructor() {}
 
+  //	--------------------------------------- ACTIVIDADES -------------------------------------- \\
+
+	// Obtener horario oficial de estudiante
   async GetOfficialScheduleByUserId(id) {
     const url =
       "http://" +
@@ -33,6 +37,7 @@ export class Connection {
     }
   }
 
+	// Obtener horario personal de estudiante
   async GetPersonalScheduleByUserId(id) {
     let data;
     const url =
@@ -58,20 +63,33 @@ export class Connection {
     }
   }
 
-  async updateNameOfPersonalScheduleByIdCourse(
-    newActivityValue,
-    idPersonalSchedule,
+  //  Actualizar actividad personal
+  async updatePersonalActivity(
+    idCurso,
+    nombreCurso,
+    descripcion,
+    fechaInicio,
+    fechaFin,
+    dia,
+    horaInicio,
+    horaFin
   ) {
     const url =
       "http://" +
       process.env.API_ADDR +
       ":" +
       process.env.API_PORT +
-      "/updateNameOfPersonalScheduleByIdCourse";
+      "/updatePersonalScheduleByIdCourse";
 
     const data = {
-      NewActivityValue: newActivityValue,
-      IdPersonalSchedule: idPersonalSchedule,
+      P_idCurso: idCurso,
+      P_nombreCurso: nombreCurso,
+      P_descripcion: descripcion,
+      P_fechaInicio: fechaInicio,
+      P_fechaFin: fechaFin,
+      P_dia: dia,
+      P_horaInicio: horaInicio,
+      P_horaFin: horaFin
     };
 
     try {
@@ -83,6 +101,7 @@ export class Connection {
         },
         body: JSON.stringify(data),
       });
+
       const response = await send.json();
 
       if (send.status == 200) {
@@ -91,124 +110,11 @@ export class Connection {
         throw new Error(response.error || "No se q paso papu");
       }
     } catch (error) {
-      console.error("Mira este error papu, que raro: ", error);
+      console.error("ERROR :sob: ", error);
     }
   }
 
-  async updateDescriptionOfPersonalScheduleByIdCourse(
-    newActivityValue,
-    idPersonalSchedule,
-  ) {
-    const url =
-      "http://" +
-      process.env.API_ADDR +
-      ":" +
-      process.env.API_PORT +
-      "/updateDescriptionOfPersonalScheduleByIdCourse";
-
-    const data = {
-      NewActivityValue: newActivityValue,
-      IdPersonalSchedule: idPersonalSchedule,
-    };
-
-    try {
-      const send = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": process.env.API_KEY,
-        },
-        body: JSON.stringify(data),
-      });
-
-      const response = await send.json();
-
-      if (send.status == 200) {
-        return send;
-      } else {
-        throw new Error(response.error || "Me lleva el chanfle");
-      }
-    } catch (error) {
-      console.error("Mira este error papu, que raro: ", error);
-    }
-  }
-
-  async updateStartHourOfPersonalScheduleByIdCourse(
-    newActivityValue,
-    idPersonalSchedule,
-  ) {
-    const url =
-      "http://" +
-      process.env.API_ADDR +
-      ":" +
-      process.env.API_PORT +
-      "/updateStartHourOfPersonalScheduleByIdCourse";
-
-    const data = {
-      NewActivityValue: newActivityValue,
-      IdPersonalSchedule: idPersonalSchedule,
-    };
-
-    try {
-      const send = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": process.env.API_KEY,
-        },
-        body: JSON.stringify(data),
-      });
-
-      const response = await send.json();
-
-      if (send.status == 200) {
-        return send;
-      } else {
-        throw new Error(result.error || "Me lleva el chanfle");
-      }
-    } catch (error) {
-      console.error("Mira este error papu, que raro: ", error);
-    }
-  }
-
-  async updateEndHourOfPersonalScheduleByIdCourse(
-    newActivityValue,
-    idPersonalSchedule,
-  ) {
-    const url =
-      "http://" +
-      process.env.API_ADDR +
-      ":" +
-      process.env.API_PORT +
-      "/updateEndHourOfPersonalScheduleByIdCourse";
-
-    const data = {
-      NewActivityValue: newActivityValue,
-      IdPersonalSchedule: idPersonalSchedule,
-    };
-
-    try {
-      const send = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": process.env.API_KEY,
-        },
-        body: JSON.stringify(data),
-      });
-
-      const response = await send.json();
-
-      if (send.status == 200) {
-        return send;
-      } else {
-        throw new Error(result.error || "Me lleva el chanfle");
-      }
-    } catch (error) {
-      console.error("Mira este error papu, que raro: ", error);
-    }
-  }
-
+	// Eliminar actividad personal
   async deleteOrRecoveryPersonalScheduleByIdCourse(
     isDeleted,
     idPersonalSchedule,
@@ -247,14 +153,17 @@ export class Connection {
     }
   }
 
+  //  agregar actividad personal
   async addPersonalActivity(
-    activity,
-    description,
-    day,
-    startHour,
-    endHour,
-    n_iduser,
-    id_academicperiod,
+    usuario,
+    nombreCurso,
+    descripcion,
+    fechaInicio,
+    fechaFin,
+    dia,
+    horaInicio,
+    horaFin,
+    periodo
   ) {
     const url =
       "http://" +
@@ -264,14 +173,15 @@ export class Connection {
       "/addPersonalActivity";
 
     const data = {
-      Activity: activity,
-      Description: description,
-      N_idTipoCurso: 7,
-      Day: day,
-      StartHour: startHour,
-      EndHour: endHour,
-      N_iduser: n_iduser,
-      Id_AcademicPeriod: id_academicperiod,
+      P_usuario: usuario,
+      P_nombreCurso: nombreCurso,
+      P_descripcion: descripcion,
+      P_fechaInicio: fechaInicio,
+      P_fechaFin: fechaFin,
+      P_dia: dia,
+      P_horaInicio: horaInicio,
+      P_horaFin: horaFin,
+      P_periodo: periodo
     };
 
     try {
@@ -296,17 +206,14 @@ export class Connection {
     }
   }
 
-  // TO DO:
-
-  //GET TAGS
-  async GetTags() {
-    let data;
+  // Obtener los tipos de cursos disponibles
+  async GetTiposCurso() {
     const url =
       "http://" +
       process.env.API_ADDR +
       ":" +
       process.env.API_PORT +
-      "/GetTags";
+      "/GetTiposCurso/"
     try {
       const rta = await fetch(url, {
         method: "GET",
@@ -315,17 +222,526 @@ export class Connection {
           "X-API-Key": process.env.API_KEY,
         },
       });
-
       if (!rta.ok) throw new Error(`Error: ${rta.status}`);
-
       const data = await rta.json();
       return data;
     } catch (error) {
       console.error("Mira este error papu, que raro: ", error);
     }
   }
+  //	--------------------------------------- COMENTARIOS -------------------------------------- \\
 
-  //GET PERSONAL COMMENTS
+  async GetPersonalComments(userId) {
+    const url =
+        "http://" +
+        process.env.API_ADDR +
+        ":" +
+        process.env.API_PORT +
+        "/GetPersonalComments/" +
+        userId;
 
-  //ADD PERSONAL COMMENT
+		
+    try {
+        const rta = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "X-API-Key": process.env.API_KEY
+            }
+        });
+
+        if (!rta.ok) throw new Error(`Error: ${rta.status}`);
+
+        const data = await rta.json();
+        return data;
+
+    } catch (error) {
+        console.error("Mira este error papu, que raro: ", error);
+    }
+}
+
+	//ADD PERSONAL COMMENT
+
+	async addPersonalComment(
+    N_idHorario,
+    N_idUsuario,
+    N_idCurso,
+    Curso,
+    T_comentario
+) {
+
+    const url =
+        "http://" +
+        process.env.API_ADDR +
+        ":" +
+        process.env.API_PORT +
+        "/addPersonalComment";
+
+    const data = {
+        N_idHorario,
+        N_idUsuario,
+        N_idCurso,
+        Curso,
+        T_comentario
+    };
+
+    try {
+        const send = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-API-Key": process.env.API_KEY
+            },
+            body: JSON.stringify(data)
+        });
+
+        const response = await send.json();
+
+        if (send.status === 200) {
+            return response;
+        } else {
+            throw new Error(response.error || "Error agregando comentario");
+        }
+
+    } catch (error) {
+        console.error("Mira este error papu, que raro: ", error);
+    }
+  }
+
+// UPDATE PERSONAL COMMENT
+async updatePersonalComment(commentId, newComment) {
+
+    const url =
+        "http://" +
+        process.env.API_ADDR +
+        ":" +
+        process.env.API_PORT +
+        "/updatePersonalComment"; 
+
+    try {
+
+        const rta = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-API-Key": process.env.API_KEY
+            },
+            body: JSON.stringify({
+                N_idComentarios: commentId,
+                T_comentario: newComment
+            })
+        });
+
+        if (!rta.ok) throw new Error(`Error: ${rta.status}`);
+
+        const data = await rta.json();
+        return data;
+
+    } catch (error) {
+        console.error("Mira este error papu, que raro: ", error);
+    }
+}
+
+  // DELETE PERSONAL COMMENTS
+  async deletePersonalComment(commentId) {
+
+      const url =
+          "http://" +
+          process.env.API_ADDR +
+          ":" +
+          process.env.API_PORT +
+          "/deletePersonalComment"; 
+
+      try {
+
+          const rta = await fetch(url, {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json",
+                  "X-API-Key": process.env.API_KEY
+              },
+              body: JSON.stringify({
+                  N_idComentarios: commentId
+              })
+          });
+
+          if (!rta.ok) throw new Error(`Error: ${rta.status}`);
+
+          const data = await rta.json();
+          return data;
+
+      } catch (error) {
+          console.error("Mira este error papu, que raro: ", error);
+      }
+  }
+
+  //	--------------------------------------- TAGS -------------------------------------- \\
+
+	// Obtener lista de etiquetas
+	async GetTagsByUserId(id) {
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/GetTagsByUserId/" +
+			id;
+		try {
+			const rta = await fetch(url, {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				}
+			});
+			if (!rta.ok) throw new Error(`Error: ${rta.status}`);
+			const data = await rta.json();
+			return data;
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+	}
+
+	//GET TAGS BY USERID AND COURSE
+
+	async GetTagsByUserAndCourse(userId, courseId) {
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/GetTagsByUserIdAndReminderId/" +
+			userId + "/" + courseId;
+		try {
+			const rta = await fetch(url, {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				}
+			});
+			if (!rta.ok) throw new Error(`Error: ${rta.status}`);
+			const data = await rta.json();
+			return data;
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+	}
+
+	//DELATE TAG
+
+	async DeleteTag(idTag) {
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/deleteTag";
+		try {
+			const rta = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify({ IdTag: idTag })
+			});
+			if (!rta.ok) throw new Error(`Error: ${rta.status}`);
+			const data = await rta.json();
+			return data;
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+	}
+
+  //	--------------------------------------- RECORDATORIOS -------------------------------------- \\
+
+	// Obtener lista de recordatorios
+	async GetReminders(id){
+		const url = 
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/GetReminders/" + 
+			id;
+
+		try {
+
+			const rta = await fetch(url, {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				}
+			});
+
+			if (!rta.ok) throw new Error(`Error: ${rta.status}`);
+
+			const data = await rta.json();
+			return data;
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+
+	}
+
+	// Añadir recordatorio
+	async addReminder(
+		idUser,
+		name,
+		desc,
+		date,
+		priory,
+		state,
+		tag1,
+		tag2,
+		tag3,
+		tag4,
+		tag5
+	
+	){
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/addReminder";
+	
+		const data = {
+			P_usuario: idUser,
+			P_nombre: name,
+			P_descripcion: desc,
+			P_fecha: date,
+			P_prioridad: priory,
+			P_estado: state,
+			P_tag1: tag1,
+			P_tag2: tag2,
+			P_tag3: tag3,
+			P_tag4: tag4,
+			P_tag5: tag5
+
+		};
+
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+
+			const response = await send.json();
+
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "Me lleva el chanfle");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+
+	}
+
+	// Eliminar recordatorio
+	async deleteReminder(
+		idReminder
+		
+	) {
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/deleteOrRecoverReminder";
+
+		const data = {
+			N_idRecordatorio: idReminder
+
+		};
+
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+
+			const response = await send.json();
+
+			if (send.status == 200) {
+				return send;
+			} else {
+				throw new Error(response.error);
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+	}
+
+	// Actualizar nombre de recordatorio
+	async updateNameReminder(
+		idToDo,
+		newName
+		
+	){
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/updateReminder";
+
+		const data = {
+			P_idToDo: idToDo,
+			P_nombre: newName
+		};
+
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+			const response = await send.json();
+
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se q paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+
+	};
+
+	// Actualizar descripción de recordatorio
+	async updateDescReminder(
+		idToDo,
+		newDesc
+		
+	){
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/updateReminder";
+
+		const data = {
+			P_idToDo: idToDo,
+			P_descripcion: newDesc
+		};
+
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+			const response = await send.json();
+
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se q paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+
+	};
+
+	// Actualizar fecha de recordatorio
+	async updateDateReminder(
+		idToDo,
+		newDate
+		
+	){
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/updateReminder";
+
+		const data = {
+			P_idToDo: idToDo,
+			P_fecha: newDate
+		};
+
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+			const response = await send.json();
+
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se q paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+
+	};
+
+	// Actualizar prioridad de recordatorio
+	async updatePrioryReminder(
+		idToDo,
+		newPriory
+		
+	){
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/updateReminder";
+
+		const data = {
+			P_idToDo: idToDo,
+			P_prioridad: newPriory
+		};
+
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+			const response = await send.json();
+
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se q paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+
+	};
 }
