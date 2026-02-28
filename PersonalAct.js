@@ -1,12 +1,6 @@
 import {Activity} from './Activity.js';
 
 export class PersonalAct extends Activity{
-    /*
-    #desc = "";
-
-    get desc(){
-        return this.#desc;
-    }*/
    
     desc;
     classroom;
@@ -31,13 +25,13 @@ export class PersonalAct extends Activity{
 
     getData(){
         return {
+            id_course: this.id,
             subject_name: this.name,
-            desc: this.desc,
+            description: this.desc,
             times: this.times,
-            Tag: this.tag,
+            tag: this.tag,
             date_start: this.date_start,
             date_end: this.date_end,
-            id_course: this.id,
         }
     }
 }
