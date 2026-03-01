@@ -738,4 +738,31 @@ export class Connection {
 			console.error("Mira este error papu, q raro: ", error);
 		}
 	}
+	async authuser(user, pass) {
+		const url =
+			"http://" + procces.env.API_ADDR + ":" + process.env.API_PORT + "/auth";
+
+		const data = {
+			User: user,
+			Pass: pass
+		};
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": procces.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+			const response = await send.json();
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se que paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, q raro: ", error);
+		}
+	}
 }
