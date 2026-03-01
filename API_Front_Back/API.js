@@ -36,7 +36,6 @@ app.get("/api/official-schedule/:userId", async (req, res) => {
 
 		//Procesamiento de los datos.
 		const ACTIVITIES = data.map(eachData => {
-
 			let OfficialActivity = new officialAct(
 				eachData.Course,
 				eachData.Teacher,
@@ -639,7 +638,21 @@ app.post("/api/update-priority-reminder", async (req, res) => {
 		});
 	}
 });
-
+app.post("/api/auth/create-user", async (req, res) => {
+	const USER = req.body.user;
+	const PASS = req.body.pass;
+	try {
+		const RESULT = await Con.adduser(USER, PASS);
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+	} catch (error) {
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+});
 // Llamado al puerto
 app.listen(PORT);
 
