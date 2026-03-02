@@ -4,6 +4,7 @@ import {dirname, resolve} from "path";
 import dotenv from "dotenv";
 import {officialAct} from "../OfficialAct.js";
 import {PersonalAct} from "../PersonalAct.js";
+import {Notification} from "../Notification.js";
 import express from "express";
 import cors from "cors";
 import {stringify} from "querystring";
@@ -645,37 +646,6 @@ app.post("/api/update-priority-reminder", async (req, res) => {
 		});
 	}
 });
-app.post("/api/auth/create-user", async (req, res) => {
-	const USER = req.body.user;
-	const PASS = req.body.pass;
-	try {
-		const RESULT = await Con.adduser(USER, PASS);
-		const success = RESULT != undefined;
-		return res.status(200).json({
-			success: success
-		});
-	} catch (error) {
-		return res.status(500).json({
-			error: "Error interno del servidor"
-		});
-	}
-});
-app.post("/api/auth/validate-user", async (req, res) => {
-	const USER = req.body.user;
-	const PASS = req.body.pass;
-	try {
-		const RESULT = await Con.authuser(USER, PASS);
-		const success = RESULT != undefined;
-		return res.status(200).json({
-			success: success
-		});
-	} catch (error) {
-		return res.status(500).json({
-			error: "Error interno del servidor"
-		});
-	}
-
-});
 
 // Actualizar estado de recordatorio
 app.post('/api/update-state-reminder', async (req, res) =>{
@@ -728,6 +698,123 @@ app.post('/api/update-tags-reminder', async (req, res) =>{
 		});
 	} catch (error) {
 		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+
+});
+
+//	--------------------------------------- NOTIFICACIONES -------------------------------------- \\
+// Obtener notificaciones por id
+app.get("/api/notifications-by-user/:userId", async (req, res) => {
+	let data = await Con.getNotifications(req.params.userId);
+	console.log(data);
+
+	let notifications = data
+		.map(eachData => {
+			let notification = new Notification(
+				eachData.idNotificacion,
+				eachData.idUsuario,
+				eachData.idRecordatorio,
+				eachData.nombre,
+				eachData.descripcion,
+				eachData.fechaEmision
+
+			);
+			return notification.getData();
+
+		})
+		.filter(notification => notification !== null);
+
+	return res.json(notifications);
+});
+
+// Añadir notificaciones
+app.post('/api/add-notification', async (req, res) =>{
+	const ID_TO_DO = req.body.N_idToDoList;
+	const NAME = req.body.T_nombre;
+	const DESC = req.body.T_descripcion;
+	const ISSUE_DATE = req.body.Dt_fechaEmision;
+
+	try {
+		const RESULT = await Con.addNotification(
+			ID_TO_DO,
+			NAME,
+			DESC,
+			ISSUE_DATE
+
+	);
+
+	return res.status(200).json({
+		success: true,
+		data: RESULT
+	});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+
+});
+
+	// Añadir correos
+app.post('/api/add-email', async (req, res) =>{
+	const ID_TO_DO = req.body.N_idToDoList;
+	const ISSUE = req.body.T_asunto;
+	const CONTENT = req.body.T_contenido;
+	const ISSUE_DATE = req.body.Dt_fechaEmision;
+
+	try {
+		const RESULT = await Con.addEmail(
+			ID_TO_DO,
+			ISSUE,
+			CONTENT,
+			ISSUE_DATE
+
+	);
+
+	return res.status(200).json({
+		success: true,
+		data: RESULT
+	});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+
+});
+
+//	------------------------ FUNCIONALIDADES DEL LDAP ------------------------ //
+
+app.post("/api/auth/create-user", async (req, res) => {
+	const USER = req.body.user;
+	const PASS = req.body.pass;
+	try {
+		const RESULT = await Con.adduser(USER, PASS);
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+	} catch (error) {
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+});
+app.post("/api/auth/validate-user", async (req, res) => {
+	const USER = req.body.user;
+	const PASS = req.body.pass;
+	try {
+		const RESULT = await Con.authuser(USER, PASS);
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+	} catch (error) {
 		return res.status(500).json({
 			error: "Error interno del servidor"
 		});

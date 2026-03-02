@@ -3,8 +3,7 @@ import {fileURLToPath} from "url";
 import {dirname, resolve} from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-//{path: resolve(__dirname, "../../config/expressapiconfig.env")}
-//dotenv.config();
+dotenv.config({path: resolve(__dirname, "../expressapiconfig.env")});
 dotenv.config();
 
 export class Connection {
@@ -707,64 +706,6 @@ export class Connection {
 			console.error("Mira este error papu, que raro: ", error);
 		}
 	}
-	async adduser(user, pass) {
-		const url =
-			"http://" +
-			procces.env.API_ADDR +
-			":" +
-			process.env.API_PORT +
-			"/addauthuser";
-
-		const data = {
-			User: user,
-			Pass: pass
-		};
-		try {
-			const send = await fetch(url, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					"X-API-Key": procces.env.API_KEY
-				},
-				body: JSON.stringify(data)
-			});
-			const response = await send.json();
-			if (send.status == 200) {
-				return response;
-			} else {
-				throw new Error(response.error || "No se que paso papu");
-			}
-		} catch (error) {
-			console.error("Mira este error papu, q raro: ", error);
-		}
-	}
-	async authuser(user, pass) {
-		const url =
-			"http://" + procces.env.API_ADDR + ":" + process.env.API_PORT + "/auth";
-
-		const data = {
-			User: user,
-			Pass: pass
-		};
-		try {
-			const send = await fetch(url, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					"X-API-Key": procces.env.API_KEY
-				},
-				body: JSON.stringify(data)
-			});
-			const response = await send.json();
-			if (send.status == 200) {
-				return response;
-			} else {
-				throw new Error(response.error || "No se que paso papu");
-			}
-		} catch (error) {
-			console.error("Mira este error papu, q raro: ", error);
-		}
-	}
 
 	// Actualizar estado de recordatorio
 	async updateStateReminder(
@@ -854,5 +795,192 @@ export class Connection {
 		}
 
 	};
+
+//	--------------------------------------- NOTIFICACIONES -------------------------------------- \\
+
+	// Obtener notificaciones
+	async getNotifications(id){
+		const url = 
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/GetNotifications/" + 
+			id;
+
+		try {
+
+			const rta = await fetch(url, {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				}
+			});
+
+			if (!rta.ok) throw new Error(`Error: ${rta.status}`);
+
+			const data = await rta.json();
+			return data;
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+
+	}
+	
+	// Agregar notificación
+	async addNotification(
+		idToDo,
+		name,
+		desc,
+		issueDate
+	
+	){
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/addNotification";
+	
+		const data = {
+			idToDoList: idToDo,
+			nombre: name,
+			descripcion: desc,
+			fechaEmision: issueDate
+
+		};
+
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+
+			const response = await send.json();
+
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "Me lleva el chanfle");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+
+	}
+
+	// Agregar correo
+	async addEmail(
+		idToDo,
+		issue,
+		content,
+		issueDate
+
+	){
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/addCorreo";
+	
+		const data = {
+			idToDoList: idToDo,
+			asunto: issue,
+			contenido: content,
+			fechaEmision: issueDate
+
+		};
+
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+
+			const response = await send.json();
+
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "Me lleva el chanfle");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+
+	}
+	
+//	------------------------ FUNCIONALIDADES DEL LDAP ------------------------ //
+
+	async adduser(user, pass) {
+		const url =
+			"http://" +
+			procces.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/addauthuser";
+
+		const data = {
+			User: user,
+			Pass: pass
+		};
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": procces.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+			const response = await send.json();
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se que paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, q raro: ", error);
+		}
+	}
+	async authuser(user, pass) {
+		const url =
+			"http://" + procces.env.API_ADDR + ":" + process.env.API_PORT + "/auth";
+
+		const data = {
+			User: user,
+			Pass: pass
+		};
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": procces.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+			const response = await send.json();
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se que paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, q raro: ", error);
+		}
+	}
+
+
 
 }
