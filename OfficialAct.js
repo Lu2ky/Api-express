@@ -22,6 +22,7 @@ export class officialAct extends Activity {
   Credits;
 
   constructor(
+    id,
     subject_name,
     professor_name,
     classroom,
@@ -31,7 +32,7 @@ export class officialAct extends Activity {
     Campus,
     Credits,
   ) {
-    super(-1, subject_name, tag, times);
+    super(id, subject_name, tag, times);
 
     this.professor_name = professor_name;
     this.classroom = classroom;
@@ -42,6 +43,7 @@ export class officialAct extends Activity {
 
   getData(){
     return {
+      id_course: this.id,
       subject_name: this.name,
       professor_name: this.professor_name,
       classroom: this.classroom,

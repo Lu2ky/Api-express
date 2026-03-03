@@ -35,11 +35,12 @@ app.get("/api/official-schedule/:userId", async (req, res) => {
 	try {
 		//Petición a la API de Go
 		let data = await Con.GetOfficialScheduleByUserId(USER_ID);
-		console.log(data);
+
 		//Procesamiento de los datos.
 		const ACTIVITIES = data.map(eachData => {
 			console.log(eachData);
 			let OfficialActivity = new officialAct(
+				eachData.N_idcourse,
 				eachData.Course,
 				eachData.Teacher,
 				eachData.Classroom,
