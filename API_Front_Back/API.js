@@ -4,6 +4,7 @@ import {dirname, resolve} from "path";
 import dotenv from "dotenv";
 import {officialAct} from "../OfficialAct.js";
 import {PersonalAct} from "../PersonalAct.js";
+import {Notification} from "../Notification.js";
 import express from "express";
 import cors from "cors";
 import {stringify} from "querystring";
@@ -26,6 +27,7 @@ let Con = new Connection();
 
 //	--------------------------------------- ACTIVIDADES -------------------------------------- \\
 
+// Obtener horario oficial
 app.get("/api/official-schedule/:userId", async (req, res) => {
 	//	req.params permite obtener los valoeres dados por medio de la URL
 	const USER_ID = req.params.userId;
@@ -33,9 +35,10 @@ app.get("/api/official-schedule/:userId", async (req, res) => {
 	try {
 		//Petición a la API de Go
 		let data = await Con.GetOfficialScheduleByUserId(USER_ID);
-
+		console.log(data);
 		//Procesamiento de los datos.
 		const ACTIVITIES = data.map(eachData => {
+			console.log(eachData);
 			let OfficialActivity = new officialAct(
 				eachData.Course,
 				eachData.Teacher,
@@ -359,7 +362,7 @@ app.post("/api/add-comment", async (req, res) => {
 	}
 });
 
-//update comment
+// Actaulizar comentario
 app.post("/api/update-comment", async (req, res) => {
 	const ID = req.body.N_idComentarios;
 	const NEW_COMMENT = req.body.T_comentario;
@@ -409,6 +412,7 @@ app.post("/api/remove-comment", async (req, res) => {
 
 //	--------------------------------------- TAGS -------------------------------------- \\
 
+// Obtener etiquetas por id usuario
 app.get("/api/tags-by-user/:userId", async (req, res) => {
 	try {
 		const data = await Con.GetTagsByUserId(req.params.userId);
@@ -452,6 +456,7 @@ app.get("/api/tags-by-user-and-reminder/:userId/:reminderId", async (req, res) =
 	}
 });
 
+// Eliminar etiqueta
 app.post("/api/delete-tag", async (req, res) => {
 	try {
 		const {IdTag} = req.body.idTag;
@@ -471,7 +476,7 @@ app.post("/api/delete-tag", async (req, res) => {
 //	--------------------------------------- RECORDATORIOS -------------------------------------- \\
 
 app.get("/api/reminders-by-user/:userId", async (req, res) => {
-	let data = await Con.GetReminders(req.params.userId);
+	let data = await Con.getReminders(req.params.userId);
 
 	let Reminders = data
 		.map(eachData => {
@@ -489,7 +494,9 @@ app.get("/api/reminders-by-user/:userId", async (req, res) => {
 				eachData.T_descripcion,
 				eachData.Dt_fechaVencimiento,
 				eachData.B_isDeleted,
-				eachData.T_Prioridad
+				eachData.T_Prioridad,
+				eachData.B_estado
+
 			);
 
 			return reminder.getData();
@@ -644,6 +651,150 @@ app.post("/api/update-priority-reminder", async (req, res) => {
 		});
 	}
 });
+
+// Actualizar estado de recordatorio
+app.post('/api/update-state-reminder', async (req, res) =>{
+	const ID = req.body.P_idToDo;
+	const NEW_STATE = req.body.P_estado;
+
+	try {
+		const RESULT = await Con.updateStateReminder(
+			ID,
+			NEW_STATE
+			
+		);
+
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+
+});
+
+// Actualizar etiquetas de recordatorio
+app.post('/api/update-tags-reminder', async (req, res) =>{
+	const ID = req.body.P_idToDo;
+	const NEW_TAG1 = req.body.P_tag1;
+	const NEW_TAG2 = req.body.P_tag2;
+	const NEW_TAG3 = req.body.P_tag3;
+	const NEW_TAG4 = req.body.P_tag4;
+	const NEW_TAG5 = req.body.P_tag5;
+
+	try {
+		const RESULT = await Con.updateTagsReminder(
+			ID,
+			NEW_TAG1,
+			NEW_TAG2,
+			NEW_TAG3,
+			NEW_TAG4,
+			NEW_TAG5
+			
+		);
+
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+
+});
+
+//	--------------------------------------- NOTIFICACIONES -------------------------------------- \\
+// Obtener notificaciones por id
+app.get("/api/notifications-by-user/:userId", async (req, res) => {
+	let data = await Con.getNotifications(req.params.userId);
+	console.log(data);
+
+	let notifications = data
+		.map(eachData => {
+			let notification = new Notification(
+				eachData.idNotificacion,
+				eachData.idUsuario,
+				eachData.idRecordatorio,
+				eachData.nombre,
+				eachData.descripcion,
+				eachData.fechaEmision
+
+			);
+			return notification.getData();
+
+		})
+		.filter(notification => notification !== null);
+
+	return res.json(notifications);
+});
+
+// Añadir notificaciones
+app.post('/api/add-notification', async (req, res) =>{
+	const ID_TO_DO = req.body.N_idToDoList;
+	const NAME = req.body.T_nombre;
+	const DESC = req.body.T_descripcion;
+	const ISSUE_DATE = req.body.Dt_fechaEmision;
+
+	try {
+		const RESULT = await Con.addNotification(
+			ID_TO_DO,
+			NAME,
+			DESC,
+			ISSUE_DATE
+
+	);
+
+	return res.status(200).json({
+		success: true,
+		data: RESULT
+	});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+
+});
+
+	// Añadir correos
+app.post('/api/add-email', async (req, res) =>{
+	const ID_TO_DO = req.body.N_idToDoList;
+	const ISSUE = req.body.T_asunto;
+	const CONTENT = req.body.T_contenido;
+	const ISSUE_DATE = req.body.Dt_fechaEmision;
+
+	try {
+		const RESULT = await Con.addEmail(
+			ID_TO_DO,
+			ISSUE,
+			CONTENT,
+			ISSUE_DATE
+
+	);
+
+	return res.status(200).json({
+		success: true,
+		data: RESULT
+	});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+
+});
+
+//	------------------------ FUNCIONALIDADES DEL LDAP ------------------------ //
+
 app.post("/api/auth/create-user", async (req, res) => {
 	const USER = req.body.user;
 	const PASS = req.body.pass;
@@ -673,6 +824,7 @@ app.post("/api/auth/validate-user", async (req, res) => {
 			error: "Error interno del servidor"
 		});
 	}
+
 });
 
 // Llamado al puerto
@@ -684,9 +836,7 @@ app.listen(PORT);
 // - Edit etiqueta
 // - Delete etiqueta
 
-// - Get Comentarios [Ya está en GO]
-// - Add comentario [Ya está en GO]
-// - Edit comentario
-// - Delete comentario
 
-// - Get tiposCurso
+
+
+
