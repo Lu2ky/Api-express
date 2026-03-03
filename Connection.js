@@ -449,6 +449,34 @@ export class Connection {
 	//	--------------------------------------- RECORDATORIOS -------------------------------------- \\
 
 	// Obtener lista de recordatorios
+	async getRemindersTags(id){
+		const url = 
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/GetRemindersTags/" +
+			id;
+
+		try {
+			const rta = await fetch(url, {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				}
+			});
+
+			if (!rta.ok) throw new Error(`Error: ${rta.status}`);
+
+			const data = await rta.json();
+			return data;
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+	}
+
+	// Obtener lista de recordatorios
 	async getReminders(id){
 		const url = 
 			"http://" +
@@ -483,7 +511,6 @@ export class Connection {
 		desc,
 		date,
 		priory,
-		state,
 		tag1,
 		tag2,
 		tag3,
@@ -503,7 +530,6 @@ export class Connection {
 			P_descripcion: desc,
 			P_fecha: date,
 			P_prioridad: priory,
-			P_estado: state,
 			P_tag1: tag1,
 			P_tag2: tag2,
 			P_tag3: tag3,
@@ -520,7 +546,6 @@ export class Connection {
 				},
 				body: JSON.stringify(data)
 			});
-
 			const response = await send.json();
 
 			if (send.status == 200) {
@@ -875,13 +900,50 @@ export class Connection {
 
 	}
 
+	// Actualizar descripción de recordatorio
+	async muteNotifications(id, mail, time_mute) {
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/muteNotification";
+
+		const data = {
+			idUsuario: id,
+			correo: mail,
+			antelacionNotis: time_mute
+		};
+
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+			const raw = await send.text();
+			console.log("Respuesta cruda:", raw);
+			const response = await send.json();
+
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se q paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+	}
+
 	// Agregar correo
 	async addEmail(
 		idToDo,
 		issue,
 		content,
 		issueDate
-
 	){
 		const url =
 			"http://" +

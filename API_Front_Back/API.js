@@ -9,6 +9,7 @@ import express from "express";
 import cors from "cors";
 import {stringify} from "querystring";
 import {Reminder} from "../Reminder.js";
+import { promises } from "dns";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -475,6 +476,58 @@ app.post("/api/delete-tag", async (req, res) => {
 });
 
 //	--------------------------------------- RECORDATORIOS -------------------------------------- \\
+app.get("/api/reminders-tags-by-user/:userId", async (req, res) => {
+	let data = await Con.getRemindersTags(req.params.userId);
+
+	let todo_id = -1;
+	let reminder_pos = -1;
+	let reminders = [];
+
+	data.forEach(eachData => {
+		console.log(eachData.B_isDeleted);
+
+			console.log(eachData)
+
+			if (eachData.B_isDeleted == true) {
+				return;
+			}
+
+			//DETECTA UN CAMBIO
+			if (todo_id != eachData.N_idToDoList){
+				todo_id = eachData.N_idToDoList
+
+
+				let reminder = new Reminder(
+					eachData.N_idToDoList,
+					eachData.N_idUsuario,
+					eachData.N_idRecordatorio,
+					eachData.T_nombre,
+					eachData.T_descripcion,
+					eachData.Dt_fechaVencimiento,
+					eachData.B_isDeleted,
+					eachData.T_Prioridad,
+					eachData.B_estado
+				).getData();
+
+				reminder.tags = [];
+
+				reminders.push(reminder);
+
+				reminder_pos++;
+			}
+
+			//AÑADE EL NOMBRE DE LA TAG AL ACTUAL
+			if (reminders.length > 0 && eachData.B_tag_isDeleted == false){
+
+				reminders[reminder_pos].tags.push({
+					tag_nombre: eachData.T_tag_nombre,
+					tag_id: eachData.N_idEtiqueta
+				})
+			}
+	});
+
+	return res.json(reminders);
+});
 
 app.get("/api/reminders-by-user/:userId", async (req, res) => {
 	let data = await Con.getReminders(req.params.userId);
@@ -756,6 +809,35 @@ app.post('/api/add-notification', async (req, res) =>{
 		success: true,
 		data: RESULT
 	});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+
+});
+
+// Añadir notificaciones
+app.post('/api/mute-notification', async (req, res) =>{
+	const ID = req.body.idUsuario;
+	const MAIL = req.body.correo;
+	const TIME_MUTE = req.body.tiempoMute;
+
+	console.log(ID, MAIL, TIME_MUTE)
+
+	try {
+		const RESULT = await Con.muteNotifications(
+			ID,
+			MAIL,
+			TIME_MUTE
+		);
+
+		return res.status(200).json({
+			success: (RESULT != undefined),
+			data: RESULT
+		});
+
 	} catch (error) {
 		console.error(error);
 		return res.status(500).json({
