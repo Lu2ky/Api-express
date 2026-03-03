@@ -819,7 +819,7 @@ app.post('/api/add-notification', async (req, res) =>{
 });
 
 // Añadir notificaciones
-app.post('/api/mute-notification', async (req, res) =>{
+app.post('/api/config-notification', async (req, res) =>{
 	const ID = req.body.idUsuario;
 	const MAIL = req.body.correo;
 	const TIME_MUTE = req.body.tiempoMute;
@@ -827,7 +827,7 @@ app.post('/api/mute-notification', async (req, res) =>{
 	console.log(ID, MAIL, TIME_MUTE)
 
 	try {
-		const RESULT = await Con.muteNotifications(
+		const RESULT = await Con.configNotifications(
 			ID,
 			MAIL,
 			TIME_MUTE

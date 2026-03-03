@@ -901,7 +901,7 @@ export class Connection {
 	}
 
 	// Actualizar descripción de recordatorio
-	async muteNotifications(id, mail, time_mute) {
+	async configNotifications(id, mail, time_mute) {
 		const url =
 			"http://" +
 			process.env.API_ADDR +
@@ -924,8 +924,7 @@ export class Connection {
 				},
 				body: JSON.stringify(data)
 			});
-			const raw = await send.text();
-			console.log("Respuesta cruda:", raw);
+
 			const response = await send.json();
 
 			if (send.status == 200) {
