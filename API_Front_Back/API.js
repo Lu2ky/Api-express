@@ -220,7 +220,7 @@ app.post("/api/update-personal-activity", async (req, res) => {
 
 	try {
 		//	Evitar que llegue incompleto el times.
-		if (ACT_TIME != null) {
+		if (TIMES != null) {
 			if (
 				PersonalAct.hasCollisions(
 					TIMES,
@@ -241,11 +241,11 @@ app.post("/api/update-personal-activity", async (req, res) => {
 			ID_CURSO,
 			NAME,
 			DESC,
-			F_INICIO,
-			F_FIN,
+			STA_DATE,
+			END_DATE,
 			DAY,
-			H_INICIO,
-			H_FIN
+			STA_HOUR,
+			END_HOUR
 		);
 
 		const SUCCESS = RESULT != undefined;
