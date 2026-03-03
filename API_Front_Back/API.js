@@ -16,8 +16,8 @@ const __dirname = dirname(__filename);
 
 //INTERCAMBIAR ESTAS DOS LINEAS SI SE QUIERE EJECUTAR EN LOCAL O SI SE SUBIRÁ A PRODUCCION
 
-//dotenv.config(); //PROD
-dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
+dotenv.config(); //PROD
+//dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
 
 const app = express();
 const PORT = 28523;
@@ -41,6 +41,7 @@ app.get("/api/official-schedule/:userId", async (req, res) => {
 		const ACTIVITIES = data.map(eachData => {
 			console.log(eachData);
 			let OfficialActivity = new officialAct(
+				eachData.N_idHorario,
 				eachData.N_idcourse,
 				eachData.Course,
 				eachData.Teacher,
@@ -360,23 +361,11 @@ app.get("/api/get-personal-course-comments/:idUser/:idCourse", async (req, res) 
 //	Agregar comentario
 app.post("/api/add-comment", async (req, res) => {
 	const N_ID_HORARIO = req.body.N_idHorario;
-	const N_ID_USUARIO = req.body.N_idUsuario;
-	const N_ID_CURSO = req.body.N_idCurso;
-	const CURSO = req.body.Curso;
 	const T_COMENTARIO = req.body.T_comentario;
 
 	try {
-		if (!N_ID_HORARIO || !N_ID_USUARIO || !N_ID_CURSO || !T_COMENTARIO) {
-			return res.status(400).json({
-				error: "Faltan datos obligatorios"
-			});
-		}
-
 		const RESULT = await Con.addPersonalComment(
 			N_ID_HORARIO,
-			N_ID_USUARIO,
-			N_ID_CURSO,
-			CURSO,
 			T_COMENTARIO
 		);
 
