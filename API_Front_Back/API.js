@@ -415,7 +415,10 @@ app.get("/api/tags-by-user/:userId", async (req, res) => {
 
 		const tags = data
 			.map(eachData => {
-				return eachData.B_isDeleted.Bool ? null : eachData.T_nombre;
+				return eachData.B_isDeleted.Bool ? null :{
+					id: eachData.N_idEtiqueta,
+					nombre: eachData.T_nombre
+				}
 			})
 			.filter(tag => tag !== null);
 
@@ -426,23 +429,26 @@ app.get("/api/tags-by-user/:userId", async (req, res) => {
 	}
 });
 
-app.get("/api/tags-by-user-and-course/:userId/:courseId", async (req, res) => {
+app.get("/api/tags-by-user-and-reminder/:userId/:reminderId", async (req, res) => {
 	try {
 		const data = await Con.GetTagsByUserAndCourse(
 			req.params.userId,
-			req.params.courseId
+			req.params.reminderId
 		);
 
 		const tags = data
 			.map(eachData => {
-				return eachData.B_isDeleted.Bool ? null : eachData.T_nombre;
+				return eachData.B_isDeleted.Bool ? null :{
+					id: eachData.N_idEtiqueta,
+					nombre: eachData.T_nombre
+				}
 			})
 			.filter(tag => tag !== null);
 
 		return res.status(200).json({success: true, data: tags});
 	} catch (error) {
 		console.error("Error:", error);
-		return res.status(500).json({success: false, error: error.message});
+		return res.status(500).json({success: false, error: error.message, data: null});
 	}
 });
 
