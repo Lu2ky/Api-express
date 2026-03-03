@@ -1016,6 +1016,31 @@ export class Connection {
 		}
 	}
 
+	async userinfo(user) {
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/" + user;
+		try {
+			const send = await fetch(url, {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				}
+			});
+			const response = await send.json();
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se que paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, q raro: ", error);
+		}
+	}
 
 
 }

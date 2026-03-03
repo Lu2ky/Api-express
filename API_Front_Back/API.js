@@ -832,6 +832,21 @@ app.post("/api/auth/create-user", async (req, res) => {
 		});
 	}
 });
+	app.get("/api/auth/userdata/:id", async (req,res) => {
+	const ID = req.params.id;
+	try {
+		const RESULT = await Con.getUserData(ID);
+		return res.status(200).json({
+			success: true,
+			data: RESULT
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+});
 app.post("/api/auth/validate-user", async (req, res) => {
 	const USER = req.body.user;
 	const PASS = req.body.pass;
