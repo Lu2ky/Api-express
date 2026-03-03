@@ -920,7 +920,37 @@ export class Connection {
 		}
 
 	}
-	
+
+	// Obtener notificaciones
+	async getUserData(id){
+		const url = 
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/GetUserInfo/" + 
+			id;
+
+		try {
+
+			const rta = await fetch(url, {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				}
+			});
+
+			if (!rta.ok) throw new Error(`Error: ${rta.status}`);
+
+			const data = await rta.json();
+			return data;
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+
+	}
+
 //	------------------------ FUNCIONALIDADES DEL LDAP ------------------------ //
 
 	async adduser(user, pass) {

@@ -793,6 +793,28 @@ app.post('/api/add-email', async (req, res) =>{
 
 });
 
+//	--------------------------------------- INFO DEL USUARIO -------------------------------------- \\
+
+//	Sacar la info del usuario
+app.get("/api/get-personal-comments/:idUser/:idCourse", async (req, res) => {
+	const ID_USER = req.params.idUser;
+	const ID_COURSE = req.params.idCourse;
+
+	try {
+		const RESULT = await Con.GetPersonalComments(ID_USER, ID_COURSE);
+
+		return res.status(200).json({
+			success: true,
+			data: RESULT
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+});
+
 //	------------------------ FUNCIONALIDADES DEL LDAP ------------------------ //
 
 app.post("/api/auth/create-user", async (req, res) => {
