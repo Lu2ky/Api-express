@@ -813,8 +813,8 @@ app.post("/api/auth/validate-user", async (req, res) => {
 		const success = RESULT != undefined;
 		return res.status(200).json({
 			success: success,
-			jwt_token: res.Token,
-			role: res.UserAuth.Roles
+			jwt_token: RESULT.Token,
+			role: RESULT.UserAuth.Roles
 		});
 	} catch (error) {
 		return res.status(500).json({
