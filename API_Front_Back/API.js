@@ -592,7 +592,7 @@ app.post("/api/add-reminder", async (req, res) => {
 	const TAG4 = req.body.P_tag4;
 	const TAG5 = req.body.P_tag5;
     const CLIENT_EMAIL = req.body.P_email; 
-    const MINUTES = req.body.P_minutos_anticipacion || 10;
+    const ADVANCE_NOTICE = req.body.P_tiempo_anticipacion || 10;
 
     try {
         const RESULT = await Con.addReminder(
@@ -617,7 +617,7 @@ app.post("/api/add-reminder", async (req, res) => {
                 TASK_NAME, 
                 DESC,      
                 DATE,      
-                MINUTES,   
+                ADVANCE_NOTICE,   
                 CLIENT_EMAIL
             );
         }
@@ -907,13 +907,17 @@ app.post('/api/add-email', async (req, res) =>{
 });
 
 // Función enviar correo y notificación
-const scheduleEmailAndNotification = (userReferenceId, userName, title, content, dateStr, anticipationMinutes, email) => {
+const scheduleEmailAndNotification = (userReferenceId, userName, title, content, dateStr, advanceNotice, email) => {
     // Procesar la fecha para que sea compatible con JS local
     const isoDate = dateStr.replace(" ", "T");
     const finalDate = new Date(isoDate);
-    
-    // Calcular el momento exacto del aviso 
-    const alertDate = new Date(finalDate.getTime() - (parseInt(anticipationMinutes || 0) * 60000));
+
+	// Conversión de hora string a milisegundos
+	const [h, m, s] = advanceNotice.split(':').map(Number);
+	const milisegundosARestar = ((h * 3600) + (m * 60) + s) * 1000;
+
+
+	const alertDate = new Date(finalDate.getTime() - milisegundosARestar);
     const now = new Date();
 
     console.log(`\n--- [SISTEMA DE PROGRAMACIÓN] ---`);
@@ -924,11 +928,11 @@ const scheduleEmailAndNotification = (userReferenceId, userName, title, content,
 
     // Verificar si la hora de la alerta es futura
     if (alertDate > now) {
-        // Se programa la tarea
-        const job = schedule.scheduleJob(alertDate, async () => {
-            console.log(`\n[TRIGGER] Ejecutando avisos para: ${title}`);
 
-            const commonPayload = {
+        const job = schedule.scheduleJob(alertDate, async () => {
+            console.log(`\nEjecutando avisos para: ${title}`);
+
+            const emailData = {
                 user: userName,         
                 destinatario: email,   
                 actividad: title,      
@@ -936,47 +940,53 @@ const scheduleEmailAndNotification = (userReferenceId, userName, title, content,
                 horaInicio: alertDate.toISOString(),
                 horaFinal: finalDate.toISOString(),
                 dia: finalDate.getDate()
+				
             };
 
-            // Envío de correo
             try {
                 const emailResponse = await fetch('http://209.25.140.25:27270/api/sendEmail', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(commonPayload)
+                    body: JSON.stringify(emailData)
+
                 });
 
                 if (emailResponse.ok) {
                     console.log(`Correo enviado con éxito a ${email}!`);
+
                 } else {
                     const errorDetail = await emailResponse.json().catch(() => ({}));
                     console.log(`Servidor .25 rechazó (422/400):`, errorDetail);
+
                 }
             } catch (err) {
                 console.error("Error de conexión al servicio de correo:", err.message);
+
             }
 
-            // Notificación local
             try {
-                await fetch('http://localhost:3000/api/add-notification', { 
+                await fetch('http://localhost:28523/api/add-notification', { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         userId: userReferenceId, 
                         message: `Recordatorio: ${title}`
+
                     })
                 });
                 console.log("Notificación enviada al servidor local");
-            } catch (err) {
 
+            } catch (err) {
+        
             }
         });
 
         if (job) {
             console.log("Recordatorio enlazado al cronómetro con éxito");
+
         }
     } else {
-        // Este mensaje sale si en Postman pones una hora que ya pasó
+
         console.log("La hora de aviso ya pasó. No se puede programar.");
     }
 };
