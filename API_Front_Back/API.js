@@ -16,8 +16,8 @@ const __dirname = dirname(__filename);
 
 //INTERCAMBIAR ESTAS DOS LINEAS SI SE QUIERE EJECUTAR EN LOCAL O SI SE SUBIRÁ A PRODUCCION
 
-dotenv.config(); //PROD
-//dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
+//dotenv.config(); //PROD
+dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
 
 const app = express();
 const PORT = 28523;
@@ -310,16 +310,44 @@ app.get("/api/course-types", async (req, res) => {
 //	--------------------------------------- COMENTARIOS -------------------------------------- \\
 
 //	Sacar los comentarios
-app.get("/api/get-personal-comments/:idUser/:idCourse", async (req, res) => {
+app.get("/api/get-personal-comments/:idUser", async (req, res) => {
 	const ID_USER = req.params.idUser;
-	const ID_COURSE = req.params.idCourse;
 
 	try {
-		const RESULT = await Con.GetPersonalComments(ID_USER, ID_COURSE);
+		const RESULT = await Con.GetPersonalComments(ID_USER);
+
+		let comentarios = RESULT.map(eachData => {
+
+			return eachData.B_isDeleted.Bool ? null : eachData;
+		}).filter(comment => comment != null);
 
 		return res.status(200).json({
 			success: true,
-			data: RESULT
+			data: comentarios
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+});
+
+//	Sacar los comentarios por curso
+app.get("/api/get-personal-course-comments/:idUser/:idCourse", async (req, res) => {
+	const ID_USER = req.params.idUser;
+	const ID_COURSE = req.params.idCourse
+	try {
+		const RESULT = await Con.GetPersonalCourseComments(ID_USER, ID_COURSE);
+
+		let comentarios = RESULT.map(eachData => {
+
+			return eachData.B_isDeleted.Bool ? null : eachData;
+		}).filter(comment => comment != null);
+
+		return res.status(200).json({
+			success: true,
+			data: comentarios
 		});
 	} catch (error) {
 		console.error(error);
