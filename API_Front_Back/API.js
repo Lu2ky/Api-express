@@ -297,7 +297,7 @@ app.get("/api/course-types", async (req, res) => {
 
 	let tiposCurso = data
 		.map(eachData => {
-			if (eachData.IsDeleted == true) {
+			if (eachData.B_isDeleted == true) {
 				return null;
 			}
 
@@ -436,7 +436,7 @@ app.get("/api/tags-by-user/:userId", async (req, res) => {
 	try {
 		const data = await Con.GetTagsByUserId(req.params.userId);
 
-		const tags = data
+		const tags = data == null ? null : data
 			.map(eachData => {
 				return eachData.B_isDeleted.Bool ? null :{
 					id: eachData.N_idEtiqueta,
@@ -459,7 +459,7 @@ app.get("/api/tags-by-user-and-reminder/:userId/:reminderId", async (req, res) =
 			req.params.reminderId
 		);
 
-		const tags = data
+		const tags = data == null ? null : data
 			.map(eachData => {
 				return eachData.B_isDeleted.Bool ? null :{
 					id: eachData.N_idEtiqueta,
