@@ -796,15 +796,14 @@ app.post('/api/add-email', async (req, res) =>{
 //	--------------------------------------- INFO DEL USUARIO -------------------------------------- \\
 
 //	Sacar la info del usuario
-app.get("/api/get-personal-comments/:idUser/:idCourse", async (req, res) => {
+app.get("/api/get-user-data/:idUser", async (req, res) => {
 	const ID_USER = req.params.idUser;
-	const ID_COURSE = req.params.idCourse;
 
 	try {
-		const RESULT = await Con.GetPersonalComments(ID_USER, ID_COURSE);
+		const RESULT = await Con.getUserData(ID_USER);
 
 		return res.status(200).json({
-			success: true,
+			success: RESULT != undefined,
 			data: RESULT
 		});
 	} catch (error) {
