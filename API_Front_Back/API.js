@@ -608,11 +608,13 @@ app.post("/api/add-reminder", async (req, res) => {
 			TAG5
 		);
 
-        await Con.addEmail(IDUSER, TASK_NAME, DESC, DATE);
+		const ID_TO_DO = RESULT.InsertedId;
+
+        await Con.addEmail(ID_TO_DO, TASK_NAME, DESC, DATE);
 
         if (RESULT) {
             scheduleEmailAndNotification(
-                IDUSER,    
+                ID_TO_DO,    
                 USER_NAME, 
                 TASK_NAME, 
                 DESC,      
@@ -820,10 +822,10 @@ app.get("/api/notifications-by-user/:userId", async (req, res) => {
 
 // Añadir notificaciones
 app.post('/api/add-notification', async (req, res) =>{
-	const ID_TO_DO = req.body.N_idToDoList;
-	const NAME = req.body.T_nombre;
-	const DESC = req.body.T_descripcion;
-	const ISSUE_DATE = req.body.Dt_fechaEmision;
+	const ID_TO_DO = req.body.idToDoList;
+	const NAME = req.body.nombre;
+	const DESC = req.body.descripcion;
+	const ISSUE_DATE = req.body.fechaEmision;
 
 	try {
 		const RESULT = await Con.addNotification(
@@ -876,38 +878,8 @@ app.post('/api/config-notification', async (req, res) =>{
 
 });
 
-//	--------------------------------------- CORREOS -------------------------------------- \\
-// Añadir log de correo
-app.post('/api/add-email', async (req, res) =>{
-	const ID_TO_DO = req.body.N_idToDoList;
-	const ISSUE = req.body.T_asunto;
-	const CONTENT = req.body.T_contenido;
-	const ISSUE_DATE = req.body.Dt_fechaEmision;
-
-	try {
-		const RESULT = await Con.addEmail(
-			ID_TO_DO,
-			ISSUE,
-			CONTENT,
-			ISSUE_DATE
-
-	);
-
-	return res.status(200).json({
-		success: true,
-		data: RESULT
-	});
-	} catch (error) {
-		console.error(error);
-		return res.status(500).json({
-			error: "Error interno del servidor"
-		});
-	}
-
-});
-
 // Función enviar correo y notificación
-const scheduleEmailAndNotification = (userReferenceId, userName, title, content, dateStr, advanceNotice, email) => {
+const scheduleEmailAndNotification = (idToDo, userName, title, content, dateStr, advanceNotice, email) => {
     // Procesar la fecha para que sea compatible con JS local
     const isoDate = dateStr.replace(" ", "T");
     const finalDate = new Date(isoDate);
@@ -920,11 +892,10 @@ const scheduleEmailAndNotification = (userReferenceId, userName, title, content,
 	const alertDate = new Date(finalDate.getTime() - milisegundosARestar);
     const now = new Date();
 
-    console.log(`\n--- [SISTEMA DE PROGRAMACIÓN] ---`);
+    console.log(`\nSISTEMA DE PROGRAMACIÓN`);
     console.log(`Usuario: ${userName}`);
     console.log(`Actividad: ${title}`);
     console.log(`Hora de Alerta: ${alertDate.toLocaleString()}`);
-    console.log(`---------------------------------\n`);
 
     // Verificar si la hora de la alerta es futura
     if (alertDate > now) {
@@ -942,6 +913,14 @@ const scheduleEmailAndNotification = (userReferenceId, userName, title, content,
                 dia: finalDate.getDate()
 				
             };
+
+			const notiDate = {
+				idToDoList: idToDo, 
+				nombre: `Recordatorio: ${title}`,
+				descripcion: content,
+				fechaEmision: dateStr
+
+			}
 
             try {
                 const emailResponse = await fetch('http://209.25.140.25:27270/api/sendEmail', {
@@ -968,17 +947,27 @@ const scheduleEmailAndNotification = (userReferenceId, userName, title, content,
                 await fetch('http://localhost:28523/api/add-notification', { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: userReferenceId, 
-                        message: `Recordatorio: ${title}`
-
-                    })
+                    body: JSON.stringify(notiDate)
                 });
                 console.log("Notificación enviada al servidor local");
 
             } catch (err) {
         
             }
+
+			try {
+
+                await Con.addEmail(
+                    idToDo,            
+                    `Recordatorio: ${title}`, 
+                    content,         
+                    dateStr
+                );
+                console.log("Log de correo guardado correctamente en la BD.");
+            } catch (dbError) {
+                console.error("Error al guardar el log de correo:", dbError.message);
+            }
+
         });
 
         if (job) {
