@@ -18,8 +18,8 @@ const __dirname = dirname(__filename);
 
 //INTERCAMBIAR ESTAS DOS LINEAS SI SE QUIERE EJECUTAR EN LOCAL O SI SE SUBIRÁ A PRODUCCION
 
-dotenv.config(); //PROD
-// dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
+// dotenv.config(); //PROD
+dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
 
 const app = express();
 const PORT = 28523;
@@ -959,7 +959,7 @@ const scheduleEmailAndNotification = (idToDo, userName, title, content, dateStr,
                 await fetch("http://" +
 				process.env.API_ADDR +
 				":" +
-				"9242" +
+				process.env.LOOP_PORT +
 				"/api/add-notification", { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1099,6 +1099,7 @@ const emailAndAdvanceNoticeUser = async (idUser) => {
 };
 
 // Recibir codigo usuario
+/*
 app.post('/api/usuario-data', async (req, res) => {
     try {
         // Extraemos el atributo 'codigoUsuario' del cuerpo de la petición
@@ -1119,6 +1120,8 @@ app.post('/api/usuario-data', async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
+
+*/
 
 //	------------------------ FUNCIONALIDADES DEL LDAP ------------------------ //
 
