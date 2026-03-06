@@ -911,14 +911,12 @@ const scheduleEmailAndNotification = (idToDo, userName, title, content, dateStr,
             console.log(`\nEjecutando avisos para: ${title}`);
 
             const emailData = {
-                user: userName,         
+                user: userName,    
+				horaInicio: ALERT_DATE.toLocaleTimeString('en-GB'),     
+				horaFinal: FINAL_DATE.toLocaleTimeString('en-GB'),
+				dia: FINAL_DATE.getDate(),
                 destinatario: email,   
-                actividad: title,      
-                contenido: content,    
-                horaInicio: ALERT_DATE.toLocaleTimeString('en-GB'),
-                horaFinal: FINAL_DATE.toLocaleTimeString('en-GB'),
-                dia: FINAL_DATE.getDate()
-				
+                actividad: title, 
             };
 			
 			const ALERT_DATE_STRING = ALERT_DATE.toLocaleString('sv-SE').replace('T', ' ');
