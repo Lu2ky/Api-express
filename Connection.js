@@ -1183,10 +1183,6 @@ export class Connection {
 	}
 
 
-=======
->>>>>>> c713b18bdd353537b45718af222beabd0bf011f4
-  constructor() {}
-
   //	--------------------------------------- ACTIVIDADES -------------------------------------- \\
 
   // Obtener horario oficial de estudiante
@@ -2182,8 +2178,6 @@ export class Connection {
     }
   }
 
-<<<<<<< HEAD
-=======
   //	--------------------------------------- IMPORTAR HORARIO -------------------------------------- \\
 
   async importSchedule(
@@ -2252,7 +2246,7 @@ export class Connection {
     }
   }
 
->>>>>>> c713b18bdd353537b45718af222beabd0bf011f4
+
   //	------------------------ FUNCIONALIDADES DEL LDAP ------------------------ //
 
   async adduser(user, pass) {
@@ -2313,8 +2307,7 @@ export class Connection {
       console.error("Mira este error papu, q raro: ", error);
     }
   }
-<<<<<<< HEAD
-=======
+
 
   async userinfo(user) {
     const url =
@@ -2342,7 +2335,7 @@ export class Connection {
       console.error("Mira este error papu, q raro: ", error);
     }
   }
->>>>>>> c713b18bdd353537b45718af222beabd0bf011f4
+
   async adduseradmin(user, pass) {
     const url =
       "http://" +
