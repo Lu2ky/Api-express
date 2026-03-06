@@ -1286,4 +1286,3 @@ export class Connection {
 		}
 	}
 }
-
