@@ -960,7 +960,7 @@ const scheduleEmailAndNotification = (idToDo, userName, title, content, dateStr,
 				process.env.API_ADDR +
 				":" +
 				process.env.API_PORT +
-				"/addNotification", { 
+				"/api/add-notification", { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(notiDate)
@@ -1074,6 +1074,8 @@ app.get("/api/get-user-data/:idUser", async (req, res) => {
 
 //	------------------------ FUNCIONES EXTRA ------------------------ //
 
+
+// 
 const emailAndAdvanceNoticeUser = async (idUser) => {
 	try {
 			const response = await Con.getUserData(idUser);
@@ -1095,6 +1097,29 @@ const emailAndAdvanceNoticeUser = async (idUser) => {
 			throw error; 
 		}
 };
+
+// Recibir codigo usuario
+app.post('/api/usuario-data', async (req, res) => {
+    try {
+        // Extraemos el atributo 'codigoUsuario' del cuerpo de la petición
+        const { codigoUsuario } = req.body;
+
+        if (!codigoUsuario) {
+            return res.status(400).json({ error: "El código de usuario es obligatorio" });
+        }
+
+        console.log(`Recibido código de usuario: ${codigoUsuario}`);
+
+        // Aquí tu lógica (ej. buscar en la BD con Con.getUser(codigoUsuario))
+        // ...
+
+        res.status(200).json({ message: "Datos recibidos correctamente", userCode: codigoUsuario });
+
+    } catch (error) {
+        console.error("Error en el endpoint:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
 
 //	------------------------ FUNCIONALIDADES DEL LDAP ------------------------ //
 
