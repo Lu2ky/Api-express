@@ -960,7 +960,7 @@ const scheduleEmailAndNotification = (idToDo, userName, title, content, dateStr,
 				process.env.API_ADDR +
 				":" +
 				process.env.API_PORT +
-				"/api/add-notification", { 
+				"/addNotification", { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(notiDate)
