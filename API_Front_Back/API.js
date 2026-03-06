@@ -19,7 +19,7 @@ const __dirname = dirname(__filename);
 //INTERCAMBIAR ESTAS DOS LINEAS SI SE QUIERE EJECUTAR EN LOCAL O SI SE SUBIRÁ A PRODUCCION
 
 dotenv.config(); //PROD
-dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
+// dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
 
 const app = express();
 const PORT = 28523;
@@ -931,7 +931,11 @@ const scheduleEmailAndNotification = (idToDo, userName, title, content, dateStr,
 
             try {
 				console.log(`Enviando correo a ${email} con los siguientes datos:`, emailData);
-                const emailResponse = await fetch('http://209.25.140.25:27270/api/sendEmail', {
+                const emailResponse = await fetch("http://" +
+				process.env.EMAIL_ADDR +
+				":" +
+				process.env.EMAIL_PORT +
+				"/api/sendEmail", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(emailData)
@@ -952,7 +956,11 @@ const scheduleEmailAndNotification = (idToDo, userName, title, content, dateStr,
             }
 
             try {
-                await fetch('http://209.25.140.25:9242/api/add-notification', { 
+                await fetch("http://" +
+				process.env.API_ADDR +
+				":" +
+				process.env.API_PORT +
+				"/api/add-notification", { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(notiDate)
@@ -1154,12 +1162,11 @@ app.post("/api/auth/add-admin", async (req, res) => {
   }
 });
 
-
-app.post("/api/auth/change-password", async (req, res) => {
+app.post("/api/auth/add-admin", async (req, res) => {
 	const USER = req.body.user;
 	const PASS = req.body.pass;
 	try {
-		const RESULT = await Con.changepassword(USER, PASS);
+		const RESULT = await Con.addadmin(USER, PASS);
 		const success = RESULT != undefined;
 		return res.status(200).json({
 			success: success
