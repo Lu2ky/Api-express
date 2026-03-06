@@ -1039,7 +1039,7 @@ export class Connection {
 	async adduser(user, pass) {
 		const url =
 			"http://" +
-			procces.env.API_ADDR +
+			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
 			"/addauthuser";
@@ -1053,7 +1053,7 @@ export class Connection {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
-					"X-API-Key": procces.env.API_KEY
+					"X-API-Key": process.env.API_KEY
 				},
 				body: JSON.stringify(data)
 			});
@@ -1069,7 +1069,11 @@ export class Connection {
 	}
 	async authuser(user, pass) {
 		const url =
-			"http://" + procces.env.API_ADDR + ":" + process.env.API_PORT + "/auth";
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/auth";
 
 		const data = {
 			User: user,
@@ -1080,7 +1084,7 @@ export class Connection {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
-					"X-API-Key": procces.env.API_KEY
+					"X-API-Key": process.env.API_KEY
 				},
 				body: JSON.stringify(data)
 			});

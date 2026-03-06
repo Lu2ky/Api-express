@@ -938,7 +938,9 @@ app.post("/api/auth/validate-user", async (req, res) => {
 		const RESULT = await Con.authuser(USER, PASS);
 		const success = RESULT != undefined;
 		return res.status(200).json({
-			success: success
+			success: success,
+			jwt_token: RESULT.Token,
+			role: RESULT.UserAuth.Roles
 		});
 	} catch (error) {
 		return res.status(500).json({
