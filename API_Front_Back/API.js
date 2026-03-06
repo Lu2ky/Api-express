@@ -840,6 +840,7 @@ app.post('/api/config-notification', async (req, res) =>{
 	const ID = req.body.idUsuario;
 	const MAIL = req.body.correo;
 	const TIME_MUTE = req.body.tiempoMute;
+	const CELLPHONE = req.body.telefono;
 
 	console.log(ID, MAIL, TIME_MUTE)
 
@@ -847,7 +848,8 @@ app.post('/api/config-notification', async (req, res) =>{
 		const RESULT = await Con.configNotifications(
 			ID,
 			MAIL,
-			TIME_MUTE
+			TIME_MUTE,
+			CELLPHONE
 		);
 
 		return res.status(200).json({
