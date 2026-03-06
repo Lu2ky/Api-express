@@ -19,7 +19,7 @@ const __dirname = dirname(__filename);
 //INTERCAMBIAR ESTAS DOS LINEAS SI SE QUIERE EJECUTAR EN LOCAL O SI SE SUBIRÁ A PRODUCCION
 
 dotenv.config(); //PROD
-dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
+//dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
 
 const app = express();
 const PORT = 28523;
@@ -1110,7 +1110,8 @@ app.post("/api/auth/create-user", async (req, res) => {
 		});
 	}
 });
-	app.get("/api/auth/userdata/:id", async (req,res) => {
+	
+app.get("/api/auth/userdata/:id", async (req,res) => {
 	const ID = req.params.id;
 	try {
 		const RESULT = await Con.getUserData(ID);
@@ -1125,6 +1126,7 @@ app.post("/api/auth/create-user", async (req, res) => {
 		});
 	}
 });
+
 app.post("/api/auth/validate-user", async (req, res) => {
 	const USER = req.body.user;
 	const PASS = req.body.pass;
@@ -1143,6 +1145,7 @@ app.post("/api/auth/validate-user", async (req, res) => {
 	}
 
 });
+
 app.post("/api/auth/add-admin", async (req, res) => {
   const USER = req.body.user;
   const PASS = req.body.pass;
