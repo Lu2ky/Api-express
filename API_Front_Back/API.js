@@ -10,6 +10,8 @@ import cors from "cors";
 import {stringify} from "querystring";
 import {Reminder} from "../Reminder.js";
 import { promises } from "dns";
+import schedule from 'node-schedule';
+import e from "express";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -17,7 +19,7 @@ const __dirname = dirname(__filename);
 //INTERCAMBIAR ESTAS DOS LINEAS SI SE QUIERE EJECUTAR EN LOCAL O SI SE SUBIRÁ A PRODUCCION
 
 dotenv.config(); //PROD
-//dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
+dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
 
 const app = express();
 const PORT = 28523;
@@ -584,10 +586,10 @@ app.get("/api/reminders-by-user/:userId", async (req, res) => {
 
 // Añadir recordatorio
 app.post("/api/add-reminder", async (req, res) => {
-	const IDUSER = req.body.P_usuario;
-	const NAME = req.body.P_nombre;
-	const DESC = req.body.P_descripcion;
-	const DATE = req.body.P_fecha;
+    const IDUSER = req.body.P_usuario;
+    const TASK_NAME = req.body.P_nombre;
+    const DESC = req.body.P_descripcion;
+    const DATE = req.body.P_fecha;
 	const PRIORY = req.body.P_prioridad;
 	const TAG1 = req.body.P_tag1;
 	const TAG2 = req.body.P_tag2;
@@ -595,12 +597,14 @@ app.post("/api/add-reminder", async (req, res) => {
 	const TAG4 = req.body.P_tag4;
 	const TAG5 = req.body.P_tag5;
 
-	try {
-		const RESULT = await Con.addReminder(
-			IDUSER,
-			NAME,
-			DESC,
-			DATE,
+	const USER_CODE = req.body.P_codigo_usuario;
+
+    try {
+        const RESULT = await Con.addReminder(
+			IDUSER, 
+			TASK_NAME, 
+			DESC, 
+			DATE, 
 			PRIORY,
 			TAG1,
 			TAG2,
@@ -609,16 +613,29 @@ app.post("/api/add-reminder", async (req, res) => {
 			TAG5
 		);
 
-		return res.status(200).json({
-			success: true,
-			data: RESULT
-		});
-	} catch (error) {
-		console.error(error);
-		return res.status(500).json({
-			error: "Error interno del servidor"
-		});
-	}
+
+		const ID_TO_DO = RESULT.InsertedId;
+		const USER_QUERY = await emailAndAdvanceNoticeUser(USER_CODE);
+		const USER_NAME = USER_QUERY.P_nombreUsuario;
+		const ADVANCE_NOTICE = USER_QUERY.P_antelacionNotis;
+		const CLIENT_EMAIL = USER_QUERY.P_correo;
+
+        if (RESULT) {
+            scheduleEmailAndNotification(
+                ID_TO_DO,    
+                USER_NAME, 
+                TASK_NAME, 
+                DESC,      
+                DATE,      
+                ADVANCE_NOTICE,   
+                CLIENT_EMAIL
+            );
+        }
+        return res.status(200).json({ success: true, data: RESULT });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Error interno" });
+    }
 });
 
 // Eliminar recordatorio
@@ -813,10 +830,10 @@ app.get("/api/notifications-by-user/:userId", async (req, res) => {
 
 // Añadir notificaciones
 app.post('/api/add-notification', async (req, res) =>{
-	const ID_TO_DO = req.body.N_idToDoList;
-	const NAME = req.body.T_nombre;
-	const DESC = req.body.T_descripcion;
-	const ISSUE_DATE = req.body.Dt_fechaEmision;
+	const ID_TO_DO = req.body.idToDoList;
+	const NAME = req.body.nombre;
+	const DESC = req.body.descripcion;
+	const ISSUE_DATE = req.body.fechaEmision;
 
 	try {
 		const RESULT = await Con.addNotification(
@@ -871,32 +888,163 @@ app.post('/api/config-notification', async (req, res) =>{
 
 });
 
-	// Añadir correos
-app.post('/api/add-email', async (req, res) =>{
-	const ID_TO_DO = req.body.N_idToDoList;
-	const ISSUE = req.body.T_asunto;
-	const CONTENT = req.body.T_contenido;
-	const ISSUE_DATE = req.body.Dt_fechaEmision;
+// Función enviar correo y notificación
+const scheduleEmailAndNotification = (idToDo, userName, title, content, dateStr, advanceNotice, email) => {
+    // Procesar la fecha para que sea compatible con JS local
+    const ISO_DATE = dateStr.replace(" ", "T");
+    const FINAL_DATE = new Date(ISO_DATE);
+
+	// Conversión de hora string a milisegundos
+	const [H, M, S] = advanceNotice.split(':').map(Number);
+	const MILISECONDS_TO_SUBTRACT = ((H * 3600) + (M * 60) + S) * 1000;
+
+
+	const ALERT_DATE = new Date(FINAL_DATE.getTime() - MILISECONDS_TO_SUBTRACT);
+    const NOW = new Date();
+
+    console.log(`\nSISTEMA DE PROGRAMACIÓN`);
+    console.log(`Usuario: ${userName}`);
+    console.log(`Actividad: ${title}`);
+    console.log(`Hora de Alerta: ${ALERT_DATE.toLocaleString()}`);
+
+	console.log("HORA ACTUAL (servidor):", NOW.toString());
+	console.log("HORA PROGRAMADA (alerta):", ALERT_DATE.toString());
+
+    // Verificar si la hora de la alerta es futura
+    if (ALERT_DATE > NOW) {
+        const job = schedule.scheduleJob(ALERT_DATE, async () => {
+            console.log(`\nEjecutando avisos para: ${title}`);
+
+            const emailData = {
+                user: userName,    
+				horaInicio: ALERT_DATE.toLocaleTimeString('en-GB'),     
+				horaFinal: FINAL_DATE.toLocaleTimeString('en-GB'),
+				dia: FINAL_DATE.getDate(),
+                destinatario: email,   
+                actividad: title,       
+            };
+			
+			const ALERT_DATE_STRING = ALERT_DATE.toLocaleString('sv-SE').replace('T', ' ');
+
+			const notiDate = {
+				idToDoList: idToDo, 
+				nombre: `Recordatorio: ${title}`,
+				descripcion: content,
+				fechaEmision: ALERT_DATE_STRING
+
+			}
+
+            try {
+				console.log(`Enviando correo a ${email} con los siguientes datos:`, emailData);
+                const emailResponse = await fetch('http://209.25.140.25:27270/api/sendEmail', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(emailData)
+
+                });
+				console.log(`Respuesta del servidor .25:`, emailResponse.status, emailResponse.statusText);
+                if (emailResponse.ok) {
+                    console.log(`Correo enviado con éxito a ${email}!`);
+
+                } else {
+                    const errorDetail = await emailResponse.json().catch(() => ({}));
+                    console.log(`Servidor .25 rechazó (422/400):`, errorDetail);
+
+                }
+            } catch (err) {
+                console.error("Error de conexión al servicio de correo:", err.message);
+ 
+            }
+
+            try {
+                await fetch('http://209.25.140.25:9242/api/add-notification', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(notiDate)
+                });
+                console.log("Notificación enviada al servidor local");
+
+            } catch (err) {
+                console.error("Error al enviar la notificación:", err.message);	
+            }
+
+			try {
+
+                await Con.addEmail(
+                    idToDo,            
+                    `Recordatorio: ${title}`, 
+                    content,         
+                    dateStr
+                );
+                console.log("Log de correo guardado correctamente en la BD.");
+            } catch (dbError) {
+                console.error("Error al guardar el log de correo:", dbError.message);
+            }
+
+        });
+
+        if (job) {
+            console.log("Recordatorio enlazado al cronómetro con éxito");
+
+        }
+    } else {
+
+        console.log("La hora de aviso ya pasó. No se puede programar.");
+    }
+};
+
+//	--------------------------------------- IMPORTAR HORARIO -------------------------------------- \\
+
+app.post('/api/import-schedule', async (req, res) =>{
+	const NOMBRE = req.body.nombre;
+	const SEMESTRE = req.body.semestre;
+	const PROGRAMA = req.body.programa;
+	const COD_USUARIO = req.body.codUsuario;
+	const NRC = req.body.nrc;
+	const NOMBRE_CURSO = req.body.nombreCurso;
+	const DOCENTE = req.body.docente;
+	const CREDITOS = req.body.creditos;
+	const MODO_CALIFICAR = req.body.modoCalificar;
+	const CAMPUS = req.body.campus;
+	const TIPO_CURSO = req.body.tipoCurso;
+	const DIA = req.body.dia;
+	const HORA_INICIO = req.body.horaInicio;
+	const HORA_FIN = req.body.horaFin;
+	const SALON = req.body.salon;
+	const PERIODO_ACADEMICO = req.body.periodoAcademico;
 
 	try {
-		const RESULT = await Con.addEmail(
-			ID_TO_DO,
-			ISSUE,
-			CONTENT,
-			ISSUE_DATE
+		const RESULT = await Con.importSchedule(
+			NOMBRE,
+			SEMESTRE,
+			PROGRAMA,
+			COD_USUARIO,
+			NRC,
+			NOMBRE_CURSO,
+			DOCENTE,
+			CREDITOS,
+			MODO_CALIFICAR,
+			CAMPUS,
+			TIPO_CURSO,
+			DIA,
+			HORA_INICIO,
+			HORA_FIN,
+			SALON,
+			PERIODO_ACADEMICO
+		);
 
-	);
+		return res.status(200).json({
+			success: (RESULT != undefined),
+			data: RESULT
+		});
 
-	return res.status(200).json({
-		success: true,
-		data: RESULT
-	});
 	} catch (error) {
 		console.error(error);
 		return res.status(500).json({
 			error: "Error interno del servidor"
 		});
 	}
+
 
 });
 
@@ -921,6 +1069,30 @@ app.get("/api/get-user-data/:idUser", async (req, res) => {
 	}
 });
 
+//	------------------------ FUNCIONES EXTRA ------------------------ //
+
+const emailAndAdvanceNoticeUser = async (idUser) => {
+	try {
+			const response = await Con.getUserData(idUser);
+			
+			// Accedemos al primer elemento del arreglo para obtener el objeto real
+			const RESULT = response[0]; 
+
+			if (!RESULT) {
+				throw new Error("No se encontró la data del usuario");
+			}
+
+			return {
+				P_nombreUsuario: RESULT.nombre,     
+				P_antelacionNotis: RESULT.antelacionNotis, 
+				P_correo: RESULT.correo           
+			};
+		} catch (error) {
+			console.error("Error en la función:", error);
+			throw error; 
+		}
+};
+
 //	------------------------ FUNCIONALIDADES DEL LDAP ------------------------ //
 
 app.post("/api/auth/create-user", async (req, res) => {
@@ -933,6 +1105,21 @@ app.post("/api/auth/create-user", async (req, res) => {
 			success: success
 		});
 	} catch (error) {
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+});
+	app.get("/api/auth/userdata/:id", async (req,res) => {
+	const ID = req.params.id;
+	try {
+		const RESULT = await Con.getUserData(ID);
+		return res.status(200).json({
+			success: true,
+			data: RESULT
+		});
+	} catch (error) {
+		console.error(error);
 		return res.status(500).json({
 			error: "Error interno del servidor"
 		});
@@ -955,6 +1142,37 @@ app.post("/api/auth/validate-user", async (req, res) => {
 		});
 	}
 
+});
+app.post("/api/auth/add-admin", async (req, res) => {
+  const USER = req.body.user;
+  const PASS = req.body.pass;
+  try {
+    const RESULT = await Con.addadmin(USER, PASS);
+    const success = RESULT != undefined;
+    return res.status(200).json({
+      success: success,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: "Error interno del servidor",
+    });
+  }
+});
+
+app.post("/api/auth/add-admin", async (req, res) => {
+	const USER = req.body.user;
+	const PASS = req.body.pass;
+	try {
+		const RESULT = await Con.addadmin(USER, PASS);
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+	} catch (error) {
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
 });
 
 // Llamado al puerto
