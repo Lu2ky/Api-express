@@ -923,7 +923,7 @@ export class Connection {
 	}
 
 	// Actualizar descripción de recordatorio
-	async configNotifications(id, mail, time_mute) {
+	async configNotifications(id, mail, time_mute, tel) {
 		const url =
 			"http://" +
 			process.env.API_ADDR +
@@ -934,7 +934,8 @@ export class Connection {
 		const data = {
 			idUsuario: id,
 			correo: mail,
-			antelacionNotis: time_mute
+			antelacionNotis: time_mute,
+			telefono: tel
 		};
 
 		try {
