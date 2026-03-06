@@ -229,6 +229,43 @@ export class Connection {
 			console.error("Mira este error papu, que raro: ", error);
 		}
 	}
+
+	// PARA REVISAR LAS COLISIONES
+	async GetTimesData(user, day){
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/GetActivityTimesData";
+
+		const data ={
+			idUsuario: user,
+			dia: day
+		};
+
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+
+			const response = await send.json();
+
+			if (send.status === 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "Error agregando comentario");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+	}
+
 	//	--------------------------------------- COMENTARIOS -------------------------------------- \\
 	async GetPersonalComments(userId) {
 		const url =
@@ -1124,6 +1161,7 @@ export class Connection {
 			console.error("Mira este error papu, q raro: ", error);
 		}
 	}
+	
 	async authuser(user, pass) {
 		const url =
 			"http://" +
@@ -1181,66 +1219,70 @@ export class Connection {
 			console.error("Mira este error papu, q raro: ", error);
 		}
 	}
-      async changepassword(user, pass) {
-    const url =
-      "http://" +
-       process.env.API_ADDR +
-      ":" +
-      process.env.API_PORT +
-      "/changepassword";
-    const data = {
-      User: user,
-      Pass: pass,
-    };
-    try {
-      const send = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": procces.env.API_KEY,
-        },
-        body: JSON.stringify(data),
-      });
-      const response = await send.json();
-      if (send.status == 200) {
-        return response;
-      } else {
-        throw new Error(response.error || "No se que paso papu");
-      }
-    } catch (error) {
-      console.error("Mira este error papu, q raro: ", error);
-    }
-  }
-   async adduseradmin(user, pass) {
-    const url =
-      "http://" +
-      process.env.API_ADDR +
-      ":" +
-      process.env.API_PORT +
-      "/addadmin";
-    const data = {
-      User: user,
-      Pass: pass,
-    };
-    try {
-      const send = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": procces.env.API_KEY,
-        },
-        body: JSON.stringify(data),
-      });
-      const response = await send.json();
-      if (send.status == 200) {
-        return response;
-      } else {
-        throw new Error(response.error || "No se que paso papu");
-      }
-    } catch (error) {
-      console.error("Mira este error papu, q raro: ", error);
-    }
-}
-}
+    
+	async changepassword(user, pass) {
+		const url =
+		"http://" +
+		process.env.API_ADDR +
+		":" +
+		process.env.API_PORT +
+		"/changepassword";
 
+		const data = {
+			User: user,
+			Pass: pass,
+		};
 
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+				"Content-Type": "application/json",
+				"X-API-Key": procces.env.API_KEY,
+				},
+				body: JSON.stringify(data),
+			});
+			const response = await send.json();
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se que paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, q raro: ", error);
+		}
+	}
+
+	async adduseradmin(user, pass) {
+		const url =
+		"http://" +
+		process.env.API_ADDR +
+		":" +
+		process.env.API_PORT +
+		"/addadmin";
+		const data = {
+		User: user,
+		Pass: pass,
+		};
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+				"Content-Type": "application/json",
+				"X-API-Key": procces.env.API_KEY,
+				},
+				body: JSON.stringify(data),
+			});
+
+			const response = await send.json();
+			
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se que paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, q raro: ", error);
+		}
+	}
+}
