@@ -11,6 +11,7 @@ import {stringify} from "querystring";
 import {Reminder} from "../Reminder.js";
 import { promises } from "dns";
 import schedule from 'node-schedule';
+import e from "express";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -18,7 +19,7 @@ const __dirname = dirname(__filename);
 //INTERCAMBIAR ESTAS DOS LINEAS SI SE QUIERE EJECUTAR EN LOCAL O SI SE SUBIRÁ A PRODUCCION
 
 dotenv.config(); //PROD
-//dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
+dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
 
 const app = express();
 const PORT = 28523;
@@ -582,7 +583,6 @@ app.get("/api/reminders-by-user/:userId", async (req, res) => {
 app.post("/api/add-reminder", async (req, res) => {
     const IDUSER = req.body.P_usuario;
     const TASK_NAME = req.body.P_nombre;
-    const USER_NAME = req.body.P_nombre_usuario; 
     const DESC = req.body.P_descripcion;
     const DATE = req.body.P_fecha;
 	const PRIORY = req.body.P_prioridad;
@@ -591,8 +591,8 @@ app.post("/api/add-reminder", async (req, res) => {
 	const TAG3 = req.body.P_tag3;
 	const TAG4 = req.body.P_tag4;
 	const TAG5 = req.body.P_tag5;
-    const CLIENT_EMAIL = req.body.P_email; 
-    const ADVANCE_NOTICE = req.body.P_tiempo_anticipacion || 10;
+
+	const USER_CODE = req.body.P_codigo_usuario;
 
     try {
         const RESULT = await Con.addReminder(
@@ -608,9 +608,12 @@ app.post("/api/add-reminder", async (req, res) => {
 			TAG5
 		);
 
-		const ID_TO_DO = RESULT.InsertedId;
 
-        await Con.addEmail(ID_TO_DO, TASK_NAME, DESC, DATE);
+		const ID_TO_DO = RESULT.InsertedId;
+		const USER_QUERY = await emailAndAdvanceNoticeUser(USER_CODE);
+		const USER_NAME = USER_QUERY.P_nombreUsuario;
+		const ADVANCE_NOTICE = USER_QUERY.P_antelacionNotis;
+		const CLIENT_EMAIL = USER_QUERY.P_correo;
 
         if (RESULT) {
             scheduleEmailAndNotification(
@@ -881,26 +884,28 @@ app.post('/api/config-notification', async (req, res) =>{
 // Función enviar correo y notificación
 const scheduleEmailAndNotification = (idToDo, userName, title, content, dateStr, advanceNotice, email) => {
     // Procesar la fecha para que sea compatible con JS local
-    const isoDate = dateStr.replace(" ", "T");
-    const finalDate = new Date(isoDate);
+    const ISO_DATE = dateStr.replace(" ", "T");
+    const FINAL_DATE = new Date(ISO_DATE);
 
 	// Conversión de hora string a milisegundos
-	const [h, m, s] = advanceNotice.split(':').map(Number);
-	const milisegundosARestar = ((h * 3600) + (m * 60) + s) * 1000;
+	const [H, M, S] = advanceNotice.split(':').map(Number);
+	const MILISECONDS_TO_SUBTRACT = ((H * 3600) + (M * 60) + S) * 1000;
 
 
-	const alertDate = new Date(finalDate.getTime() - milisegundosARestar);
-    const now = new Date();
+	const ALERT_DATE = new Date(FINAL_DATE.getTime() - MILISECONDS_TO_SUBTRACT);
+    const NOW = new Date();
 
     console.log(`\nSISTEMA DE PROGRAMACIÓN`);
     console.log(`Usuario: ${userName}`);
     console.log(`Actividad: ${title}`);
-    console.log(`Hora de Alerta: ${alertDate.toLocaleString()}`);
+    console.log(`Hora de Alerta: ${ALERT_DATE.toLocaleString()}`);
+
+	console.log("HORA ACTUAL (servidor):", NOW.toString());
+	console.log("HORA PROGRAMADA (alerta):", ALERT_DATE.toString());
 
     // Verificar si la hora de la alerta es futura
-    if (alertDate > now) {
-
-        const job = schedule.scheduleJob(alertDate, async () => {
+    if (ALERT_DATE > NOW) {
+        const job = schedule.scheduleJob(ALERT_DATE, async () => {
             console.log(`\nEjecutando avisos para: ${title}`);
 
             const emailData = {
@@ -908,17 +913,19 @@ const scheduleEmailAndNotification = (idToDo, userName, title, content, dateStr,
                 destinatario: email,   
                 actividad: title,      
                 contenido: content,    
-                horaInicio: alertDate.toISOString(),
-                horaFinal: finalDate.toISOString(),
-                dia: finalDate.getDate()
+                horaInicio: ALERT_DATE.toLocaleTimeString('en-GB'),
+                horaFinal: FINAL_DATE.toLocaleTimeString('en-GB'),
+                dia: FINAL_DATE.getDate()
 				
             };
+			
+			const ALERT_DATE_STRING = ALERT_DATE.toLocaleString('sv-SE').replace('T', ' ');
 
 			const notiDate = {
 				idToDoList: idToDo, 
 				nombre: `Recordatorio: ${title}`,
 				descripcion: content,
-				fechaEmision: dateStr
+				fechaEmision: ALERT_DATE_STRING
 
 			}
 
@@ -980,6 +987,61 @@ const scheduleEmailAndNotification = (idToDo, userName, title, content, dateStr,
     }
 };
 
+//	--------------------------------------- IMPORTAR HORARIO -------------------------------------- \\
+
+app.post('/api/import-schedule', async (req, res) =>{
+	const NOMBRE = req.body.nombre;
+	const SEMESTRE = req.body.semestre;
+	const PROGRAMA = req.body.programa;
+	const COD_USUARIO = req.body.codUsuario;
+	const NRC = req.body.nrc;
+	const NOMBRE_CURSO = req.body.nombreCurso;
+	const DOCENTE = req.body.docente;
+	const CREDITOS = req.body.creditos;
+	const MODO_CALIFICAR = req.body.modoCalificar;
+	const CAMPUS = req.body.campus;
+	const TIPO_CURSO = req.body.tipoCurso;
+	const DIA = req.body.dia;
+	const HORA_INICIO = req.body.horaInicio;
+	const HORA_FIN = req.body.horaFin;
+	const SALON = req.body.salon;
+	const PERIODO_ACADEMICO = req.body.periodoAcademico;
+
+	try {
+		const RESULT = await Con.importSchedule(
+			NOMBRE,
+			SEMESTRE,
+			PROGRAMA,
+			COD_USUARIO,
+			NRC,
+			NOMBRE_CURSO,
+			DOCENTE,
+			CREDITOS,
+			MODO_CALIFICAR,
+			CAMPUS,
+			TIPO_CURSO,
+			DIA,
+			HORA_INICIO,
+			HORA_FIN,
+			SALON,
+			PERIODO_ACADEMICO
+		);
+
+		return res.status(200).json({
+			success: (RESULT != undefined),
+			data: RESULT
+		});
+
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+
+
+});
+
 //	--------------------------------------- INFO DEL USUARIO -------------------------------------- \\
 
 //	Sacar la info del usuario
@@ -1000,6 +1062,30 @@ app.get("/api/get-user-data/:idUser", async (req, res) => {
 		});
 	}
 });
+
+//	------------------------ FUNCIONES EXTRA ------------------------ //
+
+const emailAndAdvanceNoticeUser = async (idUser) => {
+	try {
+			const response = await Con.getUserData(idUser);
+			
+			// Accedemos al primer elemento del arreglo para obtener el objeto real
+			const RESULT = response[0]; 
+
+			if (!RESULT) {
+				throw new Error("No se encontró la data del usuario");
+			}
+
+			return {
+				P_nombreUsuario: RESULT.nombre,       // "CHRISTIAN EDUARDO..."
+				P_antelacionNotis: RESULT.antelacionNotis, // "00:10:00"
+				P_correo: RESULT.correo               // "christian.duarte..."
+			};
+		} catch (error) {
+			console.error("Error en la función:", error);
+			throw error; 
+		}
+};
 
 //	------------------------ FUNCIONALIDADES DEL LDAP ------------------------ //
 

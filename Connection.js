@@ -5,7 +5,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 dotenv.config();	//PROD
-//dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});	//LOCAL
+dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});	//LOCAL
 
 export class Connection {
 	constructor() {}
@@ -1034,6 +1034,63 @@ export class Connection {
 
 	}
 
+//	--------------------------------------- IMPORTAR HORARIO -------------------------------------- \\
+
+	async importSchedule (name, semester, program, codeUser, nrc, courseName, 
+		teacher, credits, rateMode, campus, courseType, day, startTime, 
+		endTime, lounge, academicPeriod){
+			const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/importSchedule";
+
+		const data = {
+			nombre: name,
+			semestre: semester,
+			programa: program,
+			codUsuario: codeUser,
+			nrc: nrc,
+			nombreCurso: courseName,
+			docente: teacher,
+			creditos: credits,
+			modoCalificar: rateMode,
+			campus: campus,
+			tipoCurso: courseType,
+			dia: day,
+			horaInicio: startTime,
+			horaFin: endTime,
+			salon: lounge,
+			periodoAcademico: academicPeriod
+		};
+
+		
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify(data)
+			});
+
+			const response = await send.json();
+
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se q paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+
+	}
+
+
+	
 //	------------------------ FUNCIONALIDADES DEL LDAP ------------------------ //
 
 	async adduser(user, pass) {
