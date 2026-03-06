@@ -916,7 +916,7 @@ const scheduleEmailAndNotification = (idToDo, userName, title, content, dateStr,
 				horaFinal: FINAL_DATE.toLocaleTimeString('en-GB'),
 				dia: FINAL_DATE.getDate(),
                 destinatario: email,   
-                actividad: title, 
+                actividad: title,       
             };
 			
 			const ALERT_DATE_STRING = ALERT_DATE.toLocaleString('sv-SE').replace('T', ' ');
@@ -930,13 +930,14 @@ const scheduleEmailAndNotification = (idToDo, userName, title, content, dateStr,
 			}
 
             try {
+				console.log(`Enviando correo a ${email} con los siguientes datos:`, emailData);
                 const emailResponse = await fetch('http://209.25.140.25:27270/api/sendEmail', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(emailData)
 
                 });
-
+				console.log(`Respuesta del servidor .25:`, emailResponse.status, emailResponse.statusText);
                 if (emailResponse.ok) {
                     console.log(`Correo enviado con éxito a ${email}!`);
 
@@ -959,7 +960,7 @@ const scheduleEmailAndNotification = (idToDo, userName, title, content, dateStr,
                 console.log("Notificación enviada al servidor local");
 
             } catch (err) {
-        
+                console.error("Error al enviar la notificación:", err.message);	
             }
 
 			try {
