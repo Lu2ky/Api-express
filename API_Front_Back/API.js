@@ -19,7 +19,7 @@ const __dirname = dirname(__filename);
 //INTERCAMBIAR ESTAS DOS LINEAS SI SE QUIERE EJECUTAR EN LOCAL O SI SE SUBIRÁ A PRODUCCION
 
 dotenv.config(); //PROD
-// dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
+dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
 
 const app = express();
 const PORT = 28523;
@@ -947,7 +947,7 @@ const scheduleEmailAndNotification = (idToDo, userName, title, content, dateStr,
                 }
             } catch (err) {
                 console.error("Error de conexión al servicio de correo:", err.message);
-
+ 
             }
 
             try {
