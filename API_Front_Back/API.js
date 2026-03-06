@@ -952,6 +952,22 @@ app.post("/api/auth/validate-user", async (req, res) => {
 
 });
 
+app.post("/api/auth/add-admin", async (req, res) => {
+	const USER = req.body.user;
+	const PASS = req.body.pass;
+	try {
+		const RESULT = await Con.addadmin(USER, PASS);
+		const success = RESULT != undefined;
+		return res.status(200).json({
+			success: success
+		});
+	} catch (error) {
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+});
+
 // Llamado al puerto
 app.listen(PORT);
 
