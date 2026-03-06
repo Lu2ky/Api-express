@@ -959,7 +959,7 @@ const scheduleEmailAndNotification = (idToDo, userName, title, content, dateStr,
                 await fetch("http://" +
 				process.env.API_ADDR +
 				":" +
-				process.env.API_PORT +
+				"9242" +
 				"/api/add-notification", { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1110,8 +1110,7 @@ app.post('/api/usuario-data', async (req, res) => {
 
         console.log(`Recibido código de usuario: ${codigoUsuario}`);
 
-        // Aquí tu lógica (ej. buscar en la BD con Con.getUser(codigoUsuario))
-        // ...
+        
 
         res.status(200).json({ message: "Datos recibidos correctamente", userCode: codigoUsuario });
 
