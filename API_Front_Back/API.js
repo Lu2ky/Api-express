@@ -137,7 +137,11 @@ app.post("/api/add-personal-activity", async (req, res) => {
 	const END_HOUR = req.body.end_hour;
 	const DAY = req.body.day;
 
-	const TIMES = req.body.times;
+	let TIMES = await Con.GetTimesData(ID_USER, DAY)
+	TIMES = TIMES.map(element =>{
+
+		return element.IsDeleted ? null : [element.idcourse, element.StartHour, element.EndHour, element.FechaInicio, element.FechaFinal]
+	}).filter(e => e !== null);
 
 	try {
 		if (
@@ -205,7 +209,7 @@ app.post("/api/update-personal-activity", async (req, res) => {
 			
 		}
 	*/
-
+	const ID_USER = req.body.id_user;
 	const ID_CURSO = req.body.id_course;
 
 	const NAME = req.body.subject_name;
@@ -219,26 +223,27 @@ app.post("/api/update-personal-activity", async (req, res) => {
 
 	const DAY = req.body.day;
 
-	const TIMES = req.body.times;
+	let TIMES = await Con.GetTimesData(ID_USER, DAY)
+	TIMES = TIMES.map(element =>{
+
+		return (element.IsDeleted || ID_CURSO == element.idcourse) ? null : [element.idcourse, element.StartHour, element.EndHour, element.FechaInicio, element.FechaFinal]
+	}).filter(e => e !== null);
 
 	try {
-		//	Evitar que llegue incompleto el times.
-		if (TIMES != null) {
-			if (
-				PersonalAct.hasCollisions(
-					TIMES,
-					ID_CURSO,
-					STA_HOUR,
-					END_HOUR,
-					STA_DATE,
-					END_DATE
-				)
-			) {
-				return res.status(400).json({
-					error: "Colisión de horarios"
-				});
-			}
-		}
+		if (
+			PersonalAct.hasCollisions(
+				TIMES,
+				ID_CURSO,
+				STA_HOUR,
+				END_HOUR,
+				STA_DATE,
+				END_DATE
+			)
+		) {
+			return res.status(400).json({
+				error: "Colisión de horarios"
+			});
+		}	
 
 		const RESULT = await Con.updatePersonalActivity(
 			ID_CURSO,
