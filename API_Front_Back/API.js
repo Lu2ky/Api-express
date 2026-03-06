@@ -10,6 +10,7 @@ import cors from "cors";
 import {stringify} from "querystring";
 import {Reminder} from "../Reminder.js";
 import { promises } from "dns";
+import schedule from 'node-schedule';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -17,7 +18,7 @@ const __dirname = dirname(__filename);
 //INTERCAMBIAR ESTAS DOS LINEAS SI SE QUIERE EJECUTAR EN LOCAL O SI SE SUBIRÁ A PRODUCCION
 
 dotenv.config(); //PROD
-//dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
+dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
 
 const app = express();
 const PORT = 28523;
@@ -579,23 +580,26 @@ app.get("/api/reminders-by-user/:userId", async (req, res) => {
 
 // Añadir recordatorio
 app.post("/api/add-reminder", async (req, res) => {
-	const IDUSER = req.body.P_usuario;
-	const NAME = req.body.P_nombre;
-	const DESC = req.body.P_descripcion;
-	const DATE = req.body.P_fecha;
+    const IDUSER = req.body.P_usuario;
+    const TASK_NAME = req.body.P_nombre;
+    const USER_NAME = req.body.P_nombre_usuario; 
+    const DESC = req.body.P_descripcion;
+    const DATE = req.body.P_fecha;
 	const PRIORY = req.body.P_prioridad;
 	const TAG1 = req.body.P_tag1;
 	const TAG2 = req.body.P_tag2;
 	const TAG3 = req.body.P_tag3;
 	const TAG4 = req.body.P_tag4;
 	const TAG5 = req.body.P_tag5;
+    const CLIENT_EMAIL = req.body.P_email; 
+    const ADVANCE_NOTICE = req.body.P_tiempo_anticipacion || 10;
 
-	try {
-		const RESULT = await Con.addReminder(
-			IDUSER,
-			NAME,
-			DESC,
-			DATE,
+    try {
+        const RESULT = await Con.addReminder(
+			IDUSER, 
+			TASK_NAME, 
+			DESC, 
+			DATE, 
 			PRIORY,
 			TAG1,
 			TAG2,
@@ -604,16 +608,26 @@ app.post("/api/add-reminder", async (req, res) => {
 			TAG5
 		);
 
-		return res.status(200).json({
-			success: true,
-			data: RESULT
-		});
-	} catch (error) {
-		console.error(error);
-		return res.status(500).json({
-			error: "Error interno del servidor"
-		});
-	}
+		const ID_TO_DO = RESULT.InsertedId;
+
+        await Con.addEmail(ID_TO_DO, TASK_NAME, DESC, DATE);
+
+        if (RESULT) {
+            scheduleEmailAndNotification(
+                ID_TO_DO,    
+                USER_NAME, 
+                TASK_NAME, 
+                DESC,      
+                DATE,      
+                ADVANCE_NOTICE,   
+                CLIENT_EMAIL
+            );
+        }
+        return res.status(200).json({ success: true, data: RESULT });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Error interno" });
+    }
 });
 
 // Eliminar recordatorio
@@ -808,10 +822,10 @@ app.get("/api/notifications-by-user/:userId", async (req, res) => {
 
 // Añadir notificaciones
 app.post('/api/add-notification', async (req, res) =>{
-	const ID_TO_DO = req.body.N_idToDoList;
-	const NAME = req.body.T_nombre;
-	const DESC = req.body.T_descripcion;
-	const ISSUE_DATE = req.body.Dt_fechaEmision;
+	const ID_TO_DO = req.body.idToDoList;
+	const NAME = req.body.nombre;
+	const DESC = req.body.descripcion;
+	const ISSUE_DATE = req.body.fechaEmision;
 
 	try {
 		const RESULT = await Con.addNotification(
@@ -866,34 +880,107 @@ app.post('/api/config-notification', async (req, res) =>{
 
 });
 
-	// Añadir correos
-app.post('/api/add-email', async (req, res) =>{
-	const ID_TO_DO = req.body.N_idToDoList;
-	const ISSUE = req.body.T_asunto;
-	const CONTENT = req.body.T_contenido;
-	const ISSUE_DATE = req.body.Dt_fechaEmision;
+// Función enviar correo y notificación
+const scheduleEmailAndNotification = (idToDo, userName, title, content, dateStr, advanceNotice, email) => {
+    // Procesar la fecha para que sea compatible con JS local
+    const isoDate = dateStr.replace(" ", "T");
+    const finalDate = new Date(isoDate);
 
-	try {
-		const RESULT = await Con.addEmail(
-			ID_TO_DO,
-			ISSUE,
-			CONTENT,
-			ISSUE_DATE
+	// Conversión de hora string a milisegundos
+	const [h, m, s] = advanceNotice.split(':').map(Number);
+	const milisegundosARestar = ((h * 3600) + (m * 60) + s) * 1000;
 
-	);
 
-	return res.status(200).json({
-		success: true,
-		data: RESULT
-	});
-	} catch (error) {
-		console.error(error);
-		return res.status(500).json({
-			error: "Error interno del servidor"
-		});
-	}
+	const alertDate = new Date(finalDate.getTime() - milisegundosARestar);
+    const now = new Date();
 
-});
+    console.log(`\nSISTEMA DE PROGRAMACIÓN`);
+    console.log(`Usuario: ${userName}`);
+    console.log(`Actividad: ${title}`);
+    console.log(`Hora de Alerta: ${alertDate.toLocaleString()}`);
+
+    // Verificar si la hora de la alerta es futura
+    if (alertDate > now) {
+
+        const job = schedule.scheduleJob(alertDate, async () => {
+            console.log(`\nEjecutando avisos para: ${title}`);
+
+            const emailData = {
+                user: userName,         
+                destinatario: email,   
+                actividad: title,      
+                contenido: content,    
+                horaInicio: alertDate.toISOString(),
+                horaFinal: finalDate.toISOString(),
+                dia: finalDate.getDate()
+				
+            };
+
+			const notiDate = {
+				idToDoList: idToDo, 
+				nombre: `Recordatorio: ${title}`,
+				descripcion: content,
+				fechaEmision: dateStr
+
+			}
+
+            try {
+                const emailResponse = await fetch('http://209.25.140.25:27270/api/sendEmail', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(emailData)
+
+                });
+
+                if (emailResponse.ok) {
+                    console.log(`Correo enviado con éxito a ${email}!`);
+
+                } else {
+                    const errorDetail = await emailResponse.json().catch(() => ({}));
+                    console.log(`Servidor .25 rechazó (422/400):`, errorDetail);
+
+                }
+            } catch (err) {
+                console.error("Error de conexión al servicio de correo:", err.message);
+
+            }
+
+            try {
+                await fetch('http://localhost:28523/api/add-notification', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(notiDate)
+                });
+                console.log("Notificación enviada al servidor local");
+
+            } catch (err) {
+        
+            }
+
+			try {
+
+                await Con.addEmail(
+                    idToDo,            
+                    `Recordatorio: ${title}`, 
+                    content,         
+                    dateStr
+                );
+                console.log("Log de correo guardado correctamente en la BD.");
+            } catch (dbError) {
+                console.error("Error al guardar el log de correo:", dbError.message);
+            }
+
+        });
+
+        if (job) {
+            console.log("Recordatorio enlazado al cronómetro con éxito");
+
+        }
+    } else {
+
+        console.log("La hora de aviso ya pasó. No se puede programar.");
+    }
+};
 
 //	--------------------------------------- INFO DEL USUARIO -------------------------------------- \\
 
@@ -928,6 +1015,21 @@ app.post("/api/auth/create-user", async (req, res) => {
 			success: success
 		});
 	} catch (error) {
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+});
+	app.get("/api/auth/userdata/:id", async (req,res) => {
+	const ID = req.params.id;
+	try {
+		const RESULT = await Con.getUserData(ID);
+		return res.status(200).json({
+			success: true,
+			data: RESULT
+		});
+	} catch (error) {
+		console.error(error);
 		return res.status(500).json({
 			error: "Error interno del servidor"
 		});
