@@ -5,10 +5,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 dotenv.config();	//PROD
-dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});	//LOCAL
+//dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});	//LOCAL
 
 export class Connection {
-<<<<<<< HEAD
 	constructor() {}
 
 	//	--------------------------------------- ACTIVIDADES -------------------------------------- \\
