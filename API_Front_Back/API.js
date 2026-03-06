@@ -1077,9 +1077,9 @@ const emailAndAdvanceNoticeUser = async (idUser) => {
 			}
 
 			return {
-				P_nombreUsuario: RESULT.nombre,       // "CHRISTIAN EDUARDO..."
-				P_antelacionNotis: RESULT.antelacionNotis, // "00:10:00"
-				P_correo: RESULT.correo               // "christian.duarte..."
+				P_nombreUsuario: RESULT.nombre,     
+				P_antelacionNotis: RESULT.antelacionNotis, 
+				P_correo: RESULT.correo           
 			};
 		} catch (error) {
 			console.error("Error en la función:", error);
