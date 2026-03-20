@@ -422,6 +422,13 @@ app.post("/api/remove-comment", async (req, res) => {
   }
 });
 
+app.post("/api/logout", (req, res) => {
+	return res.status(200).json({
+		success: true,
+		message: "Logout exitoso"
+	});
+});
+
 
 
 // TO DO
