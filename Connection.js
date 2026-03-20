@@ -4,8 +4,8 @@ import {dirname, resolve} from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-dotenv.config();	//PROD
-//dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});	//LOCAL
+//dotenv.config();	//PROD
+dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});	//LOCAL
 
 export class Connection {
 	constructor() {}
@@ -923,7 +923,7 @@ export class Connection {
 	}
 
 	// Actualizar descripción de recordatorio
-	async configNotifications(id, mail, time_mute) {
+	async configNotifications(id, mail, time_mute, phone) {
 		const url =
 			"http://" +
 			process.env.API_ADDR +
@@ -934,7 +934,8 @@ export class Connection {
 		const data = {
 			idUsuario: id,
 			correo: mail,
-			antelacionNotis: time_mute
+			antelacionNotis: time_mute,
+			telefono: phone
 		};
 
 		try {
