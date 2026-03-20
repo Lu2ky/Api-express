@@ -52,7 +52,9 @@ app.get("/api/official-schedule/:userId", async (req, res) => {
 				[eachData.StartHour, eachData.EndHour, eachData.Day],
 				eachData.Tag,
 				eachData.Campus,
-				eachData.Credits
+				eachData.Credits,
+				eachData.FechaInicio,
+				eachData.FechaFinal
 			);
 
 			return OfficialActivity.getData();
@@ -313,6 +315,15 @@ app.get("/api/course-types", async (req, res) => {
 		.filter(tipo => tipo !== null);
 
 	return res.json(tiposCurso);
+});
+
+// Obtener los periodos académicos
+app.get("/api/academic-periods", async (req, res) => {
+	let data = await Con.GetAcademicPeriods();
+
+	console.log(data)
+
+	return res.json(data);
 });
 
 //	--------------------------------------- COMENTARIOS -------------------------------------- \\
