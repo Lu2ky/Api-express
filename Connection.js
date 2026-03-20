@@ -5,7 +5,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 dotenv.config();	//PROD
-// dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});	//LOCAL
+//dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});	//LOCAL
 
 export class Connection {
 	constructor() {}
@@ -214,6 +214,30 @@ export class Connection {
 			":" +
 			process.env.API_PORT +
 			"/GetTiposCurso/";
+		try {
+			const rta = await fetch(url, {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				}
+			});
+			if (!rta.ok) throw new Error(`Error: ${rta.status}`);
+			const data = await rta.json();
+			return data;
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+		}
+	}
+
+	// Obtener los periodos académicos disponibles
+	async GetAcademicPeriods() {
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/GetAcademicPeriods"
 		try {
 			const rta = await fetch(url, {
 				method: "GET",
