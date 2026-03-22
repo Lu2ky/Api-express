@@ -608,12 +608,11 @@ app.post("/api/add-reminder", async (req, res) => {
 			TAG5
 		);
 
-
 		const ID_TO_DO = RESULT.InsertedId;
 		const USER_QUERY = await userData(USER_CODE);
-		const USER_NAME = USER_QUERY.P_nombreUsuario;
-		const ADVANCE_NOTICE = USER_QUERY.P_antelacionNotis;
-		const CLIENT_EMAIL = USER_QUERY.P_correo;
+		const USER_NAME = USER_QUERY.nombre;
+		const ADVANCE_NOTICE = USER_QUERY.antelacionNotis;
+		const CLIENT_EMAIL = USER_QUERY.correo;
 
         if (RESULT) {
             scheduleEmailAndNotification(
@@ -1075,27 +1074,30 @@ app.get("/api/get-user-data/:idUser", async (req, res) => {
 //	------------------------ FUNCIONES EXTRA ------------------------ //
 
 
-// 
+// Obtener info del usuario
 const userData = async (idUser) => {
 	try {
-			const response = await Con.getUserData(idUser);
-			
-			// Accedemos al primer elemento del arreglo para obtener el objeto real
-			const RESULT = response[0]; 
+        const response = await Con.getUserData(idUser);
+        
+        // Validar si response no es null
+        if (!response || response.length === 0) {
+            throw new Error("No se encontró la data del usuario en la base de datos");
+        }
 
-			if (!RESULT) {
-				throw new Error("No se encontró la data del usuario");
-			}
+        const RESULT = response[0]; 
 
-			return {
-				P_nombreUsuario: RESULT.nombre,     
-				P_antelacionNotis: RESULT.antelacionNotis, 
-				P_correo: RESULT.correo           
-			};
-		} catch (error) {
-			console.error("Error en la función:", error);
-			throw error; 
-		}
+        return {
+			idUsuario: RESULT.idUsuario,
+            nombre: RESULT.nombre, 
+            antelacionNotis: RESULT.antelacionNotis, 
+            correo: RESULT.correo          
+        };
+
+    } catch (error) {
+        // Este error ahora será capturado por el catch de tu app.post
+        console.error("Error en la función userData:", error.message);
+        throw error; 
+    }
 };
 
 // Recibir codigo usuario
@@ -1205,14 +1207,15 @@ app.post("/api/auth/add-admin", async (req, res) => {
 	}
 });
 
+// --------------------------------------- ENVIO DE TOKEN ------------------------------------
 
 app.post('/api/send-code', async (req, res) =>{
     const USER_CODE = req.body.codUsuario;
-    console.log(USER_CODE)
+	console.log(USER_CODE);
 
+	// Obtener los datos del usuario
 	try {
 		const USER_DATA = await userData(USER_CODE);
-		console.log("Resultado de userData:", USER_DATA);
 
 		if (!USER_DATA) {
 				return res.status(404).json({
@@ -1223,8 +1226,19 @@ app.post('/api/send-code', async (req, res) =>{
 
 			}
 
-		const CLIENT_EMAIL = USER_DATA.P_correo;
-		console.log(CLIENT_EMAIL);
+		const USER_ID = USER_DATA.idUsuario.toString();
+		const USER_NAME = USER_DATA.nombre;
+		const CLIENT_EMAIL = USER_DATA.correo;
+		// Generar token de 6 digitos
+		const TOKEN = Math.floor(100000 + Math.random() * 900000).toString();
+
+
+		await saveTokenAndSendEmail(
+            USER_ID,    
+            TOKEN, 
+            USER_NAME,            
+            CLIENT_EMAIL
+        );
 
 		return res.status(200).json({
 			success: (USER_DATA != undefined),
@@ -1239,6 +1253,57 @@ app.post('/api/send-code', async (req, res) =>{
 	}
 
 }); 
+
+const saveTokenAndSendEmail = async (userId, token, userName, email) => {
+	// Enviar datos del token a la base de datos
+	try {
+		await Con.receiveTokenData(
+			userId,            
+			token, 
+	);
+	console.log("Token guardado correctamente.");
+	} catch (dbError) {
+		console.error("Error al guardar el log de correo:", dbError.message);
+	}
+
+	// Envío de correo con token
+	try {
+		
+		// Estrucura de correo
+		const emailData = {
+		user: userName,    
+		token: ALERT_DATE.toLocaleTimeString('en-GB'),     
+		minutos: FINAL_DATE.toLocaleTimeString('en-GB'),
+		destinatario: email,      
+		};
+
+		// Envío
+		console.log(`Enviando correo a ${email} con los siguientes datos:`, emailData);
+		const emailResponse = await fetch("http://" +
+		process.env.EMAIL_ADDR +
+		":" +
+		process.env.EMAIL_PORT +
+		"/api/sendEmailToken", {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(emailData)
+
+		});
+		console.log(`Respuesta del servidor .25:`, emailResponse.status, emailResponse.statusText);
+		if (emailResponse.ok) {
+			console.log(`Correo enviado con éxito a ${email}!`);
+
+		} else {
+			const errorDetail = await emailResponse.json().catch(() => ({}));
+			console.log(`Servidor .25 rechazó (422/400):`, errorDetail);
+
+		}
+	} catch (err) {
+		console.error("Error de conexión al servicio de correo:", err.message);
+
+	}
+
+}
 
 // Llamado al puerto
 app.listen(PORT);
