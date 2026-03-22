@@ -52,7 +52,9 @@ app.get("/api/official-schedule/:userId", async (req, res) => {
 				[eachData.StartHour, eachData.EndHour, eachData.Day],
 				eachData.Tag,
 				eachData.Campus,
-				eachData.Credits
+				eachData.Credits,
+				eachData.FechaInicio,
+				eachData.FechaFinal
 			);
 
 			return OfficialActivity.getData();
@@ -316,6 +318,15 @@ app.get("/api/course-types", async (req, res) => {
 		.filter(tipo => tipo !== null);
 
 	return res.json(tiposCurso);
+});
+
+// Obtener los periodos académicos
+app.get("/api/academic-periods", async (req, res) => {
+	let data = await Con.GetAcademicPeriods();
+
+	console.log(data)
+
+	return res.json(data);
 });
 
 //	--------------------------------------- COMENTARIOS -------------------------------------- \\
@@ -618,7 +629,7 @@ app.post("/api/add-reminder", async (req, res) => {
 
 
 		const ID_TO_DO = RESULT.InsertedId;
-		const USER_QUERY = await emailAndAdvanceNoticeUser(USER_CODE);
+		const USER_QUERY = await userData(USER_CODE);
 		const USER_NAME = USER_QUERY.P_nombreUsuario;
 		const ADVANCE_NOTICE = USER_QUERY.P_antelacionNotis;
 		const CLIENT_EMAIL = USER_QUERY.P_correo;
@@ -864,7 +875,7 @@ app.post('/api/add-notification', async (req, res) =>{
 app.post('/api/config-notification', async (req, res) =>{
 	const ID = req.body.idUsuario;
 	const MAIL = req.body.correo;
-	const TIME_MUTE = req.body.tiempoMute;
+	const TIME_MUTE = req.body.antelacionNotis;
 	const CELLPHONE = req.body.telefono;
 
 	console.log(ID, MAIL, TIME_MUTE)
@@ -1084,7 +1095,7 @@ app.get("/api/get-user-data/:idUser", async (req, res) => {
 
 
 // 
-const emailAndAdvanceNoticeUser = async (idUser) => {
+const userData = async (idUser) => {
 	try {
 			const response = await Con.getUserData(idUser);
 			
@@ -1215,6 +1226,41 @@ app.post("/api/auth/add-admin", async (req, res) => {
 		});
 	}
 });
+
+
+app.post('/api/send-code', async (req, res) =>{
+    const USER_CODE = req.body.codUsuario;
+    console.log(USER_CODE)
+
+	try {
+		const USER_DATA = await userData(USER_CODE);
+		console.log("Resultado de userData:", USER_DATA);
+
+		if (!USER_DATA) {
+				return res.status(404).json({
+					status: "error",
+					message: "El usuario no existe"
+
+				});
+
+			}
+
+		const CLIENT_EMAIL = USER_DATA.P_correo;
+		console.log(CLIENT_EMAIL);
+
+		return res.status(200).json({
+			success: (USER_DATA != undefined),
+			data: USER_DATA
+		});
+
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+
+}); 
 
 // Llamado al puerto
 app.listen(PORT);
