@@ -23,6 +23,7 @@ export class officialAct extends Activity {
   Credits;
   startDate;
   endDate;
+  AcademicPer
 
   constructor(
     idHorario,
@@ -36,7 +37,8 @@ export class officialAct extends Activity {
     Campus,
     Credits,
     startDate,
-    endDate
+    endDate,
+    AcademicPer
   ) {
     super(id, subject_name, tag, times);
     this.idHorario = idHorario
@@ -47,6 +49,7 @@ export class officialAct extends Activity {
     this.Credits = Credits;
     this.startDate = startDate;
     this.endDate = endDate;
+    this.AcademicPer = AcademicPer;
   }
 
   getData(){
@@ -62,7 +65,8 @@ export class officialAct extends Activity {
       campus: this.Campus,
       credits: this.Credits,
       date_start: this.startDate,
-      date_end: this.endDate
+      date_end: this.endDate,
+      academic_period: this.AcademicPer
     }
   }
 }

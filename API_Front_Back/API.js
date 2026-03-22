@@ -34,6 +34,7 @@ let Con = new Connection();
 app.get("/api/official-schedule/:userId", async (req, res) => {
 	//	req.params permite obtener los valoeres dados por medio de la URL
 	const USER_ID = req.params.userId;
+	//const TOKEN = req.header('Authorization');
 
 	try {
 		//Petición a la API de Go
@@ -88,7 +89,9 @@ app.get("/api/personal-schedule/:userId", async (req, res) => {
 				[eachData.StartHour, eachData.EndHour, eachData.Day],
 				eachData.Tag,
 				eachData.Dt_Start.String,
-				eachData.Dt_End.String
+				eachData.Dt_End.String,
+				eachData,
+				1
 			);
 
 			return PersonalActivity.getData();
@@ -142,11 +145,13 @@ app.post("/api/add-personal-activity", async (req, res) => {
 	const DAY = req.body.day;
 
 	let TIMES = await Con.GetTimesData(ID_USER, DAY)
-	TIMES = TIMES.map(element =>{
 
-		return element.IsDeleted ? null : [element.idcourse, element.StartHour, element.EndHour, element.FechaInicio, element.FechaFinal]
-	}).filter(e => e !== null);
+	if (TIMES !== null){
+		TIMES = TIMES.map(element =>{
 
+			return element.IsDeleted ? null : [element.idcourse, element.StartHour, element.EndHour, element.FechaInicio, element.FechaFinal]
+		}).filter(e => e !== null);
+	}
 	try {
 		if (
 			PersonalAct.hasCollisions(
