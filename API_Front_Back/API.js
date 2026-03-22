@@ -140,10 +140,13 @@ app.post("/api/add-personal-activity", async (req, res) => {
 	const DAY = req.body.day;
 
 	let TIMES = await Con.GetTimesData(ID_USER, DAY)
-	TIMES = TIMES.map(element =>{
+	
+	if (TIMES !== null){
+		TIMES = TIMES.map(element =>{
 
-		return element.IsDeleted ? null : [element.idcourse, element.StartHour, element.EndHour, element.FechaInicio, element.FechaFinal]
-	}).filter(e => e !== null);
+			return element.IsDeleted ? null : [element.idcourse, element.StartHour, element.EndHour, element.FechaInicio, element.FechaFinal]
+		}).filter(e => e !== null);
+	}
 
 	try {
 		if (
