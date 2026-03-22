@@ -1231,6 +1231,39 @@ app.post("/api/auth/add-admin", async (req, res) => {
 
 
 
+app.post('/api/send-code', async (req, res) =>{
+    const USER_CODE = req.body.codUsuario;
+    console.log(USER_CODE)
+
+	try {
+		const USER_DATA = await userData(USER_CODE);
+		console.log("Resultado de userData:", USER_DATA);
+
+		if (!USER_DATA) {
+				return res.status(404).json({
+					status: "error",
+					message: "El usuario no existe"
+
+				});
+
+			}
+
+		const CLIENT_EMAIL = USER_DATA.P_correo;
+		console.log(CLIENT_EMAIL);
+
+		return res.status(200).json({
+			success: (USER_DATA != undefined),
+			data: USER_DATA
+		});
+
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+
+});
 
 
 
