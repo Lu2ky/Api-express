@@ -54,7 +54,9 @@ app.get("/api/official-schedule/:userId", async (req, res) => {
 				eachData.Campus,
 				eachData.Credits,
 				eachData.FechaInicio,
-				eachData.FechaFinal
+				eachData.FechaFinal,
+				eachData.IdPeriodoAcademico,
+				eachData.PeriodoAcademico
 			);
 
 			return OfficialActivity.getData();
