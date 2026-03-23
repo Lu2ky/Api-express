@@ -1216,34 +1216,34 @@ export class Connection {
 
 
 	async adduseradmin(user, pass) {
-    const url =
-    "http://" +
-    process.env.API_ADDR +
-    ":" +
-    process.env.API_PORT +
-    "/addadmin";
-    const data = {
-    User: user,
-    Pass: pass,
-    };
+		const url =
+		"http://" +
+		process.env.API_ADDR +
+		":" +
+		process.env.API_PORT +
+		"/addadmin";
+		const data = {
+		User: user,
+		Pass: pass,
+		};
     try {
-    const send = await fetch(url, {
-    method: "POST",
-        headers: {
-        "Content-Type": "application/json",
-        "X-API-Key": procces.env.API_KEY,
-        },
-        body: JSON.stringify(data),
-    });
-    const response = await send.json();
-    if (send.status == 200) {
-        return response;
-    } else {
-        throw new Error(response.error || "No se que paso papu");
-    }
-    } catch (error) {
-    console.error("Mira este error papu, q raro: ", error);
-    }
+		const send = await fetch(url, {
+		method: "POST",
+			headers: {
+			"Content-Type": "application/json",
+			"X-API-Key": procces.env.API_KEY,
+			},
+			body: JSON.stringify(data),
+		});
+	const response = await send.json();
+	if (send.status == 200) {
+		return response;
+	} else {
+		throw new Error(response.error || "No se que paso papu");
+	}
+	} catch (error) {
+	console.error("Mira este error papu, q raro: ", error);
+	}
 	}
 
 	//	------------------------ Camabiar contraseña  ------------------------ //
@@ -1257,7 +1257,7 @@ export class Connection {
 			"/receiveTokenData";
 
 		const data = {
-			idUsuario: idUser,
+			userId: idUser,
 			token: token
 		};
 
@@ -1280,7 +1280,38 @@ export class Connection {
 			}
 		} catch (error) {
 			console.error("Mira este error papu, que raro: ", error);
+			throw error;
 		}
+	}
+
+	async getToken(token){
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/getToken";
+
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify({token: token})
+				
+			});
+			const response = await send.json();
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se que paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, q raro: ", error);
+		}
+		
 	}
 
 }

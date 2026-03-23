@@ -1071,34 +1071,6 @@ app.get("/api/get-user-data/:idUser", async (req, res) => {
 	}
 });
 
-//	------------------------ FUNCIONES EXTRA ------------------------ //
-
-
-// Obtener info del usuario
-const userData = async (idUser) => {
-	try {
-        const response = await Con.getUserData(idUser);
-        
-        // Validar si response no es null
-        if (!response || response.length === 0) {
-            throw new Error("No se encontró la data del usuario en la base de datos");
-        }
-
-        const RESULT = response[0]; 
-
-        return {
-			idUsuario: RESULT.idUsuario,
-            nombre: RESULT.nombre, 
-            antelacionNotis: RESULT.antelacionNotis, 
-            correo: RESULT.correo          
-        };
-
-    } catch (error) {
-        // Este error ahora será capturado por el catch de tu app.post
-        console.error("Error en la función userData:", error.message);
-        throw error; 
-    }
-};
 
 // Recibir codigo usuario
 /*
@@ -1254,56 +1226,110 @@ app.post('/api/send-code', async (req, res) =>{
 
 }); 
 
+// Guardar token en la base de datos y enviar email
 const saveTokenAndSendEmail = async (userId, token, userName, email) => {
-	// Enviar datos del token a la base de datos
+    try {
+        // Guardar token en la base de datos
+        await Con.receiveTokenData(userId, token); 
+        console.log("Token guardado correctamente.");
+
+        // Estructura de correo
+        const emailData = {
+            user: userName,
+            token: token,
+            minutos: "15",
+            destinatario: email,
+        };
+
+        // Envío de correo
+        console.log(`Enviando correo a ${email}...`);
+        const emailResponse = await fetch("http://" + process.env.EMAIL_ADDR + ":" + process.env.EMAIL_PORT + "/api/sendEmailToken", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(emailData)
+        });
+
+        if (!emailResponse.ok) {
+            const errorDetail = await emailResponse.json().catch(() => ({}));
+            throw new Error(errorDetail.message || "Servidor de correo rechazó la solicitud");
+        }
+
+        console.log(`Correo enviado con éxito a ${email}!`);
+
+    } catch (error) {
+        console.error("Hubo un fallo en el proceso:", error.message);
+    }
+
+};
+
+// Validar token
+app.post('/api/validate-token', async (req, res) =>{
+	const USER_TOKEN = req.body.token;
+	console.log(USER_TOKEN);
+
+    try {
+        // Guardar token en la base de datos
+        const RESPONSE = await Con.getToken(`reset:${USER_TOKEN}`);
+		const userId = RESPONSE.userId;
+
+		// Si userId NO es null el token es válido
+        if (userId) {
+            console.log("Token válido para el usuario:", userId);
+            
+            return res.status(200).json({ 
+                success: true, 
+                message: "Token encontrado",
+                userId: userId 
+            });
+        } else {
+            console.log("El token no existe o ya expiró.");
+    
+            return res.status(401).json({ 
+                success: false, 
+                message: "Token inválido o expirado" 
+            });
+        }
+
+    } catch (error) {
+        console.error("Hubo un fallo en el proceso:", error.message);
+        return res.status(500).json({ 
+            success: false, 
+            error: "Error interno del servidor" 
+        });
+    }
+
+});
+
+
+//	------------------------ FUNCIONES EXTRA ------------------------ //
+
+
+// Obtener info del usuario
+const userData = async (idUser) => {
 	try {
-		await Con.receiveTokenData(
-			userId,            
-			token, 
-	);
-	console.log("Token guardado correctamente.");
-	} catch (dbError) {
-		console.error("Error al guardar el log de correo:", dbError.message);
-	}
+        const response = await Con.getUserData(idUser);
+        
+        // Validar si response no es null
+        if (!response || response.length === 0) {
+            throw new Error("No se encontró la data del usuario en la base de datos");
+        }
 
-	// Envío de correo con token
-	try {
-		
-		// Estrucura de correo
-		const emailData = {
-		user: userName,    
-		token: ALERT_DATE.toLocaleTimeString('en-GB'),     
-		minutos: FINAL_DATE.toLocaleTimeString('en-GB'),
-		destinatario: email,      
-		};
+        const RESULT = response[0]; 
 
-		// Envío
-		console.log(`Enviando correo a ${email} con los siguientes datos:`, emailData);
-		const emailResponse = await fetch("http://" +
-		process.env.EMAIL_ADDR +
-		":" +
-		process.env.EMAIL_PORT +
-		"/api/sendEmailToken", {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(emailData)
+        return {
+			idUsuario: RESULT.idUsuario,
+            nombre: RESULT.nombre, 
+            antelacionNotis: RESULT.antelacionNotis, 
+            correo: RESULT.correo          
+        };
 
-		});
-		console.log(`Respuesta del servidor .25:`, emailResponse.status, emailResponse.statusText);
-		if (emailResponse.ok) {
-			console.log(`Correo enviado con éxito a ${email}!`);
+    } catch (error) {
+        // Este error ahora será capturado por el catch de tu app.post
+        console.error("Error en la función userData:", error.message);
+        throw error; 
+    }
+};
 
-		} else {
-			const errorDetail = await emailResponse.json().catch(() => ({}));
-			console.log(`Servidor .25 rechazó (422/400):`, errorDetail);
-
-		}
-	} catch (err) {
-		console.error("Error de conexión al servicio de correo:", err.message);
-
-	}
-
-}
 
 // Llamado al puerto
 app.listen(PORT);
