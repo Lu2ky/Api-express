@@ -624,12 +624,11 @@ app.post("/api/add-reminder", async (req, res) => {
 			TAG5
 		);
 
-
 		const ID_TO_DO = RESULT.InsertedId;
 		const USER_QUERY = await userData(USER_CODE);
-		const USER_NAME = USER_QUERY.P_nombreUsuario;
-		const ADVANCE_NOTICE = USER_QUERY.P_antelacionNotis;
-		const CLIENT_EMAIL = USER_QUERY.P_correo;
+		const USER_NAME = USER_QUERY.nombre;
+		const ADVANCE_NOTICE = USER_QUERY.antelacionNotis;
+		const CLIENT_EMAIL = USER_QUERY.correo;
 
         if (RESULT) {
             scheduleEmailAndNotification(
@@ -1088,31 +1087,6 @@ app.get("/api/get-user-data/:idUser", async (req, res) => {
 	}
 });
 
-//	------------------------ FUNCIONES EXTRA ------------------------ //
-
-
-// 
-const userData = async (idUser) => {
-	try {
-			const response = await Con.getUserData(idUser);
-			
-			// Accedemos al primer elemento del arreglo para obtener el objeto real
-			const RESULT = response[0]; 
-
-			if (!RESULT) {
-				throw new Error("No se encontró la data del usuario");
-			}
-
-			return {
-				P_nombreUsuario: RESULT.nombre,     
-				P_antelacionNotis: RESULT.antelacionNotis, 
-				P_correo: RESULT.correo           
-			};
-		} catch (error) {
-			console.error("Error en la función:", error);
-			throw error; 
-		}
-};
 
 // Recibir codigo usuario
 /*
@@ -1224,14 +1198,15 @@ app.post("/api/auth/add-admin", async (req, res) => {
 	}
 });
 
+// --------------------------------------- ENVIO DE TOKEN ------------------------------------
 
 app.post('/api/send-code', async (req, res) =>{
     const USER_CODE = req.body.codUsuario;
-    console.log(USER_CODE)
+	console.log(USER_CODE);
 
+	// Obtener los datos del usuario
 	try {
 		const USER_DATA = await userData(USER_CODE);
-		console.log("Resultado de userData:", USER_DATA);
 
 		if (!USER_DATA) {
 				return res.status(404).json({
@@ -1242,8 +1217,19 @@ app.post('/api/send-code', async (req, res) =>{
 
 			}
 
-		const CLIENT_EMAIL = USER_DATA.P_correo;
-		console.log(CLIENT_EMAIL);
+		const USER_ID = USER_DATA.idUsuario.toString();
+		const USER_NAME = USER_DATA.nombre;
+		const CLIENT_EMAIL = USER_DATA.correo;
+		// Generar token de 6 digitos
+		const TOKEN = Math.floor(100000 + Math.random() * 900000).toString();
+
+
+		await saveTokenAndSendEmail(
+            USER_ID,    
+            TOKEN, 
+            USER_NAME,            
+            CLIENT_EMAIL
+        );
 
 		return res.status(200).json({
 			success: (USER_DATA != undefined),
@@ -1258,6 +1244,111 @@ app.post('/api/send-code', async (req, res) =>{
 	}
 
 }); 
+
+// Guardar token en la base de datos y enviar email
+const saveTokenAndSendEmail = async (userId, token, userName, email) => {
+    try {
+        // Guardar token en la base de datos
+        await Con.receiveTokenData(userId, token); 
+        console.log("Token guardado correctamente.");
+
+        // Estructura de correo
+        const emailData = {
+            user: userName,
+            token: token,
+            minutos: "15",
+            destinatario: email,
+        };
+
+        // Envío de correo
+        console.log(`Enviando correo a ${email}...`);
+        const emailResponse = await fetch("http://" + process.env.EMAIL_ADDR + ":" + process.env.EMAIL_PORT + "/api/sendEmailToken", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(emailData)
+        });
+
+        if (!emailResponse.ok) {
+            const errorDetail = await emailResponse.json().catch(() => ({}));
+            throw new Error(errorDetail.message || "Servidor de correo rechazó la solicitud");
+        }
+
+        console.log(`Correo enviado con éxito a ${email}!`);
+
+    } catch (error) {
+        console.error("Hubo un fallo en el proceso:", error.message);
+    }
+
+};
+
+// Validar token
+app.post('/api/validate-token', async (req, res) =>{
+	const USER_TOKEN = req.body.token;
+	console.log(USER_TOKEN);
+
+    try {
+        // Guardar token en la base de datos
+        const RESPONSE = await Con.getToken(`reset:${USER_TOKEN}`);
+		const userId = RESPONSE.userId;
+
+		// Si userId NO es null el token es válido
+        if (userId) {
+            console.log("Token válido para el usuario:", userId);
+            
+            return res.status(200).json({ 
+                success: true, 
+                message: "Token encontrado",
+                userId: userId 
+            });
+        } else {
+            console.log("El token no existe o ya expiró.");
+    
+            return res.status(401).json({ 
+                success: false, 
+                message: "Token inválido o expirado" 
+            });
+        }
+
+    } catch (error) {
+        console.error("Hubo un fallo en el proceso:", error.message);
+        return res.status(500).json({ 
+            success: false, 
+            error: "Error interno del servidor" 
+        });
+    }
+
+});
+
+
+//	------------------------ FUNCIONES EXTRA ------------------------ //
+
+
+// Obtener info del usuario
+const userData = async (idUser) => {
+	try {
+        const response = await Con.getUserData(idUser);
+        
+        // Validar si response no es null
+        if (!response || response.length === 0) {
+            throw new Error("No se encontró la data del usuario en la base de datos");
+        }
+
+        const RESULT = response[0]; 
+
+        return {
+			idUsuario: RESULT.idUsuario,
+            nombre: RESULT.nombre, 
+            antelacionNotis: RESULT.antelacionNotis, 
+            correo: RESULT.correo          
+        };
+
+    } catch (error) {
+        // Este error ahora será capturado por el catch de tu app.post
+        console.error("Error en la función userData:", error.message);
+        throw error; 
+    }
+};
+
 
 // Llamado al puerto
 app.listen(PORT);
