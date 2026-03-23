@@ -54,7 +54,9 @@ app.get("/api/official-schedule/:userId", async (req, res) => {
 				eachData.Campus,
 				eachData.Credits,
 				eachData.FechaInicio,
-				eachData.FechaFinal
+				eachData.FechaFinal,
+				eachData.IdPeriodoAcademico,
+				eachData.PeriodoAcademico
 			);
 
 			return OfficialActivity.getData();
@@ -142,10 +144,13 @@ app.post("/api/add-personal-activity", async (req, res) => {
 	const DAY = req.body.day;
 
 	let TIMES = await Con.GetTimesData(ID_USER, DAY)
-	TIMES = TIMES.map(element =>{
+	
+	if (TIMES !== null){
+		TIMES = TIMES.map(element =>{
 
-		return element.IsDeleted ? null : [element.idcourse, element.StartHour, element.EndHour, element.FechaInicio, element.FechaFinal]
-	}).filter(e => e !== null);
+			return element.IsDeleted ? null : [element.idcourse, element.StartHour, element.EndHour, element.FechaInicio, element.FechaFinal]
+		}).filter(e => e !== null);
+	}
 
 	try {
 		if (
@@ -1200,6 +1205,7 @@ app.post("/api/auth/add-admin", async (req, res) => {
 
 // --------------------------------------- ENVIO DE TOKEN ------------------------------------
 
+
 app.post('/api/send-code', async (req, res) =>{
     const USER_CODE = req.body.codUsuario;
 	console.log(USER_CODE);
@@ -1243,7 +1249,9 @@ app.post('/api/send-code', async (req, res) =>{
 		});
 	}
 
-}); 
+});
+
+
 
 // Guardar token en la base de datos y enviar email
 const saveTokenAndSendEmail = async (userId, token, userName, email) => {

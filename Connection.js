@@ -1375,6 +1375,44 @@ export class Connection {
 		}
 		
 	}
+//logs
+
+async addLog(usuario_id, accion, descripcion) {
+	const url =
+	"http://" +
+	process.env.API_ADDR +
+	":" +
+	process.env.API_PORT +
+	"/addLog";
+	
+	const data = {
+		usuario_id,
+		accion,
+		descripcion
+	};
+
+	try {
+		const send = await fetch(url, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				"X-API-Key": process.env.API_KEY
+			},
+			body: JSON.stringify(data)
+		});
+
+		const response = await send.json();
+
+		if (send.status == 200) {
+			return response;
+		} else {
+			throw new Error(response.error || "Error al insertar log");
+		}
+
+	} catch (error) {
+		console.error("Error en addLog:", error);
+	}
+}
 
 }
 
