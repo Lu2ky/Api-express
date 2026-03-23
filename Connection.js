@@ -1375,7 +1375,8 @@ export class Connection {
 		}
 		
 	}
-//logs
+
+	//	------------------------ LOGS  ------------------------ //
 
 async addLog(usuario_id, accion, descripcion) {
 	const url =

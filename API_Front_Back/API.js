@@ -1208,7 +1208,6 @@ app.post("/api/auth/add-admin", async (req, res) => {
 
 app.post('/api/send-code', async (req, res) =>{
     const USER_CODE = req.body.codUsuario;
-	console.log(USER_CODE);
 
 	// Obtener los datos del usuario
 	try {
@@ -1238,8 +1237,7 @@ app.post('/api/send-code', async (req, res) =>{
         );
 
 		return res.status(200).json({
-			success: (USER_DATA != undefined),
-			data: USER_DATA
+			success: (USER_DATA != undefined)
 		});
 
 	} catch (error) {
@@ -1250,8 +1248,6 @@ app.post('/api/send-code', async (req, res) =>{
 	}
 
 });
-
-
 
 // Guardar token en la base de datos y enviar email
 const saveTokenAndSendEmail = async (userId, token, userName, email) => {
@@ -1327,9 +1323,7 @@ app.post('/api/validate-token', async (req, res) =>{
 
 });
 
-
 //	------------------------ FUNCIONES EXTRA ------------------------ //
-
 
 // Obtener info del usuario
 const userData = async (idUser) => {
@@ -1357,16 +1351,8 @@ const userData = async (idUser) => {
     }
 };
 
-
 // Llamado al puerto
 app.listen(PORT);
-
-// TO DO
-
-// - Add etiqueta
-// - Edit etiqueta
-// - Delete etiqueta
-
 
 
 
