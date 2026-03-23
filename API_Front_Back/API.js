@@ -1187,11 +1187,11 @@ app.post("/api/auth/add-admin", async (req, res) => {
   }
 });
 
-app.post("/api/auth/add-admin", async (req, res) => {
+app.post("/api/auth/changepassword", async (req, res) => {
 	const USER = req.body.user;
 	const PASS = req.body.pass;
 	try {
-		const RESULT = await Con.addadmin(USER, PASS);
+		const RESULT = await Con.changepassword(USER, PASS);
 		const success = RESULT != undefined;
 		return res.status(200).json({
 			success: success
