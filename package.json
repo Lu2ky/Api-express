@@ -3,7 +3,11 @@
 	"version": "1.0.0",
 	"type": "module",
 	"dependencies": {
+<<<<<<< HEAD
 		"bullmq": "^5.71.0",
+=======
+		"bcrypt": "^6.0.0",
+>>>>>>> 240e054234096f64433f19e841710051eb5a67c2
 		"cors": "^2.8.6",
 		"dayjs": "^1.11.19",
 		"dotenv": "^17.3.1",
