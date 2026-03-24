@@ -1264,9 +1264,14 @@ export class Connection {
 		":" +
 		process.env.API_PORT +
 		"/changepassword";
+		const encoder = new TextEncoder();
+        	const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(pass));
+        	const hashedPass = Array.from(new Uint8Array(hashBuffer))
+        	.map(b => b.toString(16).padStart(2, "0"))
+        	.join("");
 		const data = {
 		user: user,
-		pass: pass,
+		pass: hashedPass,
 		};
 		try {
 		const send = await fetch(url, {
