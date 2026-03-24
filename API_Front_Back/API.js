@@ -1226,7 +1226,7 @@ app.post('/api/validate-token', async (req, res) =>{
 
     try {
         // Guardar token en la base de datos
-        const RESPONSE = await Con.getToken(`reset:${CODE}`);
+        const RESPONSE = await Con.getToken(`reset:${USER_CODE}`);
 		const token = RESPONSE.token;
 
 		// Si userId NO es null el token es válido
