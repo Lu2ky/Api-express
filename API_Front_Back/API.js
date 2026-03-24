@@ -21,8 +21,8 @@ const __dirname = dirname(__filename);
 
 //INTERCAMBIAR ESTAS DOS LINEAS SI SE QUIERE EJECUTAR EN LOCAL O SI SE SUBIRÁ A PRODUCCION
 
-dotenv.config(); //PROD
-//dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
+//dotenv.config(); //PROD
+dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
 
 const app = express();
 const PORT = 28523;
@@ -1265,89 +1265,93 @@ const scheduleEmailAndNotification = async (idToDo, userName, title, content, da
     }
 };
 
-// Bloquear notificación temporalmente
-app.post('/api/stop-notification', async (req, res) => {
-    const idToDo = req.body.idToDo; 
-    
-    if (!idToDo) {
-        return res.status(400).json({ error: "Debes enviar idToDo en el cuerpo JSON" });
-    }
-
+// Bloquear notificaciones temporalmente
+app.post('/api/stop-all-notifications', async (req, res) => {
     try {
-        const jobId = `todo-${idToDo}`;
-        console.log(`Buscando Job en Redis: ${jobId}`);
+        // Vaciar todos los jobs: los que esperan (waiting) y los futuros (delayed)
+        await reminderQueue.drain(true); 
 
-        const job = await reminderQueue.getJob(jobId);
-
-        if (job) {
-            await job.remove();
-            console.log("El recordatorio ${jobId} fue eliminado.");
-            return res.json({ message: "Notificación ${idToDo} detenida con éxito." });
-        } else {
-            console.log("No se encontró el job ${jobId} (tal vez ya se ejecutó o el nombre no coincide).");
-            return res.status(404).json({ message: "La notificación no existe o ya fue enviada." });
-        }
+        // Limpiamos basura de intentos fallidos previos
+        await reminderQueue.clean(0, 0, 'failed');
+        
+        console.log("Sistema Limpio: Se eliminaron todas las tareas de la cola.");
+        res.json({ message: "Todas las notificaciones han sido canceladas en el motor de envíos." });
     } catch (error) {
-        console.error("Error en stop-notification:", error);
         res.status(500).json({ error: error.message });
     }
 });
 
-// Reanudar notificación
-app.post('/api/resume-notification', async (req, res) => {
-	const idToDo = req.body.idToDo; 
-	const codUsuario = req.body.codUsuario; 
-
+app.get('/api/debug-redis', async (req, res) => {
     try {
-        console.log(`--- Iniciando Reactivación ---`);
-        console.log(`Usuario: ${codUsuario} | Buscando Tarea: ${idToDo}`);
+        // Obtenemos conteos de BullMQ
+        const counts = await reminderQueue.getJobCounts();
+        
+        // Obtenemos los últimos 10 trabajos agendados (delayed)
+        const delayedJobs = await reminderQueue.getDelayed(0, 10);
+        
+        res.json({
+            resumen: counts,
+            detalles_futuros: delayedJobs.map(j => ({
+                id: j.id,
+                data: j.data,
+                timestamp: new Date(j.timestamp)
+            }))
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
-		// Llamar a método de obtener recordatorios para extraer la información
-        const response = await fetch(`http://${process.env.API_ADDR}:${process.env.LOOP_PORT}/api/reminders-by-user/${codUsuario}`);
+// Reanudar notificaciones
+app.post('/api/restore-notifications', async (req, res) => {
+    try {
+        console.log("Iniciando restauración masiva desde Go...");
+        
+        // Obtener la lista de Go 
+        const codUsuario = req.body.codUsuario; 
+        const reminders = await Con.getReminders(codUsuario);
+
+        if (!reminders || reminders.length === 0) {
+            return res.status(404).json({ message: "No hay tareas activas para restaurar." });
+        }
 
 		const USER_QUERY = await userData(codUsuario);
 		const CLIENT_EMAIL = USER_QUERY.correo;
 		const USER_NAME = USER_QUERY.nombre;
 		const ADVANCE_NOTICE = USER_QUERY.antelacionNotis;
-        
-        if (!response.ok) {
-            return res.status(404).json({ error: "No se pudo obtener la lista de recordatorios del usuario." });
-        }
 
-        const remindersList = await response.json();
+        let count = 0;
 
-        // Buscamos el recordatorio exacto para renaduar
-        const reminder = remindersList.N_idToDoList;
+        // Recorrer y re-agendar solo lo que es válido
+		for (const r of reminders) {
+			const fechaRaw = r.Dt_fechaVencimiento?.String || r.Dt_fechaVencimiento;
+			const fechaTarea = new Date(fechaRaw);
+			const ahora = new Date();
 
-        if (!reminder) {
-            console.log("Tarea no encontrada en la lista del usuario.");
-            return res.status(404).json({ error: "El recordatorio no existe para este usuario." });
-        }
+			const isDeleted = r.B_isDeleted === true || r.B_isDeleted === 1;
+			const isPending = r.B_estado === false || r.B_estado === 0; 
 
-        // Extraemos ls datos
-        const title = reminder.T_nombre;
-        const content = reminder.T_descripcion;
-        const dateStr = reminder.Dt_fechaVencimiento;
-        
-        // Re-agendar en BullMQ
-        await scheduleEmailAndNotification(
-            idToDo, 
-            USER_NAME, 
-            title, 
-            content, 
-            dateStr, 
-            ADVANCE_NOTICE, 
-            CLIENT_EMAIL
-        );
+			if (!isDeleted && isPending && fechaTarea > ahora) {
+				console.log(`Agendando Pendiente: ${r.T_nombre}`);
+				await scheduleEmailAndNotification(
+					r.N_idToDoList,
+					USER_NAME,
+					r.T_nombre,
+					r.T_descripcion?.String || "",
+					fechaRaw,
+					ADVANCE_NOTICE,
+					CLIENT_EMAIL
+				);
+				count++;
+			} else {
+				console.log(`Saltando ${r.T_nombre}: Borrado=${isDeleted}, Pendiente=${isPending}, Futuro=${fechaTarea > ahora}`);
+			}
+		}
 
-        res.json({ 
-            message: "Notificación reactivada con éxito.",
-            tarea: title 
-        });
-
+        res.json({ message: `Sincronización exitosa. Se re-agendaron ${count} notificaciones activas.` });
     } catch (error) {
-        console.error("Error en resume-notification:", error);
-        res.status(500).json({ error: "Error interno al procesar la reactivación." });
+        console.error("Error en restauración:", error);
+        res.status(500).json({ error: "Error al sincronizar con la base de datos." });
     }
 });
 
