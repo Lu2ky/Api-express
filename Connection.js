@@ -939,6 +939,7 @@ export class Connection {
 		};
 
 		try {
+			console.log("Enviando a Go:", JSON.stringify(data));
 			const send = await fetch(url, {
 				method: "POST",
 				headers: {

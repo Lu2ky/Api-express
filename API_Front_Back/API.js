@@ -1,25 +1,26 @@
-import {Connection} from "../Connection.js";
-import {fileURLToPath} from "url";
-import {dirname, resolve} from "path";
+import { Connection } from "../Connection.js";
+import { fileURLToPath } from "url";
+import { dirname, resolve } from "path";
 import dotenv from "dotenv";
-import {officialAct} from "../OfficialAct.js";
-import {PersonalAct} from "../PersonalAct.js";
-import {Notification} from "../Notification.js";
+import { officialAct } from "../OfficialAct.js";
+import { PersonalAct } from "../PersonalAct.js";
+import { Notification } from "../Notification.js";
 import express from "express";
 import cors from "cors";
-import {stringify} from "querystring";
-import {Reminder} from "../Reminder.js";
+import { stringify } from "querystring";
+import { Reminder } from "../Reminder.js";
 import { promises } from "dns";
 import schedule from 'node-schedule';
 import e from "express";
+import { Queue } from 'bullmq';
+import { redisConnection } from '../QueueConfig.js'; 
+import '../ReminderWorker.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-//INTERCAMBIAR ESTAS DOS LINEAS SI SE QUIERE EJECUTAR EN LOCAL O SI SE SUBIRÁ A PRODUCCION
-
-//dotenv.config(); //PROD
-dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
+//dotenv.config();	//PROD
+dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});	//LOCAL
 
 const app = express();
 const PORT = 28523;
@@ -27,6 +28,26 @@ app.use(cors());
 app.use(express.json());
 
 let Con = new Connection();
+
+const reminderQueue = new Queue('reminderQueue', { connection: redisConnection });
+
+reminderQueue.client.then(async (client) => {
+    try {
+        // Al tener password, este 'ping' debería devolver 'PONG'
+        const respuesta = await client.ping();
+        console.log("--- RESULTADO DE AUTENTICACIÓN ---");
+        if (respuesta === 'PONG') {
+            console.log("¡CONTRASEÑA CORRECTA! Conexión total establecida.");
+            
+            // Opcional: Probar escritura
+            await client.set('auth_test', 'Exito');
+            console.log("Escritura permitida.");
+        }
+    } catch (error) {
+        console.error("ERROR DE AUTENTICACIÓN:", error.message);
+        console.log("Tip: Revisa que DB_PASSWORD_REDIS en tu .env sea la correcta.");
+    }
+});
 
 //	--------------------------------------- ACTIVIDADES -------------------------------------- \\
 
@@ -882,119 +903,6 @@ app.post('/api/config-notification', async (req, res) =>{
 
 });
 
-// Función enviar correo y notificación
-const scheduleEmailAndNotification = (idToDo, userName, title, content, dateStr, advanceNotice, email) => {
-    // Procesar la fecha para que sea compatible con JS local
-    const ISO_DATE = dateStr.replace(" ", "T");
-    const FINAL_DATE = new Date(ISO_DATE);
-
-	// Conversión de hora string a milisegundos
-	const [H, M, S] = advanceNotice.split(':').map(Number);
-	const MILISECONDS_TO_SUBTRACT = ((H * 3600) + (M * 60) + S) * 1000;
-
-
-	const ALERT_DATE = new Date(FINAL_DATE.getTime() - MILISECONDS_TO_SUBTRACT);
-    const NOW = new Date();
-
-    console.log(`\nSISTEMA DE PROGRAMACIÓN`);
-    console.log(`Usuario: ${userName}`);
-    console.log(`Actividad: ${title}`);
-    console.log(`Hora de Alerta: ${ALERT_DATE.toLocaleString()}`);
-
-	console.log("HORA ACTUAL (servidor):", NOW.toString());
-	console.log("HORA PROGRAMADA (alerta):", ALERT_DATE.toString());
-
-    // Verificar si la hora de la alerta es futura
-    if (ALERT_DATE > NOW) {
-        const job = schedule.scheduleJob(ALERT_DATE, async () => {
-            console.log(`\nEjecutando avisos para: ${title}`);
-
-            const emailData = {
-                user: userName,    
-				horaInicio: ALERT_DATE.toLocaleTimeString('en-GB'),     
-				horaFinal: FINAL_DATE.toLocaleTimeString('en-GB'),
-				dia: FINAL_DATE.getDate(),
-                destinatario: email,   
-                actividad: title,       
-            };
-			
-			const ALERT_DATE_STRING = ALERT_DATE.toLocaleString('sv-SE').replace('T', ' ');
-
-			const notiDate = {
-				idToDoList: idToDo, 
-				nombre: `Recordatorio: ${title}`,
-				descripcion: content,
-				fechaEmision: ALERT_DATE_STRING
-
-			}
-
-            try {
-				console.log(`Enviando correo a ${email} con los siguientes datos:`, emailData);
-                const emailResponse = await fetch("http://" +
-				process.env.EMAIL_ADDR +
-				":" +
-				process.env.EMAIL_PORT +
-				"/api/sendEmail", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(emailData)
-
-                });
-				console.log(`Respuesta del servidor .25:`, emailResponse.status, emailResponse.statusText);
-                if (emailResponse.ok) {
-                    console.log(`Correo enviado con éxito a ${email}!`);
-
-                } else {
-                    const errorDetail = await emailResponse.json().catch(() => ({}));
-                    console.log(`Servidor .25 rechazó (422/400):`, errorDetail);
-
-                }
-            } catch (err) {
-                console.error("Error de conexión al servicio de correo:", err.message);
- 
-            }
-
-            try {
-                await fetch("http://" +
-				process.env.API_ADDR +
-				":" +
-				process.env.LOOP_PORT +
-				"/api/add-notification", { 
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(notiDate)
-                });
-                console.log("Notificación enviada al servidor local");
-
-            } catch (err) {
-                console.error("Error al enviar la notificación:", err.message);	
-            }
-
-			try {
-
-                await Con.addEmail(
-                    idToDo,            
-                    `Recordatorio: ${title}`, 
-                    content,         
-                    dateStr
-                );
-                console.log("Log de correo guardado correctamente en la BD.");
-            } catch (dbError) {
-                console.error("Error al guardar el log de correo:", dbError.message);
-            }
-
-        });
-
-        if (job) {
-            console.log("Recordatorio enlazado al cronómetro con éxito");
-
-        }
-    } else {
-
-        console.log("La hora de aviso ya pasó. No se puede programar.");
-    }
-};
-
 //	--------------------------------------- IMPORTAR HORARIO -------------------------------------- \\
 
 app.post('/api/import-schedule', async (req, res) =>{
@@ -1071,32 +979,6 @@ app.get("/api/get-user-data/:idUser", async (req, res) => {
 	}
 });
 
-
-// Recibir codigo usuario
-/*
-app.post('/api/usuario-data', async (req, res) => {
-    try {
-        // Extraemos el atributo 'codigoUsuario' del cuerpo de la petición
-        const { codigoUsuario } = req.body;
-
-        if (!codigoUsuario) {
-            return res.status(400).json({ error: "El código de usuario es obligatorio" });
-        }
-
-        console.log(`Recibido código de usuario: ${codigoUsuario}`);
-
-        
-
-        res.status(200).json({ message: "Datos recibidos correctamente", userCode: codigoUsuario });
-
-    } catch (error) {
-        console.error("Error en el endpoint:", error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-});
-
-*/
-
 //	------------------------ FUNCIONALIDADES DEL LDAP ------------------------ //
 
 app.post("/api/auth/create-user", async (req, res) => {
@@ -1148,19 +1030,19 @@ app.post("/api/auth/validate-user", async (req, res) => {
 
 });
 app.post("/api/auth/add-admin", async (req, res) => {
-  const USER = req.body.user;
-  const PASS = req.body.pass;
-  try {
-    const RESULT = await Con.addadmin(USER, PASS);
-    const success = RESULT != undefined;
-    return res.status(200).json({
-      success: success,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      error: "Error interno del servidor",
-    });
-  }
+	const USER = req.body.user;
+	const PASS = req.body.pass;
+	try {
+		const RESULT = await Con.addadmin(USER, PASS);
+		const success = RESULT != undefined;
+		return res.status(200).json({
+		success: success,
+		});
+	} catch (error) {
+		return res.status(500).json({
+		error: "Error interno del servidor",
+		});
+	}
 });
 
 app.post("/api/auth/add-admin", async (req, res) => {
@@ -1300,9 +1182,7 @@ app.post('/api/validate-token', async (req, res) =>{
 
 });
 
-
 //	------------------------ FUNCIONES EXTRA ------------------------ //
-
 
 // Obtener info del usuario
 const userData = async (idUser) => {
@@ -1330,15 +1210,124 @@ const userData = async (idUser) => {
     }
 };
 
+const scheduleEmailAndNotification = async (idToDo, userName, title, content, dateStr, advanceNotice, email) => {
+    // Lógica de fechas
+    const ISO_DATE = dateStr.replace(" ", "T");
+    const FINAL_DATE = new Date(ISO_DATE);
+    const [H, M, S] = advanceNotice.split(':').map(Number);
+    const MILISECONDS_TO_SUBTRACT = ((H * 3600) + (M * 60) + S) * 1000;
+
+    const ALERT_DATE = new Date(FINAL_DATE.getTime() - MILISECONDS_TO_SUBTRACT);
+    const NOW = new Date();
+
+    const delay = ALERT_DATE.getTime() - NOW.getTime();
+
+    if (delay > 0) {
+        await reminderQueue.add('send-reminder', {
+            idToDo, userName, title, content, dateStr, email,
+            alertDateStr: ALERT_DATE.toLocaleString(),
+            finalDateStr: FINAL_DATE.toISOString()
+        }, {
+			delay: delay,
+            jobId: `todo-${idToDo}`,
+            removeOnComplete: true,
+            removeOnFail: false
+        });
+
+        console.log(`[BullMQ] Recordatorio "${title}" agendada con ID: todo-${idToDo} (Faltan ${delay / 1000} seg).`);
+    } else {
+        console.log("La hora de aviso ya pasó. No se puede programar.");
+    }
+};
+
+// Bloquear notificación temporalmente
+app.post('/api/stop-notification', async (req, res) => {
+    const idToDo = req.body.idToDo; 
+    
+    if (!idToDo) {
+        return res.status(400).json({ error: "Debes enviar idToDo en el cuerpo JSON" });
+    }
+
+    try {
+        const jobId = `todo-${idToDo}`;
+        console.log(`Buscando Job en Redis: ${jobId}`);
+
+        const job = await reminderQueue.getJob(jobId);
+
+        if (job) {
+            await job.remove();
+            console.log("El recordatorio ${jobId} fue eliminado.");
+            return res.json({ message: "Notificación ${idToDo} detenida con éxito." });
+        } else {
+            console.log("No se encontró el job ${jobId} (tal vez ya se ejecutó o el nombre no coincide).");
+            return res.status(404).json({ message: "La notificación no existe o ya fue enviada." });
+        }
+    } catch (error) {
+        console.error("Error en stop-notification:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Reanudar notificación
+app.post('/api/resume-notification', async (req, res) => {
+	const idToDo = req.body.idToDo; 
+	const codUsuario = req.body.codUsuario; 
+
+    try {
+        console.log(`--- Iniciando Reactivación ---`);
+        console.log(`Usuario: ${codUsuario} | Buscando Tarea: ${idToDo}`);
+
+		// Llamar a método de obtener recordatorios para extraer la información
+        const response = await fetch(`http://${process.env.API_ADDR}:${process.env.LOOP_PORT}/api/reminders-by-user/${codUsuario}`);
+
+		const USER_QUERY = await userData(codUsuario);
+		const CLIENT_EMAIL = USER_QUERY.correo;
+		const USER_NAME = USER_QUERY.nombre;
+		const ADVANCE_NOTICE = USER_QUERY.antelacionNotis;
+        
+        if (!response.ok) {
+            return res.status(404).json({ error: "No se pudo obtener la lista de recordatorios del usuario." });
+        }
+
+        const remindersList = await response.json();
+
+        // Buscamos el recordatorio exacto para renaduar
+        const reminder = remindersList.N_idToDoList;
+
+        if (!reminder) {
+            console.log("Tarea no encontrada en la lista del usuario.");
+            return res.status(404).json({ error: "El recordatorio no existe para este usuario." });
+        }
+
+        // Extraemos ls datos
+        const title = reminder.T_nombre;
+        const content = reminder.T_descripcion;
+        const dateStr = reminder.Dt_fechaVencimiento;
+        
+        // Re-agendar en BullMQ
+        await scheduleEmailAndNotification(
+            idToDo, 
+            USER_NAME, 
+            title, 
+            content, 
+            dateStr, 
+            ADVANCE_NOTICE, 
+            CLIENT_EMAIL
+        );
+
+        res.json({ 
+            message: "Notificación reactivada con éxito.",
+            tarea: title 
+        });
+
+    } catch (error) {
+        console.error("Error en resume-notification:", error);
+        res.status(500).json({ error: "Error interno al procesar la reactivación." });
+    }
+});
 
 // Llamado al puerto
 app.listen(PORT);
-
-// TO DO
-
-// - Add etiqueta
-// - Edit etiqueta
-// - Delete etiqueta
 
 
 
