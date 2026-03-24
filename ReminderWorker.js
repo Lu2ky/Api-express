@@ -13,8 +13,11 @@ const worker = new Worker('reminderQueue', async (job) => {
     // Contenido de email
     const emailData = {
         user: userName,
-        horaInicio: new Date().toLocaleTimeString('en-GB'),
-        horaFinal: FINAL_DATE.toLocaleTimeString('en-GB'),
+        horaFinal: FINAL_DATE.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            hour12: true 
+        }),
         dia: FINAL_DATE.getDay() === 0 ? 7 : FINAL_DATE.getDay(),
         destinatario: email,
         actividad: title,

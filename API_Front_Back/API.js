@@ -1300,7 +1300,6 @@ const scheduleEmailAndNotification = async (idToDo, userName, title, content, da
     if (delay > 0) {
         await reminderQueue.add('send-reminder', {
             idToDo, userName, title, content, dateStr, email,
-            alertDateStr: ALERT_DATE.toISOString(),
             finalDateStr: FINAL_DATE.toISOString()
         }, {
 			delay: delay,
@@ -1325,7 +1324,7 @@ app.post('/api/stop-all-notifications', async (req, res) => {
             return res.status(400).json({ error: "Falta el parámetro codUsuario en el cuerpo de la petición." });
         }
 
-        console.log(`\n--- 🛑 DETENIENDO NOTIFICACIONES: Usuario ${codUsuario} ---`);
+        console.log(`\nDETENIENDO NOTIFICACIONES: Usuario ${codUsuario} ---`);
 
         // Obtener los trabajos de la cola en diferentes estados
         const jobs = await reminderQueue.getJobs(['waiting', 'delayed', 'active']);
@@ -1433,7 +1432,6 @@ app.post('/api/restore-notifications', async (req, res) => {
                 
                 console.log(`Agendando: "${titulo}" | Alerta: ${fechaAlerta.toLocaleString()}`);
 
-                // 3. Llamada con los 8 parámetros en orden
                 await scheduleEmailAndNotification(
                     idToDo,             
                     user.nombre,        
@@ -1465,9 +1463,8 @@ app.post('/api/restore-notifications', async (req, res) => {
     }
 });
 
-/**
- * Calcula la fecha exacta de la notificación restando la antelación
- */
+
+//Calcula la fecha exacta de la notificación restando la antelación
 function calcularFechaAlerta(vencimiento, antelacion) {
     if (!antelacion || !antelacion.includes(':')) return vencimiento;
     
