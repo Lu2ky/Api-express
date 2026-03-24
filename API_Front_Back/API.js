@@ -1222,11 +1222,14 @@ const saveTokenAndSendEmail = async (userId, token, userName, email) => {
 // Validar token
 app.post('/api/validate-token', async (req, res) =>{
 	const USER_CODE = req.body.codUsuario;
-	console.log(USER_CODE);
+	const USER_QUERY = await userData(USER_CODE);
+	const USER_ID = USER_QUERY.idUsuario.toString;
+	console.log(USER_ID); 
+
 
     try {
         // Guardar token en la base de datos
-        const RESPONSE = await Con.getToken(`reset:${USER_CODE}`);
+        const RESPONSE = await Con.getToken(`reset:${USER_ID}`);
 		const token = RESPONSE.token;
 
 		// Si userId NO es null el token es válido
