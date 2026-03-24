@@ -3,6 +3,7 @@ import {fileURLToPath} from "url";
 import {dirname, resolve} from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+import bcrypt from "bcryptjs";
 
 dotenv.config();	//PROD
 // dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});	//LOCAL
@@ -1137,10 +1138,15 @@ export class Connection {
 			":" +
 			process.env.API_PORT +
 			"/addauthuser";
+		const encoder = new TextEncoder();
+    	const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(pass));
+    	const hashedPass = Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
 
 		const data = {
 			User: user,
-			Pass: pass
+			Pass: hashedPass
 		};
 		try {
 			const send = await fetch(url, {
@@ -1169,10 +1175,15 @@ export class Connection {
 			":" +
 			process.env.API_PORT +
 			"/auth";
+		const encoder = new TextEncoder();
+    	const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(pass));
+    	const hashedPass = Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
 
 		const data = {
 			User: user,
-			Pass: pass
+			Pass: hashedPass
 		};
 		try {
 			const send = await fetch(url, {
@@ -1227,18 +1238,23 @@ export class Connection {
 		":" +
 		process.env.API_PORT +
 		"/changepassword";
+		const encoder = new TextEncoder();
+    	const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(pass));
+    	const hashedPass = Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
 
 		const data = {
 			User: user,
-			Pass: pass,
+			Pass: hashedPass,
 		};
-
+		
 		try {
 			const send = await fetch(url, {
 				method: "POST",
 				headers: {
 				"Content-Type": "application/json",
-				"X-API-Key": procces.env.API_KEY,
+				"X-API-Key": process.env.API_KEY,
 				},
 				body: JSON.stringify(data),
 			});
@@ -1260,16 +1276,22 @@ export class Connection {
 		":" +
 		process.env.API_PORT +
 		"/addadmin";
+		const encoder = new TextEncoder();
+    	const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(pass));
+    	const hashedPass = Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+
 		const data = {
 		User: user,
-		Pass: pass,
+		Pass: hashedPass,
 		};
 		try {
 			const send = await fetch(url, {
 				method: "POST",
 				headers: {
 				"Content-Type": "application/json",
-				"X-API-Key": procces.env.API_KEY,
+				"X-API-Key": process.env.API_KEY,
 				},
 				body: JSON.stringify(data),
 			});
