@@ -666,7 +666,8 @@ app.post("/api/add-reminder", async (req, res) => {
                 DESC,      
                 DATE,      
                 ADVANCE_NOTICE,   
-                CLIENT_EMAIL
+                CLIENT_EMAIL,
+				USER_CODE
             );
         }
         return res.status(200).json({ success: true, data: RESULT });
@@ -1235,7 +1236,7 @@ const userData = async (idUser) => {
     }
 };
 
-const scheduleEmailAndNotification = async (idToDo, userName, title, content, dateStr, advanceNotice, email) => {
+const scheduleEmailAndNotification = async (idToDo, userName, title, content, dateStr, advanceNotice, email, userCode) => {
     // Lógica de fechas
     const ISO_DATE = dateStr.replace(" ", "T");
     const FINAL_DATE = new Date(ISO_DATE);
@@ -1250,11 +1251,11 @@ const scheduleEmailAndNotification = async (idToDo, userName, title, content, da
     if (delay > 0) {
         await reminderQueue.add('send-reminder', {
             idToDo, userName, title, content, dateStr, email,
-            alertDateStr: ALERT_DATE.toLocaleString(),
+            alertDateStr: ALERT_DATE.toISOString(),
             finalDateStr: FINAL_DATE.toISOString()
         }, {
 			delay: delay,
-            jobId: `todo-${idToDo}`,
+            jobId: `${userCode}-${idToDo}`,
             removeOnComplete: true,
             removeOnFail: false
         });
@@ -1268,19 +1269,56 @@ const scheduleEmailAndNotification = async (idToDo, userName, title, content, da
 // Bloquear notificaciones temporalmente
 app.post('/api/stop-all-notifications', async (req, res) => {
     try {
-        // Vaciar todos los jobs: los que esperan (waiting) y los futuros (delayed)
-        await reminderQueue.drain(true); 
+        const { codUsuario } = req.body;
 
-        // Limpiamos basura de intentos fallidos previos
-        await reminderQueue.clean(0, 0, 'failed');
-        
-        console.log("Sistema Limpio: Se eliminaron todas las tareas de la cola.");
-        res.json({ message: "Todas las notificaciones han sido canceladas en el motor de envíos." });
+        // Validación de entrada
+        if (!codUsuario) {
+            return res.status(400).json({ error: "Falta el parámetro codUsuario en el cuerpo de la petición." });
+        }
+
+        console.log(`\n--- 🛑 DETENIENDO NOTIFICACIONES: Usuario ${codUsuario} ---`);
+
+        // Obtener los trabajos de la cola en diferentes estados
+        const jobs = await reminderQueue.getJobs(['waiting', 'delayed', 'active']);
+
+        let count = 0;
+
+        for (const job of jobs) {
+            const isUserJob = job.id.startsWith(`${codUsuario}-`) || 
+			job.data.codUsuario == codUsuario;
+
+            if (isUserJob) {
+                try {
+                    await job.remove();
+                    count++;
+                    console.log(`Eliminado Job ID: ${job.id}`);
+                } catch (removeError) {
+                    console.warn(`No se pudo eliminar el job ${job.id}: ${removeError.message}`);
+                }
+            }
+        }
+
+        console.log(`Limpieza terminada: ${count} tareas eliminadas para ${codUsuario} ---\n`);
+
+        res.json({ 
+            success: true, 
+            message: `Se han cancelado tus ${count} notificaciones pendientes.`,
+            detalles: {
+                usuario: codUsuario,
+                eliminados: count
+            }
+        });
+
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error("ERROR CRÍTICO AL DETENER NOTIFICACIONES:", error);
+        res.status(500).json({ 
+            error: "Error interno del servidor al limpiar la cola de Redis.",
+            detalle: error.message 
+        });
     }
 });
 
+// Revisar registros en la bd redis
 app.get('/api/debug-redis', async (req, res) => {
     try {
         // Obtenemos conteos de BullMQ
@@ -1305,55 +1343,94 @@ app.get('/api/debug-redis', async (req, res) => {
 // Reanudar notificaciones
 app.post('/api/restore-notifications', async (req, res) => {
     try {
-        console.log("Iniciando restauración masiva desde Go...");
-        
-        // Obtener la lista de Go 
-        const codUsuario = req.body.codUsuario; 
-        const reminders = await Con.getReminders(codUsuario);
+        const { codUsuario } = req.body;
+        if (!codUsuario) return res.status(400).json({ error: "Falta codUsuario" });
 
-        if (!reminders || reminders.length === 0) {
-            return res.status(404).json({ message: "No hay tareas activas para restaurar." });
+        console.log(`\nRESTAURACIÓN: Usuario ${codUsuario} ---`);
+
+        // Datos del Usuario 
+        const user = await userData(codUsuario);
+        
+        // Datos de Go 
+        const rawReminders = await Con.getReminders(codUsuario);
+        const reminders = Array.isArray(rawReminders) ? rawReminders : [];
+
+        if (reminders.length === 0) {
+            return res.status(404).json({ message: "Sin tareas para este usuario." });
         }
 
-		const USER_QUERY = await userData(codUsuario);
-		const CLIENT_EMAIL = USER_QUERY.correo;
-		const USER_NAME = USER_QUERY.nombre;
-		const ADVANCE_NOTICE = USER_QUERY.antelacionNotis;
-
         let count = 0;
+        const ahora = new Date();
 
-        // Recorrer y re-agendar solo lo que es válido
-		for (const r of reminders) {
-			const fechaRaw = r.Dt_fechaVencimiento?.String || r.Dt_fechaVencimiento;
-			const fechaTarea = new Date(fechaRaw);
-			const ahora = new Date();
+        for (const r of reminders) {
+            // Limpieza de datos
+            const idToDo = r.N_idToDoList || r.n_idtodolist;
+            const titulo = r.T_nombre || r.t_nombre;
+            const desc = r.T_descripcion?.String || r.t_descripcion?.String || r.T_descripcion || "";
+            const fechaRaw = r.Dt_fechaVencimiento?.String || r.Dt_fechaVencimiento;
+            
+            // Estados
+            const isDeleted = r.B_isDeleted === true || r.B_isDeleted === 1;
+            const isPending = r.B_estado === false || r.B_estado === 0;
 
-			const isDeleted = r.B_isDeleted === true || r.B_isDeleted === 1;
-			const isPending = r.B_estado === false || r.B_estado === 0; 
+            if (!fechaRaw) continue;
 
-			if (!isDeleted && isPending && fechaTarea > ahora) {
-				console.log(`Agendando Pendiente: ${r.T_nombre}`);
-				await scheduleEmailAndNotification(
-					r.N_idToDoList,
-					USER_NAME,
-					r.T_nombre,
-					r.T_descripcion?.String || "",
-					fechaRaw,
-					ADVANCE_NOTICE,
-					CLIENT_EMAIL
-				);
-				count++;
-			} else {
-				console.log(`Saltando ${r.T_nombre}: Borrado=${isDeleted}, Pendiente=${isPending}, Futuro=${fechaTarea > ahora}`);
-			}
-		}
+            // LÓGICA DE TIEMPO 
+            const fechaVencimiento = new Date(fechaRaw);
+            const fechaAlerta = calcularFechaAlerta(fechaVencimiento, user.antelacionNotis);
 
-        res.json({ message: `Sincronización exitosa. Se re-agendaron ${count} notificaciones activas.` });
+            // FILTRO CRÍTICO: Activa, Pendiente y Alerta FUTURA
+            if (!isDeleted && isPending && fechaAlerta > ahora) {
+                
+                console.log(`Agendando: "${titulo}" | Alerta: ${fechaAlerta.toLocaleString()}`);
+
+                // 3. Llamada con los 8 parámetros en orden
+                await scheduleEmailAndNotification(
+                    idToDo,             
+                    user.nombre,        
+                    titulo,               
+                    desc,               
+                    fechaRaw,              
+                    user.antelacionNotis, 
+                    user.correo,           
+                    codUsuario         
+                );
+                
+                count++;
+            } else {
+                console.log(`Omitida: "${titulo}" (Alerta pasada o tarea inactiva)`);
+            }
+        }
+
+        console.log(`TERMINADO: ${count} restaurados ---\n`);
+
+        res.json({ 
+            success: true, 
+            message: `Sincronización exitosa.`, 
+            total_restaurado: count 
+        });
+
     } catch (error) {
-        console.error("Error en restauración:", error);
-        res.status(500).json({ error: "Error al sincronizar con la base de datos." });
+        console.error("Error Crítico:", error.message);
+        res.status(500).json({ error: "Fallo en la sincronización.", detalle: error.message });
     }
 });
+
+/**
+ * Calcula la fecha exacta de la notificación restando la antelación
+ */
+function calcularFechaAlerta(vencimiento, antelacion) {
+    if (!antelacion || !antelacion.includes(':')) return vencimiento;
+    
+    const [h, m, s] = antelacion.split(':').map(Number);
+    const alerta = new Date(vencimiento);
+    
+    alerta.setHours(alerta.getHours() - (h || 0));
+    alerta.setMinutes(alerta.getMinutes() - (m || 0));
+    alerta.setSeconds(alerta.getSeconds() - (s || 0));
+    
+    return alerta;
+}
 
 // Llamado al puerto
 app.listen(PORT);
