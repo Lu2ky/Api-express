@@ -1264,7 +1264,6 @@ const userData = async (idUser) => {
 	try {
         const response = await Con.getUserData(idUser);
         
-        // Validar si response no es null
         if (!response || response.length === 0) {
             throw new Error("No se encontró la data del usuario en la base de datos");
         }
@@ -1279,7 +1278,6 @@ const userData = async (idUser) => {
         };
 
     } catch (error) {
-        // Este error ahora será capturado por el catch de tu app.post
         console.error("Error en la función userData:", error.message);
         throw error; 
     }
@@ -1369,10 +1367,10 @@ app.post('/api/stop-all-notifications', async (req, res) => {
 // Revisar registros en la bd redis
 app.get('/api/debug-redis', async (req, res) => {
     try {
-        // Obtenemos conteos de BullMQ
+        // Obtener conteos de BullMQ
         const counts = await reminderQueue.getJobCounts();
         
-        // Obtenemos los últimos 10 trabajos agendados (delayed)
+        // Obtener los últimos 10 trabajos agendados
         const delayedJobs = await reminderQueue.getDelayed(0, 10);
         
         res.json({
