@@ -1355,9 +1355,6 @@ app.post('/api/resume-notification', async (req, res) => {
 app.listen(PORT);
 
 
-// Llamado al puerto
-app.listen(PORT);
-
 
 
 
