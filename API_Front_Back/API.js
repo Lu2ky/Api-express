@@ -1,17 +1,20 @@
-import {Connection} from "../Connection.js";
-import {fileURLToPath} from "url";
-import {dirname, resolve} from "path";
+import { Connection } from "../Connection.js";
+import { fileURLToPath } from "url";
+import { dirname, resolve } from "path";
 import dotenv from "dotenv";
-import {officialAct} from "../OfficialAct.js";
-import {PersonalAct} from "../PersonalAct.js";
-import {Notification} from "../Notification.js";
+import { officialAct } from "../OfficialAct.js";
+import { PersonalAct } from "../PersonalAct.js";
+import { Notification } from "../Notification.js";
 import express from "express";
 import cors from "cors";
-import {stringify} from "querystring";
-import {Reminder} from "../Reminder.js";
+import { stringify } from "querystring";
+import { Reminder } from "../Reminder.js";
 import { promises } from "dns";
 import schedule from 'node-schedule';
 import e from "express";
+import { Queue } from 'bullmq';
+import { redisConnection } from '../QueueConfig.js'; 
+import '../ReminderWorker.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -27,6 +30,26 @@ app.use(cors());
 app.use(express.json());
 
 let Con = new Connection();
+
+const reminderQueue = new Queue('reminderQueue', { connection: redisConnection });
+
+reminderQueue.client.then(async (client) => {
+    try {
+        // Al tener password, este 'ping' debería devolver 'PONG'
+        const respuesta = await client.ping();
+        console.log("--- RESULTADO DE AUTENTICACIÓN ---");
+        if (respuesta === 'PONG') {
+            console.log("¡CONTRASEÑA CORRECTA! Conexión total establecida.");
+            
+            // Opcional: Probar escritura
+            await client.set('auth_test', 'Exito');
+            console.log("Escritura permitida.");
+        }
+    } catch (error) {
+        console.error("ERROR DE AUTENTICACIÓN:", error.message);
+        console.log("Tip: Revisa que DB_PASSWORD_REDIS en tu .env sea la correcta.");
+    }
+});
 
 //	--------------------------------------- ACTIVIDADES -------------------------------------- \\
 
@@ -55,7 +78,9 @@ app.get("/api/official-schedule/:userId", async (req, res) => {
 				eachData.Campus,
 				eachData.Credits,
 				eachData.FechaInicio,
-				eachData.FechaFinal
+				eachData.FechaFinal,
+				eachData.IdPeriodoAcademico,
+				eachData.PeriodoAcademico
 			);
 
 			return OfficialActivity.getData();
@@ -145,13 +170,14 @@ app.post("/api/add-personal-activity", async (req, res) => {
 	const DAY = req.body.day;
 
 	let TIMES = await Con.GetTimesData(ID_USER, DAY)
-
+	
 	if (TIMES !== null){
 		TIMES = TIMES.map(element =>{
 
 			return element.IsDeleted ? null : [element.idcourse, element.StartHour, element.EndHour, element.FechaInicio, element.FechaFinal]
 		}).filter(e => e !== null);
 	}
+
 	try {
 		if (
 			PersonalAct.hasCollisions(
@@ -629,12 +655,11 @@ app.post("/api/add-reminder", async (req, res) => {
 			TAG5
 		);
 
-
 		const ID_TO_DO = RESULT.InsertedId;
-		const USER_QUERY = await emailAndAdvanceNoticeUser(USER_CODE);
-		const USER_NAME = USER_QUERY.P_nombreUsuario;
-		const ADVANCE_NOTICE = USER_QUERY.P_antelacionNotis;
-		const CLIENT_EMAIL = USER_QUERY.P_correo;
+		const USER_QUERY = await userData(USER_CODE);
+		const USER_NAME = USER_QUERY.nombre;
+		const ADVANCE_NOTICE = USER_QUERY.antelacionNotis;
+		const CLIENT_EMAIL = USER_QUERY.correo;
 
         if (RESULT) {
             scheduleEmailAndNotification(
@@ -644,7 +669,8 @@ app.post("/api/add-reminder", async (req, res) => {
                 DESC,      
                 DATE,      
                 ADVANCE_NOTICE,   
-                CLIENT_EMAIL
+                CLIENT_EMAIL,
+				USER_CODE
             );
         }
         return res.status(200).json({ success: true, data: RESULT });
@@ -877,7 +903,7 @@ app.post('/api/add-notification', async (req, res) =>{
 app.post('/api/config-notification', async (req, res) =>{
 	const ID = req.body.idUsuario;
 	const MAIL = req.body.correo;
-	const TIME_MUTE = req.body.tiempoMute;
+	const TIME_MUTE = req.body.antelacionNotis;
 	const CELLPHONE = req.body.telefono;
 
 	console.log(ID, MAIL, TIME_MUTE)
@@ -903,119 +929,6 @@ app.post('/api/config-notification', async (req, res) =>{
 	}
 
 });
-
-// Función enviar correo y notificación
-const scheduleEmailAndNotification = (idToDo, userName, title, content, dateStr, advanceNotice, email) => {
-    // Procesar la fecha para que sea compatible con JS local
-    const ISO_DATE = dateStr.replace(" ", "T");
-    const FINAL_DATE = new Date(ISO_DATE);
-
-	// Conversión de hora string a milisegundos
-	const [H, M, S] = advanceNotice.split(':').map(Number);
-	const MILISECONDS_TO_SUBTRACT = ((H * 3600) + (M * 60) + S) * 1000;
-
-
-	const ALERT_DATE = new Date(FINAL_DATE.getTime() - MILISECONDS_TO_SUBTRACT);
-    const NOW = new Date();
-
-    console.log(`\nSISTEMA DE PROGRAMACIÓN`);
-    console.log(`Usuario: ${userName}`);
-    console.log(`Actividad: ${title}`);
-    console.log(`Hora de Alerta: ${ALERT_DATE.toLocaleString()}`);
-
-	console.log("HORA ACTUAL (servidor):", NOW.toString());
-	console.log("HORA PROGRAMADA (alerta):", ALERT_DATE.toString());
-
-    // Verificar si la hora de la alerta es futura
-    if (ALERT_DATE > NOW) {
-        const job = schedule.scheduleJob(ALERT_DATE, async () => {
-            console.log(`\nEjecutando avisos para: ${title}`);
-
-            const emailData = {
-                user: userName,    
-				horaInicio: ALERT_DATE.toLocaleTimeString('en-GB'),     
-				horaFinal: FINAL_DATE.toLocaleTimeString('en-GB'),
-				dia: FINAL_DATE.getDate(),
-                destinatario: email,   
-                actividad: title,       
-            };
-			
-			const ALERT_DATE_STRING = ALERT_DATE.toLocaleString('sv-SE').replace('T', ' ');
-
-			const notiDate = {
-				idToDoList: idToDo, 
-				nombre: `Recordatorio: ${title}`,
-				descripcion: content,
-				fechaEmision: ALERT_DATE_STRING
-
-			}
-
-            try {
-				console.log(`Enviando correo a ${email} con los siguientes datos:`, emailData);
-                const emailResponse = await fetch("http://" +
-				process.env.EMAIL_ADDR +
-				":" +
-				process.env.EMAIL_PORT +
-				"/api/sendEmail", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(emailData)
-
-                });
-				console.log(`Respuesta del servidor .25:`, emailResponse.status, emailResponse.statusText);
-                if (emailResponse.ok) {
-                    console.log(`Correo enviado con éxito a ${email}!`);
-
-                } else {
-                    const errorDetail = await emailResponse.json().catch(() => ({}));
-                    console.log(`Servidor .25 rechazó (422/400):`, errorDetail);
-
-                }
-            } catch (err) {
-                console.error("Error de conexión al servicio de correo:", err.message);
- 
-            }
-
-            try {
-                await fetch("http://" +
-				process.env.API_ADDR +
-				":" +
-				process.env.LOOP_PORT +
-				"/api/add-notification", { 
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(notiDate)
-                });
-                console.log("Notificación enviada al servidor local");
-
-            } catch (err) {
-                console.error("Error al enviar la notificación:", err.message);	
-            }
-
-			try {
-
-                await Con.addEmail(
-                    idToDo,            
-                    `Recordatorio: ${title}`, 
-                    content,         
-                    dateStr
-                );
-                console.log("Log de correo guardado correctamente en la BD.");
-            } catch (dbError) {
-                console.error("Error al guardar el log de correo:", dbError.message);
-            }
-
-        });
-
-        if (job) {
-            console.log("Recordatorio enlazado al cronómetro con éxito");
-
-        }
-    } else {
-
-        console.log("La hora de aviso ya pasó. No se puede programar.");
-    }
-};
 
 //	--------------------------------------- IMPORTAR HORARIO -------------------------------------- \\
 
@@ -1093,57 +1006,6 @@ app.get("/api/get-user-data/:idUser", async (req, res) => {
 	}
 });
 
-//	------------------------ FUNCIONES EXTRA ------------------------ //
-
-
-// 
-const emailAndAdvanceNoticeUser = async (idUser) => {
-	try {
-			const response = await Con.getUserData(idUser);
-			
-			// Accedemos al primer elemento del arreglo para obtener el objeto real
-			const RESULT = response[0]; 
-
-			if (!RESULT) {
-				throw new Error("No se encontró la data del usuario");
-			}
-
-			return {
-				P_nombreUsuario: RESULT.nombre,     
-				P_antelacionNotis: RESULT.antelacionNotis, 
-				P_correo: RESULT.correo           
-			};
-		} catch (error) {
-			console.error("Error en la función:", error);
-			throw error; 
-		}
-};
-
-// Recibir codigo usuario
-/*
-app.post('/api/usuario-data', async (req, res) => {
-    try {
-        // Extraemos el atributo 'codigoUsuario' del cuerpo de la petición
-        const { codigoUsuario } = req.body;
-
-        if (!codigoUsuario) {
-            return res.status(400).json({ error: "El código de usuario es obligatorio" });
-        }
-
-        console.log(`Recibido código de usuario: ${codigoUsuario}`);
-
-        
-
-        res.status(200).json({ message: "Datos recibidos correctamente", userCode: codigoUsuario });
-
-    } catch (error) {
-        console.error("Error en el endpoint:", error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-});
-
-*/
-
 //	------------------------ FUNCIONALIDADES DEL LDAP ------------------------ //
 
 app.post("/api/auth/create-user", async (req, res) => {
@@ -1198,59 +1060,427 @@ app.post("/api/auth/validate-user", async (req, res) => {
 });
 
 app.post("/api/auth/add-admin", async (req, res) => {
-  const USER = req.body.user;
-  const PASS = req.body.pass;
-  try {
-    const RESULT = await Con.addadmin(USER, PASS);
-    const success = RESULT != undefined;
-    return res.status(200).json({
-      success: success,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      error: "Error interno del servidor",
-    });
-  }
-});
-
-app.post("/api/auth/add-admin", async (req, res) => {
 	const USER = req.body.user;
 	const PASS = req.body.pass;
 	try {
 		const RESULT = await Con.addadmin(USER, PASS);
 		const success = RESULT != undefined;
 		return res.status(200).json({
-			success: success
+		success: success,
 		});
 	} catch (error) {
 		return res.status(500).json({
-			error: "Error interno del servidor"
+		error: "Error interno del servidor",
 		});
 	}
 });
-app.post("/api/chngpassword", async (req, res) => {
+
+function validatePasswordPolicy(password) {
+	const value = String(password || "");
+
+	if (value.length < 8) {
+		return "La contraseña debe tener al menos 8 caracteres";
+	}
+
+	if (!/[a-z]/.test(value)) {
+		return "La contraseña debe incluir al menos una letra minúscula";
+	}
+
+	if (!/[A-Z]/.test(value)) {
+		return "La contraseña debe incluir al menos una letra mayúscula";
+	}
+
+	if (!/\d/.test(value)) {
+		return "La contraseña debe incluir al menos un número";
+	}
+
+	if (!/[^A-Za-z0-9\s]/.test(value)) {
+		return "La contraseña debe incluir al menos un símbolo";
+	}
+
+	return null;
+}
+
+app.post("/api/auth/changepassword", async (req, res) => {
 	const USER = req.body.user;
 	const PASS = req.body.pass;
+	if (!USER || !PASS) {
+		return res.status(400).json({
+			success: false,
+			message: "user y pass son obligatorios"
+		});
+	}
+
+	const policyError = validatePasswordPolicy(PASS);
+	if (policyError) {
+		return res.status(400).json({
+			success: false,
+			message: policyError
+		});
+	}
+
 	try {
 		const RESULT = await Con.changepassword(USER, PASS);
-		const success = RESULT != undefined;
+		if (!RESULT) {
+			return res.status(502).json({
+				success: false,
+				message: "No se recibio respuesta valida del servicio LDAP"
+			});
+		}
+
 		return res.status(200).json({
-			success: success
+			success: true,
+			message: RESULT.message || "Contraseña cambiada correctamente"
 		});
 	} catch (error) {
+		return res.status(500).json({
+			success: false,
+			message: error?.message || "Error interno del servidor"
+		});
+	}
+});
+
+// --------------------------------------- ENVIO DE TOKEN ------------------------------------
+
+
+app.post('/api/send-code', async (req, res) =>{
+    const USER_CODE = req.body.codUsuario;
+
+	// Obtener los datos del usuario
+	try {
+		const USER_DATA = await userData(USER_CODE);
+
+		if (!USER_DATA) {
+				return res.status(404).json({
+					status: "error",
+					message: "El usuario no existe"
+
+				});
+
+			}
+
+		const USER_ID = USER_DATA.idUsuario.toString();
+		const USER_NAME = USER_DATA.nombre;
+		const CLIENT_EMAIL = USER_DATA.correo;
+		// Generar token de 6 digitos
+		const TOKEN = Math.floor(100000 + Math.random() * 900000).toString();
+
+
+		await saveTokenAndSendEmail(
+            USER_ID,    
+            TOKEN, 
+            USER_NAME,            
+            CLIENT_EMAIL
+        );
+
+		return res.status(200).json({
+			success: (USER_DATA != undefined)
+		});
+
+	} catch (error) {
+		console.error(error);
 		return res.status(500).json({
 			error: "Error interno del servidor"
 		});
 	}
+
 });
+
+// Guardar token en la base de datos y enviar email
+const saveTokenAndSendEmail = async (userId, token, userName, email) => {
+    try {
+        // Guardar token en la base de datos
+        await Con.receiveTokenData(userId, token); 
+        console.log("Token guardado correctamente.");
+
+        // Estructura de correo
+        const emailData = {
+            user: userName,
+            token: token,
+            minutos: "15",
+            destinatario: email,
+        };
+
+        // Envío de correo
+        console.log(`Enviando correo a ${email}...`);
+        const emailResponse = await fetch("http://" + process.env.EMAIL_ADDR + ":" + process.env.EMAIL_PORT + "/api/sendEmailToken", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(emailData)
+        });
+
+        if (!emailResponse.ok) {
+            const errorDetail = await emailResponse.json().catch(() => ({}));
+            throw new Error(errorDetail.message || "Servidor de correo rechazó la solicitud");
+        }
+
+        console.log(`Correo enviado con éxito a ${email}!`);
+
+    } catch (error) {
+        console.error("Hubo un fallo en el proceso:", error.message);
+    }
+
+};
+
+// Validar token
+app.post('/api/validate-token', async (req, res) =>{
+	const USER_TOKEN = req.body.token;
+	console.log(USER_TOKEN);
+
+    try {
+        // Guardar token en la base de datos
+        const RESPONSE = await Con.getToken(`reset:${USER_TOKEN}`);
+		const userId = RESPONSE.userId;
+
+		// Si userId NO es null el token es válido
+        if (userId) {
+            console.log("Token válido para el usuario:", userId);
+            
+            return res.status(200).json({ 
+                success: true, 
+                message: "Token encontrado",
+                userId: userId 
+            });
+        } else {
+            console.log("El token no existe o ya expiró.");
+    
+            return res.status(401).json({ 
+                success: false, 
+                message: "Token inválido o expirado" 
+            });
+        }
+
+    } catch (error) {
+        console.error("Hubo un fallo en el proceso:", error.message);
+        return res.status(500).json({ 
+            success: false, 
+            error: "Error interno del servidor" 
+        });
+    }
+
+});
+
+//	------------------------ FUNCIONES EXTRA ------------------------ //
+
+// Obtener info del usuario
+const userData = async (idUser) => {
+	try {
+        const response = await Con.getUserData(idUser);
+        
+        if (!response || response.length === 0) {
+            throw new Error("No se encontró la data del usuario en la base de datos");
+        }
+
+        const RESULT = response[0]; 
+
+        return {
+			idUsuario: RESULT.idUsuario,
+            nombre: RESULT.nombre, 
+            antelacionNotis: RESULT.antelacionNotis, 
+            correo: RESULT.correo          
+        };
+
+    } catch (error) {
+        console.error("Error en la función userData:", error.message);
+        throw error; 
+    }
+};
+
+const scheduleEmailAndNotification = async (idToDo, userName, title, content, dateStr, advanceNotice, email, userCode) => {
+    // Lógica de fechas
+    const ISO_DATE = dateStr.replace(" ", "T");
+    const FINAL_DATE = new Date(ISO_DATE);
+    const [H, M, S] = advanceNotice.split(':').map(Number);
+    const MILISECONDS_TO_SUBTRACT = ((H * 3600) + (M * 60) + S) * 1000;
+
+    const ALERT_DATE = new Date(FINAL_DATE.getTime() - MILISECONDS_TO_SUBTRACT);
+    const NOW = new Date();
+
+    const delay = ALERT_DATE.getTime() - NOW.getTime();
+
+    if (delay > 0) {
+        await reminderQueue.add('send-reminder', {
+            idToDo, userName, title, content, dateStr, email,
+            finalDateStr: FINAL_DATE.toISOString()
+        }, {
+			delay: delay,
+            jobId: `${userCode}-${idToDo}`,
+            removeOnComplete: true,
+            removeOnFail: false
+        });
+
+        console.log(`[BullMQ] Recordatorio "${title}" agendada con ID: todo-${idToDo} (Faltan ${delay / 1000} seg).`);
+    } else {
+        console.log("La hora de aviso ya pasó. No se puede programar.");
+    }
+};
+
+// Bloquear notificaciones temporalmente
+app.post('/api/stop-all-notifications', async (req, res) => {
+    try {
+        const { codUsuario } = req.body;
+
+        // Validación de entrada
+        if (!codUsuario) {
+            return res.status(400).json({ error: "Falta el parámetro codUsuario en el cuerpo de la petición." });
+        }
+
+        console.log(`\nDETENIENDO NOTIFICACIONES: Usuario ${codUsuario} ---`);
+
+        // Obtener los trabajos de la cola en diferentes estados
+        const jobs = await reminderQueue.getJobs(['waiting', 'delayed', 'active']);
+
+        let count = 0;
+
+        for (const job of jobs) {
+            const isUserJob = job.id.startsWith(`${codUsuario}-`) || 
+			job.data.codUsuario == codUsuario;
+
+            if (isUserJob) {
+                try {
+                    await job.remove();
+                    count++;
+                    console.log(`Eliminado Job ID: ${job.id}`);
+                } catch (removeError) {
+                    console.warn(`No se pudo eliminar el job ${job.id}: ${removeError.message}`);
+                }
+            }
+        }
+
+        console.log(`Limpieza terminada: ${count} tareas eliminadas para ${codUsuario} ---\n`);
+
+        res.json({ 
+            success: true, 
+            message: `Se han cancelado tus ${count} notificaciones pendientes.`,
+            detalles: {
+                usuario: codUsuario,
+                eliminados: count
+            }
+        });
+
+    } catch (error) {
+        console.error("ERROR CRÍTICO AL DETENER NOTIFICACIONES:", error);
+        res.status(500).json({ 
+            error: "Error interno del servidor al limpiar la cola de Redis.",
+            detalle: error.message 
+        });
+    }
+});
+
+// Revisar registros en la bd redis
+app.get('/api/debug-redis', async (req, res) => {
+    try {
+        // Obtener conteos de BullMQ
+        const counts = await reminderQueue.getJobCounts();
+        
+        // Obtener los últimos 10 trabajos agendados
+        const delayedJobs = await reminderQueue.getDelayed(0, 10);
+        
+        res.json({
+            resumen: counts,
+            detalles_futuros: delayedJobs.map(j => ({
+                id: j.id,
+                data: j.data,
+                timestamp: new Date(j.timestamp)
+            }))
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Reanudar notificaciones
+app.post('/api/restore-notifications', async (req, res) => {
+    try {
+        const { codUsuario } = req.body;
+        if (!codUsuario) return res.status(400).json({ error: "Falta codUsuario" });
+
+        console.log(`\nRESTAURACIÓN: Usuario ${codUsuario} ---`);
+
+        // Datos del Usuario 
+        const user = await userData(codUsuario);
+        
+        // Datos de Go 
+        const rawReminders = await Con.getReminders(codUsuario);
+        const reminders = Array.isArray(rawReminders) ? rawReminders : [];
+
+        if (reminders.length === 0) {
+            return res.status(404).json({ message: "Sin tareas para este usuario." });
+        }
+
+        let count = 0;
+        const ahora = new Date();
+
+        for (const r of reminders) {
+            // Limpieza de datos
+            const idToDo = r.N_idToDoList || r.n_idtodolist;
+            const titulo = r.T_nombre || r.t_nombre;
+            const desc = r.T_descripcion?.String || r.t_descripcion?.String || r.T_descripcion || "";
+            const fechaRaw = r.Dt_fechaVencimiento?.String || r.Dt_fechaVencimiento;
+            
+            // Estados
+            const isDeleted = r.B_isDeleted === true || r.B_isDeleted === 1;
+            const isPending = r.B_estado === false || r.B_estado === 0;
+
+            if (!fechaRaw) continue;
+
+            // LÓGICA DE TIEMPO 
+            const fechaVencimiento = new Date(fechaRaw);
+            const fechaAlerta = calcularFechaAlerta(fechaVencimiento, user.antelacionNotis);
+
+            // FILTRO CRÍTICO: Activa, Pendiente y Alerta FUTURA
+            if (!isDeleted && isPending && fechaAlerta > ahora) {
+                
+                console.log(`Agendando: "${titulo}" | Alerta: ${fechaAlerta.toLocaleString()}`);
+
+                await scheduleEmailAndNotification(
+                    idToDo,             
+                    user.nombre,        
+                    titulo,               
+                    desc,               
+                    fechaRaw,              
+                    user.antelacionNotis, 
+                    user.correo,           
+                    codUsuario         
+                );
+                
+                count++;
+            } else {
+                console.log(`Omitida: "${titulo}" (Alerta pasada o tarea inactiva)`);
+            }
+        }
+
+        console.log(`TERMINADO: ${count} restaurados ---\n`);
+
+        res.json({ 
+            success: true, 
+            message: `Sincronización exitosa.`, 
+            total_restaurado: count 
+        });
+
+    } catch (error) {
+        console.error("Error Crítico:", error.message);
+        res.status(500).json({ error: "Fallo en la sincronización.", detalle: error.message });
+    }
+});
+
+
+//Calcula la fecha exacta de la notificación restando la antelación
+function calcularFechaAlerta(vencimiento, antelacion) {
+    if (!antelacion || !antelacion.includes(':')) return vencimiento;
+    
+    const [h, m, s] = antelacion.split(':').map(Number);
+    const alerta = new Date(vencimiento);
+    
+    alerta.setHours(alerta.getHours() - (h || 0));
+    alerta.setMinutes(alerta.getMinutes() - (m || 0));
+    alerta.setSeconds(alerta.getSeconds() - (s || 0));
+    
+    return alerta;
+}
+
 // Llamado al puerto
 app.listen(PORT);
-
-// TO DO
-
-// - Add etiqueta
-// - Edit etiqueta
-// - Delete etiqueta
 
 
 

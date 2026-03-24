@@ -20,6 +20,8 @@ export class Activity {
         
         if (timesData === null) return false;
 
+        if (timesData === null) return false;
+
         const between = (val, izq, der) => (val < Math.max(izq, der) && val > Math.min(izq, der));
         const dateToNumber = (date) => (parseInt((date.slice(0, 5)).replace(":", "")));
 

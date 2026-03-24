@@ -51,7 +51,7 @@ export class officialAct extends Activity {
     this.Credits = Credits;
     this.startDate = startDate;
     this.endDate = endDate;
-    this.idAcademicPer = idAcademicPer
+    this.idAcademicPer = idAcademicPer;
     this.AcademicPer = AcademicPer;
   }
 

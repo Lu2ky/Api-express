@@ -3,6 +3,7 @@ import {fileURLToPath} from "url";
 import {dirname, resolve} from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+import bcrypt from "bcrypt";
 
 dotenv.config();	//PROD
 //dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});	//LOCAL
@@ -984,7 +985,7 @@ export class Connection {
 	}
 
 	// Actualizar descripción de recordatorio
-	async configNotifications(id, mail, time_mute) {
+	async configNotifications(id, mail, time_mute, phone) {
 		const url =
 			"http://" +
 			process.env.API_ADDR +
@@ -995,10 +996,12 @@ export class Connection {
 		const data = {
 			idUsuario: id,
 			correo: mail,
-			antelacionNotis: time_mute
+			antelacionNotis: time_mute,
+			telefono: phone
 		};
 
 		try {
+			console.log("Enviando a Go:", JSON.stringify(data));
 			const send = await fetch(url, {
 				method: "POST",
 				headers: {
@@ -1161,10 +1164,15 @@ export class Connection {
 			":" +
 			process.env.API_PORT +
 			"/addauthuser";
+		const encoder = new TextEncoder();
+    	const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(pass));
+    	const hashedPass = Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
 
 		const data = {
 			User: user,
-			Pass: pass
+			Pass: hashedPass
 		};
 		try {
 			const send = await fetch(url, {
@@ -1193,10 +1201,15 @@ export class Connection {
 			":" +
 			process.env.API_PORT +
 			"/auth";
+		const encoder = new TextEncoder();
+    	const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(pass));
+    	const hashedPass = Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
 
 		const data = {
 			User: user,
-			Pass: pass
+			Pass: hashedPass
 		};
 		try {
 			const send = await fetch(url, {
@@ -1243,39 +1256,39 @@ export class Connection {
 			console.error("Mira este error papu, q raro: ", error);
 		}
 	}
-    
-	async changepassword(user, pass) {
+
+    async changepassword(user, pass) {
 		const url =
 		"http://" +
 		process.env.API_ADDR +
 		":" +
 		process.env.API_PORT +
 		"/changepassword";
-
 		const data = {
-			User: user,
-			Pass: pass,
+		user: user,
+		pass: pass,
 		};
-
 		try {
-			const send = await fetch(url, {
-				method: "POST",
-				headers: {
-				"Content-Type": "application/json",
-				"X-API-Key": procces.env.API_KEY,
-				},
-				body: JSON.stringify(data),
-			});
-			const response = await send.json();
-			if (send.status == 200) {
-				return response;
-			} else {
-				throw new Error(response.error || "No se que paso papu");
-			}
+		const send = await fetch(url, {
+			method: "POST",
+			headers: {
+			"Content-Type": "application/json",
+			"X-API-Key": process.env.API_KEY,
+			},
+			body: JSON.stringify(data),
+		});
+		const response = await send.json();
+		if (send.status == 200) {
+			return response;
+		} else {
+			throw new Error(response.error || "No se que paso papu");
+		}
 		} catch (error) {
-			console.error("Mira este error papu, q raro: ", error);
+		console.error("Mira este error papu, q raro: ", error);
+		throw error;
 		}
 	}
+
 
 	async adduseradmin(user, pass) {
 		const url =
@@ -1284,22 +1297,93 @@ export class Connection {
 		":" +
 		process.env.API_PORT +
 		"/addadmin";
+		const encoder = new TextEncoder();
+    	const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(pass));
+    	const hashedPass = Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+
 		const data = {
 		User: user,
-		Pass: pass,
+		Pass: hashedPass,
 		};
+    try {
+		const send = await fetch(url, {
+		method: "POST",
+			headers: {
+			"Content-Type": "application/json",
+			"X-API-Key": procces.env.API_KEY,
+			},
+			body: JSON.stringify(data),
+		});
+	const response = await send.json();
+	if (send.status == 200) {
+		return response;
+	} else {
+		throw new Error(response.error || "No se que paso papu");
+	}
+	} catch (error) {
+	console.error("Mira este error papu, q raro: ", error);
+	}
+	}
+
+	//	------------------------ Camabiar contraseña  ------------------------ //
+
+	async receiveTokenData(idUser, token) {
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/receiveTokenData";
+
+		const data = {
+			userId: idUser,
+			token: token
+		};
+
 		try {
 			const send = await fetch(url, {
 				method: "POST",
 				headers: {
 				"Content-Type": "application/json",
-				"X-API-Key": procces.env.API_KEY,
+				"X-API-Key": process.env.API_KEY,
 				},
-				body: JSON.stringify(data),
+				body: JSON.stringify(data)
 			});
 
 			const response = await send.json();
-			
+
+			if (send.status == 200) {
+				return response;
+			} else {
+				throw new Error(response.error || "No se q paso papu");
+			}
+		} catch (error) {
+			console.error("Mira este error papu, que raro: ", error);
+			throw error;
+		}
+	}
+
+	async getToken(token){
+		const url =
+			"http://" +
+			process.env.API_ADDR +
+			":" +
+			process.env.API_PORT +
+			"/getToken";
+
+		try {
+			const send = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"X-API-Key": process.env.API_KEY
+				},
+				body: JSON.stringify({token: token})
+				
+			});
+			const response = await send.json();
 			if (send.status == 200) {
 				return response;
 			} else {
@@ -1308,5 +1392,47 @@ export class Connection {
 		} catch (error) {
 			console.error("Mira este error papu, q raro: ", error);
 		}
+		
+	}
+
+	//	------------------------ LOGS  ------------------------ //
+
+async addLog(usuario_id, accion, descripcion) {
+	const url =
+	"http://" +
+	process.env.API_ADDR +
+	":" +
+	process.env.API_PORT +
+	"/addLog";
+	
+	const data = {
+		usuario_id,
+		accion,
+		descripcion
+	};
+
+	try {
+		const send = await fetch(url, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				"X-API-Key": process.env.API_KEY
+			},
+			body: JSON.stringify(data)
+		});
+
+		const response = await send.json();
+
+		if (send.status == 200) {
+			return response;
+		} else {
+			throw new Error(response.error || "Error al insertar log");
+		}
+
+	} catch (error) {
+		console.error("Error en addLog:", error);
 	}
 }
+
+}
+
