@@ -1187,7 +1187,7 @@ app.post('/api/send-code', async (req, res) =>{
 const saveTokenAndSendEmail = async (userId, token, userName, email) => {
     try {
         // Guardar token en la base de datos
-        await Con.receiveTokenData(token, userId); 
+        await Con.receiveTokenData(userId, token); 
         console.log("Token guardado correctamente.");
 
         // Estructura de correo
