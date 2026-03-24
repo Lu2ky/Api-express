@@ -1334,7 +1334,7 @@ export class Connection {
 
 	//	------------------------ Camabiar contraseña  ------------------------ //
 
-	async receiveTokenData(idUser, token) {
+	async receiveTokenData(codUsuario, token) {
 		const url =
 			"http://" +
 			process.env.API_ADDR +
@@ -1343,7 +1343,7 @@ export class Connection {
 			"/receiveTokenData";
 
 		const data = {
-			userId: idUser,
+			codUsuario: codUsuario,
 			token: token
 		};
 
@@ -1370,7 +1370,7 @@ export class Connection {
 		}
 	}
 
-	async getToken(token){
+	async getToken(codUsuario){
 		const url =
 			"http://" +
 			process.env.API_ADDR +
@@ -1385,7 +1385,7 @@ export class Connection {
 					"Content-Type": "application/json",
 					"X-API-Key": process.env.API_KEY
 				},
-				body: JSON.stringify({token: token})
+				body: JSON.stringify({codUsario: codUsuario})
 				
 			});
 			const response = await send.json();

@@ -1221,22 +1221,22 @@ const saveTokenAndSendEmail = async (userId, token, userName, email) => {
 
 // Validar token
 app.post('/api/validate-token', async (req, res) =>{
-	const USER_TOKEN = req.body.token;
-	console.log(USER_TOKEN);
+	const USER_CODE = req.body.codUsuario;
+	console.log(USER_CODE);
 
     try {
         // Guardar token en la base de datos
-        const RESPONSE = await Con.getToken(`reset:${USER_TOKEN}`);
-		const userId = RESPONSE.userId;
+        const RESPONSE = await Con.getToken(`reset:${CODE}`);
+		const token = RESPONSE.token;
 
 		// Si userId NO es null el token es válido
-        if (userId) {
-            console.log("Token válido para el usuario:", userId);
+        if (token) {
+            console.log("Token válido para el usuario:", token);
             
             return res.status(200).json({ 
                 success: true, 
                 message: "Token encontrado",
-                userId: userId 
+                token: token 
             });
         } else {
             console.log("El token no existe o ya expiró.");
