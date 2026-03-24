@@ -1254,8 +1254,8 @@ export class Connection {
 		process.env.API_PORT +
 		"/changepassword";
 		const data = {
-		User: user,
-		Pass: pass,
+		user: user,
+		pass: pass,
 		};
 		try {
 		const send = await fetch(url, {
@@ -1274,6 +1274,7 @@ export class Connection {
 		}
 		} catch (error) {
 		console.error("Mira este error papu, q raro: ", error);
+		throw error;
 		}
 	}
 

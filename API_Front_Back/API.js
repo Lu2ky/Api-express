@@ -1071,18 +1071,67 @@ app.post("/api/auth/add-admin", async (req, res) => {
 	}
 });
 
+function validatePasswordPolicy(password) {
+	const value = String(password || "");
+
+	if (value.length < 8) {
+		return "La contraseña debe tener al menos 8 caracteres";
+	}
+
+	if (!/[a-z]/.test(value)) {
+		return "La contraseña debe incluir al menos una letra minúscula";
+	}
+
+	if (!/[A-Z]/.test(value)) {
+		return "La contraseña debe incluir al menos una letra mayúscula";
+	}
+
+	if (!/\d/.test(value)) {
+		return "La contraseña debe incluir al menos un número";
+	}
+
+	if (!/[^A-Za-z0-9\s]/.test(value)) {
+		return "La contraseña debe incluir al menos un símbolo";
+	}
+
+	return null;
+}
+
 app.post("/api/auth/changepassword", async (req, res) => {
 	const USER = req.body.user;
 	const PASS = req.body.pass;
+	if (!USER || !PASS) {
+		return res.status(400).json({
+			success: false,
+			message: "user y pass son obligatorios"
+		});
+	}
+
+	const policyError = validatePasswordPolicy(PASS);
+	if (policyError) {
+		return res.status(400).json({
+			success: false,
+			message: policyError
+		});
+	}
+
 	try {
 		const RESULT = await Con.changepassword(USER, PASS);
-		const success = RESULT != undefined;
+		if (!RESULT) {
+			return res.status(502).json({
+				success: false,
+				message: "No se recibio respuesta valida del servicio LDAP"
+			});
+		}
+
 		return res.status(200).json({
-			success: success
+			success: true,
+			message: RESULT.message || "Contraseña cambiada correctamente"
 		});
 	} catch (error) {
 		return res.status(500).json({
-			error: "Error interno del servidor"
+			success: false,
+			message: error?.message || "Error interno del servidor"
 		});
 	}
 });
