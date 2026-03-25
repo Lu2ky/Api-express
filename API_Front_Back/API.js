@@ -21,8 +21,8 @@ const __dirname = dirname(__filename);
 
 //INTERCAMBIAR ESTAS DOS LINEAS SI SE QUIERE EJECUTAR EN LOCAL O SI SE SUBIRÁ A PRODUCCION
 
-// dotenv.config(); //PROD
-dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
+dotenv.config(); //PROD
+//dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
 
 const app = express();
 const PORT = 28523;
@@ -1223,12 +1223,10 @@ const saveTokenAndSendEmail = async (userId, token, userName, email) => {
 app.post('/api/validate-token', async (req, res) =>{
 	const USER_TOKEN = req.body.token;
 	const USER_ID = req.body.userId.toString();
-	console.log(USER_TOKEN);
-	console.log(USER_ID);
-
+	
     try {
         // Guardar token en la base de datos
-        const RESPONSE = await Con.getToken(USER_ID, `reset:${USER_TOKEN}`);
+        const RESPONSE = await Con.getToken(`reset:${USER_ID}`, USER_TOKEN);
 		const userId = RESPONSE.userId;
 
 		// Si userId NO es null el token es válido

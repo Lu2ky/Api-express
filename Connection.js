@@ -1365,13 +1365,18 @@ export class Connection {
 		}
 	}
 
-	async getToken(token){
+	async getToken(idUser, token){
 		const url =
 			"http://" +
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
 			"/getToken";
+
+		const data = {
+			userId: idUser,
+			token: token
+		};
 
 		try {
 			const send = await fetch(url, {
@@ -1380,10 +1385,12 @@ export class Connection {
 					"Content-Type": "application/json",
 					"X-API-Key": process.env.API_KEY
 				},
-				body: JSON.stringify({token: token})
+				body: JSON.stringify(data)
 				
 			});
+
 			const response = await send.json();
+			console.log("respuesta", response);
 			if (send.status == 200) {
 				return response;
 			} else {
