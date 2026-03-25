@@ -1230,13 +1230,13 @@ app.post('/api/validate-token', async (req, res) =>{
 		const userId = RESPONSE.userId;
 
 		// Si userId NO es null el token es válido
-        if (userId) {
-            console.log("Token válido para el usuario:", userId);
+        if (token) {
+            console.log("Token válido para el usuario:", token);
             
             return res.status(200).json({ 
                 success: true, 
                 message: "Token encontrado",
-                userId: userId 
+                token: token 
             });
         } else {
             console.log("El token no existe o ya expiró.");
