@@ -969,7 +969,7 @@ app.post('/api/import-schedule', async (req, res) =>{
 			PERIODO_ACADEMICO
 		);
 		let temp = NOMBRE;
-		const temp2 = "COD_USUARIO"
+		const temp2 = COD_USUARIO
 		temp = temp.split(" ")[0];
 		temp = temp.toLowerCase();
 		temp = temp.charAt(0).toUpperCase() +temp.slice(1);
