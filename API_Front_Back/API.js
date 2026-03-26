@@ -16,13 +16,17 @@ import { Queue } from 'bullmq';
 import { redisConnection } from '../QueueConfig.js'; 
 import '../ReminderWorker.js';
 
+import modulo_official from './modulo_official.js';
+import modulo_personal from './modulo_personal.js';
+import modulo_comments from './modulo_comments.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 //INTERCAMBIAR ESTAS DOS LINEAS SI SE QUIERE EJECUTAR EN LOCAL O SI SE SUBIRÁ A PRODUCCION
 
-dotenv.config(); //PROD
-//dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
+//dotenv.config(); //PROD
+dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
 
 const app = express();
 const PORT = 28523;
@@ -51,17 +55,21 @@ reminderQueue.client.then(async (client) => {
     }
 });
 
+app.use("/", modulo_official);
+app.use("/", modulo_personal);
+app.use("/", modulo_comments);
 //	--------------------------------------- ACTIVIDADES -------------------------------------- \\
 
 // Obtener horario oficial
+/*
 app.get("/api/official-schedule/:userId", async (req, res) => {
 	//	req.params permite obtener los valoeres dados por medio de la URL
 	const USER_ID = req.params.userId;
-	//const TOKEN = req.header('Authorization');
+	const TOKEN = req.header('Authorization');
 
 	try {
 		//Petición a la API de Go
-		let data = await Con.GetOfficialScheduleByUserId(USER_ID);
+		let data = await Con.GetOfficialScheduleByUserId(USER_ID, TOKEN);
 
 		//Procesamiento de los datos.
 		const ACTIVITIES = data.map(eachData => {
@@ -96,8 +104,9 @@ app.get("/api/official-schedule/:userId", async (req, res) => {
 		});
 	}
 });
-
+*/
 // Obtener horario personal
+/*
 app.get("/api/personal-schedule/:userId", async (req, res) => {
 	let data = await Con.GetPersonalScheduleByUserId(req.params.userId);
 
@@ -125,10 +134,10 @@ app.get("/api/personal-schedule/:userId", async (req, res) => {
 
 	return res.json(PersonalActivitys);
 });
-
+*/
 // Editar descripción de actividad personal
-app.post("/api/add-personal-activity", async (req, res) => {
-	/*
+/*app.post("/api/add-personal-activity", async (req, res) => {
+	
     data = {
 		id_user
 		
@@ -155,7 +164,7 @@ app.post("/api/add-personal-activity", async (req, res) => {
 			[ACT_ID, START_HOUR, END_HOUR, START_DATE, END_DATE]
 		]
     }
-  */
+
 	const ID_USER = req.body.id_user;
 
 	const ID_ACADEMIC_PER = req.body.id_academic_per;
@@ -217,8 +226,9 @@ app.post("/api/add-personal-activity", async (req, res) => {
 		});
 	}
 });
-
+*/
 //	Actualizar actividad personal
+/*
 app.post("/api/update-personal-activity", async (req, res) => {
 	/*
 		{
@@ -243,7 +253,7 @@ app.post("/api/update-personal-activity", async (req, res) => {
 			]
 			
 		}
-	*/
+	
 	const ID_USER = req.body.id_user;
 	const ID_CURSO = req.body.id_course;
 
@@ -310,7 +320,7 @@ app.post("/api/remove-personal-activity", async (req, res) => {
     data = {
       IdCurso: [ID]
     }
-  */
+  
 	const ID = req.body.IdPersonalSchedule;
 
 	try {
@@ -330,7 +340,8 @@ app.post("/api/remove-personal-activity", async (req, res) => {
 		});
 	}
 });
-
+*/
+/*
 // Obtener tipos de curso
 app.get("/api/course-types", async (req, res) => {
 	let data = await Con.GetTiposCurso();
@@ -356,9 +367,9 @@ app.get("/api/academic-periods", async (req, res) => {
 
 	return res.json(data);
 });
-
+*/
 //	--------------------------------------- COMENTARIOS -------------------------------------- \\
-
+/*
 //	Sacar los comentarios
 app.get("/api/get-personal-comments/:idUser", async (req, res) => {
 	const ID_USER = req.params.idUser;
@@ -477,7 +488,7 @@ app.post("/api/remove-comment", async (req, res) => {
 		});
 	}
 });
-
+*/
 //	--------------------------------------- TAGS -------------------------------------- \\
 
 // Obtener etiquetas por id usuario
