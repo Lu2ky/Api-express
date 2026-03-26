@@ -15,6 +15,8 @@ import e from "express";
 import { Queue } from 'bullmq';
 import { redisConnection } from '../QueueConfig.js'; 
 import '../ReminderWorker.js';
+import {} from 'express';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -966,12 +968,20 @@ app.post('/api/import-schedule', async (req, res) =>{
 			SALON,
 			PERIODO_ACADEMICO
 		);
-		const temp = NOMBRE;
+		let temp = NOMBRE;
+		const temp2 = "COD_USUARIO"
+		temp = temp.split(" ")[0];
+		temp = temp.toLowerCase();
+		temp = temp.charAt(0).toUpperCase() +temp.slice(1);
+		const PASS = temp + "@" + temp2
 
-		const RESULT1 = await Con.adduser(
-			COD_USUARIO,
-
-		);
+		try {
+            RESULT1 = await Con.adduser(COD_USUARIO, PASS);
+            userCreated = RESULT1 != null;
+        } catch (userErr) {
+            userError = userErr.message;
+            console.warn("No se pudo crear el usuario:", userErr.message);
+        }
 		return res.status(200).json({
 			success: (RESULT != undefined),
 			data: RESULT
@@ -1065,7 +1075,7 @@ app.post("/api/auth/add-admin", async (req, res) => {
 	const USER = req.body.user;
 	const PASS = req.body.pass;
 	try {
-		const RESULT = await Con.addadmin(USER, PASS);
+		const RESULT = await Con.adduseradmin(USER, PASS);
 		const success = RESULT != undefined;
 		return res.status(200).json({
 		success: success,
