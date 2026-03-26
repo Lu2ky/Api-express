@@ -966,7 +966,12 @@ app.post('/api/import-schedule', async (req, res) =>{
 			SALON,
 			PERIODO_ACADEMICO
 		);
+		const temp = NOMBRE;
 
+		const RESULT1 = await Con.adduser(
+			COD_USUARIO,
+
+		);
 		return res.status(200).json({
 			success: (RESULT != undefined),
 			data: RESULT
