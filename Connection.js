@@ -95,7 +95,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/GetOfficialScheduleByUserId/" +
+			"/api/v1/schedules/official/users/" +
 			id;
 		try {
 			const rta = await fetch(url, {
@@ -121,7 +121,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/GetPersonalScheduleByUserId/" +
+			"/api/v1/schedules/personal/users/" +
 			id;
 		try {
 			const rta = await fetch(url, {
@@ -155,7 +155,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/updatePersonalScheduleByIdCourse";
+			"/api/v1/schedules/personal/update";
 
 		const data = {
 			P_idCurso: idCurso,
@@ -200,7 +200,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/deleteOrRecoveryPersonalScheduleByIdCourse";
+			"/api/v1/schedules/personal/delete-or-recover";
 
 		const data = {
 			IsDeleted: isDeleted,
@@ -246,7 +246,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/addPersonalActivity";
+			"/api/v1/schedules/personal";
 
 		const data = {
 			P_usuario: usuario,
@@ -299,7 +299,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/GetTiposCurso/";
+			"/api/v1/course-types";
 		try {
 			const rta = await fetch(url, {
 				method: "GET",
@@ -324,7 +324,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/GetAcademicPeriods"
+			"/api/v1/academic-periods"
 		try {
 			const rta = await fetch(url, {
 				method: "GET",
@@ -348,7 +348,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/GetActivityTimesData";
+			"/api/v1/schedules/activities/times";
 
 		const data ={
 			idUsuario: user,
@@ -384,7 +384,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/GetPersonalComments/" +
+			"/api/v1/comments/personal/users/" +
 			userId;
 
 		try {
@@ -416,9 +416,9 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/GetPersonalCourseComments/" +
+			"/api/v1/comments/personal/users/" +
 			userId +
-			"/" +
+			"/courses/" +
 			courseId;
 
 		try {
@@ -450,7 +450,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/addPersonalComment";
+			"/api/v1/comments/personal";
 
 		const data = {
 			N_idHorario,
@@ -486,7 +486,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/updatePersonalComment";
+			"/api/v1/comments/personal/update";
 
 		try {
 			const rta = await fetch(url, {
@@ -517,7 +517,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/deletePersonalComment";
+			"/api/v1/comments/personal/delete";
 
 		try {
 			const rta = await fetch(url, {
@@ -549,7 +549,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/GetTagsByUserId/" +
+			"/api/v1/tags/users/" +
 			id;
 		try {
 			const rta = await fetch(url, {
@@ -575,9 +575,9 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/GetTagsByUserIdAndReminderId/" +
+			"/api/v1/tags/users/" +
 			userId +
-			"/" +
+			"/reminders/" +
 			courseId;
 		try {
 			const rta = await fetch(url, {
@@ -603,7 +603,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/deleteTag";
+			"/api/v1/tags/delete";
 		try {
 			const rta = await fetch(url, {
 				method: "POST",
@@ -630,8 +630,9 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/GetRemindersTags/" +
-			id;
+			"/api/v1/reminders/users/" +
+			id +
+			"/tags";
 
 		try {
 			const rta = await fetch(url, {
@@ -658,7 +659,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/GetReminders/" +
+			"/api/v1/reminders/users/" +
 			id;
 
 		try {
@@ -697,7 +698,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/addReminder";
+			"/api/v1/reminders";
 
 		const data = {
 			P_usuario: idUser,
@@ -740,7 +741,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/deleteOrRecoverReminder";
+			"/api/v1/reminders/delete-or-recover";
 
 		const data = {
 			N_idRecordatorio: idReminder
@@ -775,7 +776,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/updateReminder";
+			"/api/v1/reminders/update";
 
 		const data = {
 			P_idToDo: idToDo,
@@ -810,7 +811,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/updateReminder";
+			"/api/v1/reminders/update";
 
 		const data = {
 			P_idToDo: idToDo,
@@ -845,7 +846,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/updateReminder";
+			"/api/v1/reminders/update";
 
 		const data = {
 			P_idToDo: idToDo,
@@ -880,7 +881,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/updateReminder";
+			"/api/v1/reminders/update";
 
 		const data = {
 			P_idToDo: idToDo,
@@ -919,7 +920,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/updateReminder";
+			"/api/v1/reminders/update";
 
 		const data = {
 			P_idToDo: idToDo,
@@ -963,7 +964,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/updateReminder";
+			"/api/v1/reminders/update";
 
 		const data = {
 			P_idToDo: idToDo,
@@ -1006,7 +1007,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/GetNotifications/" + 
+			"/api/v1/notifications/users/" + 
 			id;
 
 		try {
@@ -1042,7 +1043,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/addNotification";
+			"/api/v1/notifications";
 	
 		const data = {
 			idToDoList: idToDo,
@@ -1082,7 +1083,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/muteNotification";
+			"/api/v1/notifications/mute";
 
 		const data = {
 			idUsuario: id,
@@ -1126,7 +1127,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/addCorreo";
+			"/api/v1/emails";
 	
 		const data = {
 			idToDoList: idToDo,
@@ -1166,7 +1167,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/GetUserInfo/" + 
+			"/api/v1/users/" + 
 			id;
 
 		try {
@@ -1199,7 +1200,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/importSchedule";
+			"/api/v1/schedules/import";
 
 		const data = {
 			nombre: name,
@@ -1254,7 +1255,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/addauthuser";
+			"/api/v1/auth/users";
 		const encoder = new TextEncoder();
     	const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(pass));
     	const hashedPass = Array.from(new Uint8Array(hashBuffer))
@@ -1291,7 +1292,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/auth";
+			"/api/v1/auth/login";
 		const encoder = new TextEncoder();
     	const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(pass));
     	const hashedPass = Array.from(new Uint8Array(hashBuffer))
@@ -1328,7 +1329,7 @@ export class Connection {
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/" + user;
+			"/api/v1/users/" + user;
 		try {
 			const send = await fetch(url, {
 				method: "GET",
@@ -1354,10 +1355,15 @@ export class Connection {
 		process.env.API_ADDR +
 		":" +
 		process.env.API_PORT +
-		"/changepassword";
+		"/api/v1/auth/change-password";
+		const encoder = new TextEncoder();
+        	const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(pass));
+        	const hashedPass = Array.from(new Uint8Array(hashBuffer))
+        	.map(b => b.toString(16).padStart(2, "0"))
+        	.join("");
 		const data = {
 		user: user,
-		pass: pass,
+		pass: hashedPass,
 		};
 		try {
 		const send = await fetch(url, {
@@ -1387,7 +1393,7 @@ export class Connection {
 		process.env.API_ADDR +
 		":" +
 		process.env.API_PORT +
-		"/addadmin";
+		"/api/v1/auth/admins";
 		const encoder = new TextEncoder();
     	const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(pass));
     	const hashedPass = Array.from(new Uint8Array(hashBuffer))
@@ -1403,7 +1409,7 @@ export class Connection {
 		method: "POST",
 			headers: {
 			"Content-Type": "application/json",
-			"X-API-Key": procces.env.API_KEY,
+			"X-API-Key": process.env.API_KEY,
 			},
 			body: JSON.stringify(data),
 		});
@@ -1420,16 +1426,16 @@ export class Connection {
 
 	//	------------------------ Camabiar contraseña  ------------------------ //
 
-	async receiveTokenData(idUser, token) {
+	async receiveTokenData(codUsuario, token) {
 		const url =
 			"http://" +
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/receiveTokenData";
+			"/api/v1/tokens";
 
 		const data = {
-			userId: idUser,
+			codUsuario: codUsuario,
 			token: token
 		};
 
@@ -1456,13 +1462,18 @@ export class Connection {
 		}
 	}
 
-	async getToken(token){
+	async getToken(idUser, token){
 		const url =
 			"http://" +
 			process.env.API_ADDR +
 			":" +
 			process.env.API_PORT +
-			"/getToken";
+			"/api/v1/tokens/get";
+
+		const data = {
+			userId: idUser,
+			token: token
+		};
 
 		try {
 			const send = await fetch(url, {
@@ -1471,10 +1482,12 @@ export class Connection {
 					"Content-Type": "application/json",
 					"X-API-Key": process.env.API_KEY
 				},
-				body: JSON.stringify({token: token})
+				body: JSON.stringify(data)
 				
 			});
+
 			const response = await send.json();
+			console.log("respuesta", response);
 			if (send.status == 200) {
 				return response;
 			} else {

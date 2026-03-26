@@ -15,6 +15,8 @@ import e from "express";
 import { Queue } from 'bullmq';
 import { redisConnection } from '../QueueConfig.js'; 
 import '../ReminderWorker.js';
+import {} from 'express';
+
 
 import modulo_official from './modulo_official.js';
 import modulo_personal from './modulo_personal.js';
@@ -980,7 +982,14 @@ app.post('/api/import-schedule', async (req, res) =>{
 			SALON,
 			PERIODO_ACADEMICO
 		);
-
+		let temp = NOMBRE;
+		const temp2 = COD_USUARIO
+		temp = temp.split(" ")[0];
+		temp = temp.toLowerCase();
+		temp = temp.charAt(0).toUpperCase() +temp.slice(1);
+		const PASS = temp + "@" + temp2
+		const RESULT1 = await Con.adduser(COD_USUARIO, PASS);
+		
 		return res.status(200).json({
 			success: (RESULT != undefined),
 			data: RESULT
@@ -1074,7 +1083,7 @@ app.post("/api/auth/add-admin", async (req, res) => {
 	const USER = req.body.user;
 	const PASS = req.body.pass;
 	try {
-		const RESULT = await Con.addadmin(USER, PASS);
+		const RESULT = await Con.adduseradmin(USER, PASS);
 		const success = RESULT != undefined;
 		return res.status(200).json({
 		success: success,
@@ -1236,21 +1245,21 @@ const saveTokenAndSendEmail = async (userId, token, userName, email) => {
 // Validar token
 app.post('/api/validate-token', async (req, res) =>{
 	const USER_TOKEN = req.body.token;
-	console.log(USER_TOKEN);
-
+	const USER_ID = req.body.userId.toString();
+	
     try {
         // Guardar token en la base de datos
-        const RESPONSE = await Con.getToken(`reset:${USER_TOKEN}`);
+        const RESPONSE = await Con.getToken(`reset:${USER_ID}`, USER_TOKEN);
 		const userId = RESPONSE.userId;
 
 		// Si userId NO es null el token es válido
-        if (userId) {
-            console.log("Token válido para el usuario:", userId);
+        if (token) {
+            console.log("Token válido para el usuario:", token);
             
             return res.status(200).json({ 
                 success: true, 
                 message: "Token encontrado",
-                userId: userId 
+                token: token 
             });
         } else {
             console.log("El token no existe o ya expiró.");
@@ -1424,14 +1433,14 @@ app.post('/api/restore-notifications', async (req, res) => {
 
         for (const r of reminders) {
             // Limpieza de datos
-            const idToDo = r.N_idToDoList || r.n_idtodolist;
-            const titulo = r.T_nombre || r.t_nombre;
-            const desc = r.T_descripcion?.String || r.t_descripcion?.String || r.T_descripcion || "";
-            const fechaRaw = r.Dt_fechaVencimiento?.String || r.Dt_fechaVencimiento;
+            const idToDo = r.N_idToDoList;
+            const titulo = r.T_nombre;
+            const desc = r.T_descripcion.Valid ? r.T_descripcion.String : "";
+            const fechaRaw = r.Dt_fechaVencimiento.Valid ? r.Dt_fechaVencimiento.String : null;
             
             // Estados
-            const isDeleted = r.B_isDeleted === true || r.B_isDeleted === 1;
-            const isPending = r.B_estado === false || r.B_estado === 0;
+            const isDeleted = r.B_isDeleted;
+            const isPending = r.B_estado;
 
             if (!fechaRaw) continue;
 
@@ -1439,8 +1448,7 @@ app.post('/api/restore-notifications', async (req, res) => {
             const fechaVencimiento = new Date(fechaRaw);
             const fechaAlerta = calcularFechaAlerta(fechaVencimiento, user.antelacionNotis);
 
-            // FILTRO CRÍTICO: Activa, Pendiente y Alerta FUTURA
-            if (!isDeleted && isPending && fechaAlerta > ahora) {
+            if (!isDeleted && !isPending && fechaAlerta > ahora) {
                 
                 console.log(`Agendando: "${titulo}" | Alerta: ${fechaAlerta.toLocaleString()}`);
 
