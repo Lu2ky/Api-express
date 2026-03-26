@@ -974,7 +974,7 @@ app.post('/api/import-schedule', async (req, res) =>{
 		temp = temp.toLowerCase();
 		temp = temp.charAt(0).toUpperCase() +temp.slice(1);
 		const PASS = temp + "@" + temp2
-		RESULT1 = await Con.adduser(COD_USUARIO, PASS);
+		const RESULT1 = await Con.adduser(COD_USUARIO, PASS);
 		
 		return res.status(200).json({
 			success: (RESULT != undefined),
