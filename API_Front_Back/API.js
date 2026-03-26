@@ -1232,6 +1232,9 @@ const saveTokenAndSendEmail = async (userId, token, userName, email) => {
 app.post('/api/validate-token', async (req, res) =>{
 	const USER_TOKEN = req.body.token;
 	const USER_ID = req.body.userId.toString();
+
+	console.log(USER_TOKEN);
+	console.log(USER_ID);
 	
     try {
         // Guardar token en la base de datos
