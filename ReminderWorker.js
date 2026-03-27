@@ -50,7 +50,7 @@ const worker = new Worker('reminderQueue', async (job) => {
     };
 
     try {
-        await fetch(`http://${process.env.API_ADDR}:${process.env.LOOP_PORT}/api/add-notification`, {
+        await fetch(`http://${process.env.API_ADDR}:${process.env.API_PORT}/api/add-notification`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(notiDate)
