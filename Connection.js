@@ -5,8 +5,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 import bcrypt from "bcrypt";
 
-dotenv.config();	//PROD
-//dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});	//LOCAL
+//dotenv.config();	//PROD
+dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});	//LOCAL
 
 export class Connection {
 	constructor() {}
@@ -1334,7 +1334,7 @@ export class Connection {
 
 	//	------------------------ Camabiar contraseña  ------------------------ //
 
-	async receiveTokenData(codUsuario, token) {
+	async receiveTokenData(userId, token) {
 		const url =
 			"http://" +
 			process.env.API_ADDR +
@@ -1343,7 +1343,7 @@ export class Connection {
 			"/receiveTokenData";
 
 		const data = {
-			codUsuario: codUsuario,
+			userId: userId,
 			token: token
 		};
 
@@ -1370,7 +1370,7 @@ export class Connection {
 		}
 	}
 
-	async getToken(idUser, token){
+	async getToken(userId, token){
 		const url =
 			"http://" +
 			process.env.API_ADDR +
@@ -1379,7 +1379,7 @@ export class Connection {
 			"/getToken";
 
 		const data = {
-			userId: idUser,
+			userId: userId,
 			token: token
 		};
 

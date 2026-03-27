@@ -21,8 +21,8 @@ const __dirname = dirname(__filename);
 
 //INTERCAMBIAR ESTAS DOS LINEAS SI SE QUIERE EJECUTAR EN LOCAL O SI SE SUBIRÁ A PRODUCCION
 
-dotenv.config(); //PROD
-//dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
+//dotenv.config(); //PROD
+dotenv.config({path: resolve(__dirname, "../../../config/expressapiconfig.env")});	//LOCAL
 
 const app = express();
 const PORT = 28523;
@@ -1156,7 +1156,9 @@ app.post('/api/send-code', async (req, res) =>{
 
 			}
 
+		console.log(USER_DATA)
 		const USER_ID = USER_DATA.idUsuario.toString();
+		console.log("moiiuserid", USER_ID)
 		const USER_NAME = USER_DATA.nombre;
 		const CLIENT_EMAIL = USER_DATA.correo;
 		// Generar token de 6 digitos
@@ -1187,6 +1189,7 @@ app.post('/api/send-code', async (req, res) =>{
 const saveTokenAndSendEmail = async (userId, token, userName, email) => {
     try {
         // Guardar token en la base de datos
+		console.log("user:", userId, " token:", token)
         await Con.receiveTokenData(userId, token); 
         console.log("Token guardado correctamente.");
 
@@ -1230,13 +1233,13 @@ app.post('/api/validate-token', async (req, res) =>{
 		const userId = RESPONSE.userId;
 
 		// Si userId NO es null el token es válido
-        if (token) {
-            console.log("Token válido para el usuario:", token);
+        if (userId) {
+            console.log("Token válido para el usuario:", userId);
             
             return res.status(200).json({ 
                 success: true, 
                 message: "Token encontrado",
-                token: token 
+                userId: userId 
             });
         } else {
             console.log("El token no existe o ya expiró.");
