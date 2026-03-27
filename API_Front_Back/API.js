@@ -1157,7 +1157,10 @@ app.post('/api/send-code', async (req, res) => {
         
         const response = await fetch(url, {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 
+				'Content-Type': 'application/json',
+				"X-API-Key": process.env.API_KEY
+			}
         });
 
         const jsonResponse = await response.json();
