@@ -654,11 +654,23 @@ app.post("/api/add-reminder", async (req, res) => {
 			TAG5
 		);
 
+		const url = `http://${process.env.API_ADDR}:${process.env.API_PORT}/api/v1/users/${USER_CODE}`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: { 
+				'Content-Type': 'application/json',
+				"X-API-Key": process.env.API_KEY
+			}
+        });
+
+        const jsonResponse = await response.json();
+        const USER_DATA = jsonResponse[0];
+
 		const ID_TO_DO = RESULT.InsertedId;
-		const USER_QUERY = await userData(USER_CODE);
-		const USER_NAME = USER_QUERY.nombre;
-		const ADVANCE_NOTICE = USER_QUERY.antelacionNotis;
-		const CLIENT_EMAIL = USER_QUERY.correo;
+		const USER_NAME = USER_DATA.nombre;
+		const ADVANCE_NOTICE = USER_DATA.antelacionNotis;
+		const CLIENT_EMAIL = USER_DATA.correo;
 
         if (RESULT) {
             scheduleEmailAndNotification(
