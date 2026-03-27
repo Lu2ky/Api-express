@@ -1163,6 +1163,8 @@ app.post('/api/send-code', async (req, res) => {
         const jsonResponse = await response.json();
     
         const USER_DATA = jsonResponse.data[0];
+		console.log(USER_DATA);
+		
         
         if (!USER_DATA || !USER_DATA.idUsuario) {
             console.log("Respuesta de API sin datos de usuario:", jsonResponse);
