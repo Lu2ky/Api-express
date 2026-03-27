@@ -1162,7 +1162,7 @@ app.post('/api/send-code', async (req, res) => {
 
         const jsonResponse = await response.json();
     
-        const USER_DATA = jsonResponse.data[0];
+        const USER_DATA = jsonResponse[0];
 		console.log(USER_DATA);
 		
         
