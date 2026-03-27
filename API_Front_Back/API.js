@@ -1153,7 +1153,7 @@ app.post('/api/send-code', async (req, res) => {
     const USER_CODE = req.body.codUsuario;
 
     try {
-        const url = `http:/${process.env.API_ADDR}:${process.env.API_PORT}/api/v1/users/${USER_CODE}`;
+        const url = `http://${process.env.API_ADDR}:${process.env.API_PORT}/api/v1/users/${USER_CODE}`;
         
         const response = await fetch(url, {
             method: 'GET',
