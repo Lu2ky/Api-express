@@ -1140,49 +1140,46 @@ app.post("/api/auth/changepassword", async (req, res) => {
 // --------------------------------------- ENVIO DE TOKEN ------------------------------------
 
 
-app.post('/api/send-code', async (req, res) =>{
+app.post('/api/send-code', async (req, res) => {
     const USER_CODE = req.body.codUsuario;
 
-	// Obtener los datos del usuario
-	try {
-		const USER_DATA = await userData(USER_CODE);
+    try {
+        const url = `http://${process.env.API_ADDR}:${process.env.LOOP_PORT}/api/get-user-data/${USER_CODE}`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
 
-		if (!USER_DATA) {
-				return res.status(404).json({
-					status: "error",
-					message: "El usuario no existe"
+        const jsonResponse = await response.json();
+    
+        const USER_DATA = jsonResponse.data[0];
+        
+        if (!USER_DATA || !USER_DATA.idUsuario) {
+            console.log("Respuesta de API sin datos de usuario:", jsonResponse);
+            return res.status(404).json({ error: "Usuario no encontrado" });
+        }
 
-				});
+        const USER_ID = USER_DATA.idUsuario.toString();
+        const USER_NAME = USER_DATA.nombre || "Usuario";
+        const CLIENT_EMAIL = USER_DATA.correo;
 
-			}
+        // Generar token
+        const TOKEN = Math.floor(100000 + Math.random() * 900000).toString();
 
-		console.log(USER_DATA)
-		const USER_ID = USER_DATA.idUsuario.toString();
-		console.log("moiiuserid", USER_ID)
-		const USER_NAME = USER_DATA.nombre;
-		const CLIENT_EMAIL = USER_DATA.correo;
-		// Generar token de 6 digitos
-		const TOKEN = Math.floor(100000 + Math.random() * 900000).toString();
-
-
-		await saveTokenAndSendEmail(
+        await saveTokenAndSendEmail(
             USER_ID,    
             TOKEN, 
             USER_NAME,            
             CLIENT_EMAIL
         );
 
-		return res.status(200).json({
-			success: (USER_DATA != undefined)
-		});
+        return res.status(200).json({ success: true });
 
-	} catch (error) {
-		console.error(error);
-		return res.status(500).json({
-			error: "Error interno del servidor"
-		});
-	}
-
+    } catch (error) {
+        console.error("Error en send-code:", error.message);
+        return res.status(500).json({ error: "Error interno del servidor" });
+    }
 });
 
 // Guardar token en la base de datos y enviar email
@@ -1263,28 +1260,6 @@ app.post('/api/validate-token', async (req, res) =>{
 //	------------------------ FUNCIONES EXTRA ------------------------ //
 
 // Obtener info del usuario
-const userData = async (idUser) => {
-	try {
-        const response = await Con.getUserData(idUser);
-        
-        if (!response || response.length === 0) {
-            throw new Error("No se encontró la data del usuario en la base de datos");
-        }
-
-        const RESULT = response[0]; 
-
-        return {
-			idUsuario: RESULT.idUsuario,
-            nombre: RESULT.nombre, 
-            antelacionNotis: RESULT.antelacionNotis, 
-            correo: RESULT.correo          
-        };
-
-    } catch (error) {
-        console.error("Error en la función userData:", error.message);
-        throw error; 
-    }
-};
 
 const scheduleEmailAndNotification = async (idToDo, userName, title, content, dateStr, advanceNotice, email, userCode) => {
     // Lógica de fechas
