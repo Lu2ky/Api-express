@@ -1426,7 +1426,7 @@ export class Connection {
 
 	//	------------------------ Camabiar contraseña  ------------------------ //
 
-	async receiveTokenData(codUsuario, token) {
+	async receiveTokenData(userId, token) {
 		const url =
 			"http://" +
 			process.env.API_ADDR +
@@ -1435,7 +1435,7 @@ export class Connection {
 			"/api/v1/tokens";
 
 		const data = {
-			codUsuario: codUsuario,
+			userId: userId,
 			token: token
 		};
 
@@ -1462,7 +1462,7 @@ export class Connection {
 		}
 	}
 
-	async getToken(idUser, token){
+	async getToken(userId, token){
 		const url =
 			"http://" +
 			process.env.API_ADDR +
@@ -1471,7 +1471,7 @@ export class Connection {
 			"/api/v1/tokens/get";
 
 		const data = {
-			userId: idUser,
+			userId: userId,
 			token: token
 		};
 

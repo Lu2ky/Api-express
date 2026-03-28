@@ -668,11 +668,23 @@ app.post("/api/add-reminder", async (req, res) => {
 			TAG5
 		);
 
+		const url = `http://${process.env.API_ADDR}:${process.env.API_PORT}/api/v1/users/${USER_CODE}`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: { 
+				'Content-Type': 'application/json',
+				"X-API-Key": process.env.API_KEY
+			}
+        });
+
+        const jsonResponse = await response.json();
+        const USER_DATA = jsonResponse[0];
+
 		const ID_TO_DO = RESULT.InsertedId;
-		const USER_QUERY = await userData(USER_CODE);
-		const USER_NAME = USER_QUERY.nombre;
-		const ADVANCE_NOTICE = USER_QUERY.antelacionNotis;
-		const CLIENT_EMAIL = USER_QUERY.correo;
+		const USER_NAME = USER_DATA.nombre;
+		const ADVANCE_NOTICE = USER_DATA.antelacionNotis;
+		const CLIENT_EMAIL = USER_DATA.correo;
 
         if (RESULT) {
             scheduleEmailAndNotification(
@@ -1163,53 +1175,58 @@ app.post("/api/auth/changepassword", async (req, res) => {
 // --------------------------------------- ENVIO DE TOKEN ------------------------------------
 
 
-app.post('/api/send-code', async (req, res) =>{
+app.post('/api/send-code', async (req, res) => {
     const USER_CODE = req.body.codUsuario;
 
-	// Obtener los datos del usuario
-	try {
-		const USER_DATA = await userData(USER_CODE);
-
-		if (!USER_DATA) {
-				return res.status(404).json({
-					status: "error",
-					message: "El usuario no existe"
-
-				});
-
+    try {
+        const url = `http://${process.env.API_ADDR}:${process.env.API_PORT}/api/v1/users/${USER_CODE}`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: { 
+				'Content-Type': 'application/json',
+				"X-API-Key": process.env.API_KEY
 			}
+        });
 
-		const USER_ID = USER_DATA.idUsuario.toString();
-		const USER_NAME = USER_DATA.nombre;
-		const CLIENT_EMAIL = USER_DATA.correo;
-		// Generar token de 6 digitos
-		const TOKEN = Math.floor(100000 + Math.random() * 900000).toString();
+        const jsonResponse = await response.json();
+    
+        const USER_DATA = jsonResponse[0];
+		console.log(USER_DATA);
+		
+        
+        if (!USER_DATA || !USER_DATA.idUsuario) {
+            console.log("Respuesta de API sin datos de usuario:", jsonResponse);
+            return res.status(404).json({ error: "Usuario no encontrado" });
+        }
 
+        const USER_ID = USER_DATA.idUsuario.toString();
+        const USER_NAME = USER_DATA.nombre || "Usuario";
+        const CLIENT_EMAIL = USER_DATA.correo;
 
-		await saveTokenAndSendEmail(
+        // Generar token
+        const TOKEN = Math.floor(100000 + Math.random() * 900000).toString();
+
+        await saveTokenAndSendEmail(
             USER_ID,    
             TOKEN, 
             USER_NAME,            
             CLIENT_EMAIL
         );
 
-		return res.status(200).json({
-			success: (USER_DATA != undefined)
-		});
+        return res.status(200).json({ success: true });
 
-	} catch (error) {
-		console.error(error);
-		return res.status(500).json({
-			error: "Error interno del servidor"
-		});
-	}
-
+    } catch (error) {
+        console.error("Error en send-code:", error.message);
+        return res.status(500).json({ error: "Error interno del servidor" });
+    }
 });
 
 // Guardar token en la base de datos y enviar email
 const saveTokenAndSendEmail = async (userId, token, userName, email) => {
     try {
         // Guardar token en la base de datos
+		console.log("user:", userId, " token:", token)
         await Con.receiveTokenData(userId, token); 
         console.log("Token guardado correctamente.");
 
@@ -1246,6 +1263,9 @@ const saveTokenAndSendEmail = async (userId, token, userName, email) => {
 app.post('/api/validate-token', async (req, res) =>{
 	const USER_TOKEN = req.body.token;
 	const USER_ID = req.body.userId.toString();
+
+	console.log(USER_TOKEN);
+	console.log(USER_ID);
 	
     try {
         // Guardar token en la base de datos
@@ -1253,13 +1273,13 @@ app.post('/api/validate-token', async (req, res) =>{
 		const userId = RESPONSE.userId;
 
 		// Si userId NO es null el token es válido
-        if (token) {
-            console.log("Token válido para el usuario:", token);
+        if (userId) {
+            console.log("Token válido para el usuario:", userId);
             
             return res.status(200).json({ 
                 success: true, 
                 message: "Token encontrado",
-                token: token 
+                userId: userId 
             });
         } else {
             console.log("El token no existe o ya expiró.");
@@ -1283,28 +1303,6 @@ app.post('/api/validate-token', async (req, res) =>{
 //	------------------------ FUNCIONES EXTRA ------------------------ //
 
 // Obtener info del usuario
-const userData = async (idUser) => {
-	try {
-        const response = await Con.getUserData(idUser);
-        
-        if (!response || response.length === 0) {
-            throw new Error("No se encontró la data del usuario en la base de datos");
-        }
-
-        const RESULT = response[0]; 
-
-        return {
-			idUsuario: RESULT.idUsuario,
-            nombre: RESULT.nombre, 
-            antelacionNotis: RESULT.antelacionNotis, 
-            correo: RESULT.correo          
-        };
-
-    } catch (error) {
-        console.error("Error en la función userData:", error.message);
-        throw error; 
-    }
-};
 
 const scheduleEmailAndNotification = async (idToDo, userName, title, content, dateStr, advanceNotice, email, userCode) => {
     // Lógica de fechas
