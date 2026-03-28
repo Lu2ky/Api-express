@@ -1,6 +1,5 @@
 import express from "express";
 import { Connection } from "../Connection.js";
-import { officialAct } from "../OfficialAct.js";
 
 let Con = new Connection();
 const router = express.Router();
@@ -9,7 +8,7 @@ const router = express.Router();
 router.get("/api/get-personal-comments/:idUser", async (req, res) => {
 	const ID_USER = req.params.idUser;
     const TOKEN = req.header('Authorization');
-    const CALL = `/GetPersonalComments/${ID_USER}`;
+    const CALL = `/comments/personal/users/${ID_USER}`;
 
 	try {
         const RESULT = await Con.goGetFetcher(CALL, TOKEN);
@@ -38,7 +37,8 @@ router.get("/api/get-personal-course-comments/:idUser/:idCourse", async (req, re
 	const ID_COURSE = req.params.idCourse;
 
     const TOKEN = req.header('Authorization');
-    const CALL = `/GetPersonalCourseComments/${ID_USER}/${ID_COURSE}`;
+    const CALL = `/comments/personal/users/${ID_USER}/courses/${ID_COURSE}`;
+
 	try {
         const RESULT = await Con.goGetFetcher(CALL, TOKEN);
 		//const RESULT = await Con.GetPersonalCourseComments(ID_USER, ID_COURSE);
@@ -66,7 +66,7 @@ router.post("/api/add-comment", async (req, res) => {
 	const T_COMENTARIO = req.body.T_comentario;
 
     const TOKEN = req.header('Authorization');
-    const CALL = `/addPersonalComment`;
+    const CALL = `/comments/personal`;
 
 	try {
         const DATA = {
@@ -96,8 +96,9 @@ router.post("/api/add-comment", async (req, res) => {
 router.post("/api/update-comment", async (req, res) => {
 	const ID = req.body.N_idComentarios;
 	const NEW_COMMENT = req.body.T_comentario;
+
     const TOKEN = req.header('Authorization');
-    const CALL = `/updatePersonalComment`;
+    const CALL = `/comments/personal/update`;
 
 	try {
 		if (!ID || !NEW_COMMENT) {
@@ -131,14 +132,16 @@ router.post("/api/update-comment", async (req, res) => {
 router.post("/api/remove-comment", async (req, res) => {
 	const ID = req.body.N_idComentarios;
     const TOKEN = req.header('Authorization');
-    const CALL = `/deletePersonalComment/${ID_USER}/${ID_COURSE}`;
+    const CALL = `/comments/personal/delete`;
 
 	try {
 		
         const DATA = {
             N_idComentarios: ID
         }
+		
         const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN)
+
         //const RESULT = await Con.deletePersonalComment(ID);
 
 		return res.status(200).json({

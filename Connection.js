@@ -8,20 +8,20 @@ import bcrypt from "bcrypt";
 //dotenv.config();	//PROD
 dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});	//LOCAL
 
-//const API_ADDR = process.env.API_ADDR
-//const API_PORT = process.env.API_PORT
+const API_ADDR = process.env.API_ADDR
+const API_PORT = process.env.API_PORT
 
 // Para que ejecute una instancia local de la API de Go
-const API_ADDR = "localhost";
-const API_PORT = "8080";
+//const API_ADDR = "localhost";
+//const API_PORT = "8080";
 
 export class Connection {
 	constructor() {}
 
 	//	--- Fetcher --- //
-	async goGetFetcher(service, token) {
+	async goGetFetcher(service, token = null) {
 
-		const URL = "http://" + API_ADDR + ":" + API_PORT + service;
+		const URL = `http://${API_ADDR}:${API_PORT}/api/v1${service}`//"http://" + API_ADDR + ":" + API_PORT + service;
 		console.log(API_ADDR);
 		console.log(API_PORT);
 		console.log(service);
@@ -48,9 +48,9 @@ export class Connection {
 		}
 	}
 
-	async goPostFetcher(service, bodyData, token) {
+	async goPostFetcher(service, bodyData, token = null) {
 		
-		const URL = "http://" + API_ADDR + ":" + API_PORT + service;
+		const URL = `http://${API_ADDR}:${API_PORT}/api/v1${service}`
 		console.log(URL)
 		console.log(bodyData)
 
@@ -75,9 +75,9 @@ export class Connection {
 			console.error("ERROR EN LA CONEXION:", error);
 		}
 	}
-
+}
 	//	--------------------------------------- ACTIVIDADES -------------------------------------- \\
-
+/*
 	// Obtener horario oficial de estudiante
 	async GetOfficialScheduleByUserId(id, token) {
 		const CALL = `/GetOfficialScheduleByUserId/${id}`;
@@ -90,7 +90,7 @@ export class Connection {
 		}
 		
 
-		/*const url =
+		const url =
 			"http://" +
 			process.env.API_ADDR +
 			":" +
@@ -110,7 +110,7 @@ export class Connection {
 			return data;
 		} catch (error) {
 			console.error("Mira este error papu, que raro: ", error);
-		}*/
+		}
 	}
 
 	// Obtener horario personal de estudiante
@@ -293,7 +293,7 @@ export class Connection {
 			console.log(error);
 		}
 
-		/*
+		
 		const url =
 			"http://" +
 			process.env.API_ADDR +
@@ -314,7 +314,7 @@ export class Connection {
 		} catch (error) {
 			console.error("Mira este error papu, que raro: ", error);
 		}
-		*/
+		
 	}
 
 	// Obtener los periodos académicos disponibles
@@ -411,7 +411,7 @@ export class Connection {
 
 		this.goGetFetcher(CALL, "1");
 
-		/*const url =
+		const url =
 			"http://" +
 			process.env.API_ADDR +
 			":" +
@@ -436,7 +436,7 @@ export class Connection {
 			return data;
 		} catch (error) {
 			console.error("Mira este error papu, que raro: ", error);
-		}*/
+		}
 	}
 
 	//ADD PERSONAL COMMENT
@@ -1540,3 +1540,4 @@ async addLog(usuario_id, accion, descripcion) {
 
 }
 
+*/

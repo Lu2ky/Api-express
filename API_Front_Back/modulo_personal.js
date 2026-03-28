@@ -10,7 +10,7 @@ router.get("/api/personal-schedule/:userId", async (req, res) => {
 
     const USER_ID = req.params.userId;
     const TOKEN = req.header('Authorization');
-    const CALL = `/GetPersonalScheduleByUserId/${USER_ID}`;
+    const CALL = `/schedules/personal/users/${USER_ID}`;
 
 	let data = await Con.goGetFetcher(CALL, TOKEN);//await Con.GetPersonalScheduleByUserId(req.params.userId);
 
@@ -70,7 +70,7 @@ router.post("/api/add-personal-activity", async (req, res) => {
 
     const TOKEN = req.header('Authorization');
 
-	const TIMES_CALL = `/GetActivityTimesData`;
+	const TIMES_CALL = `schedules/activities/times`;
 	const TIMES_BODY = {
 		idUsuario: ID_USER,
 		dia: DAY
@@ -102,7 +102,7 @@ router.post("/api/add-personal-activity", async (req, res) => {
 				error: "Colisión de horarios"
 			});
 		}
-        const CALL = "/addPersonalActivity"
+        const CALL = "/schedules/personal"
 
         const DATA = {
 			P_usuario: ID_USER,
@@ -159,7 +159,7 @@ router.post("/api/update-personal-activity", async (req, res) => {
 
     const TOKEN = req.header('Authorization');
 
-	const TIMES_CALL = `/GetActivityTimesData`;
+	const TIMES_CALL = `/schedules/activities/times`;
 	const TIMES_BODY = {
 		idUsuario: ID_USER,
 		dia: DAY
@@ -192,7 +192,7 @@ router.post("/api/update-personal-activity", async (req, res) => {
 			});
 		}	
 
-        const CALL = "/updatePersonalScheduleByIdCourse"
+        const CALL = "/schedules/personal/update"
 
         const DATA = {
 			P_idCurso: ID_CURSO,
@@ -239,7 +239,7 @@ router.post("/api/remove-personal-activity", async (req, res) => {
     */
 	const ID = req.body.IdPersonalSchedule;
     const TOKEN = req.header('Authorization');
-    const CALL = `/GetTiposCurso`;
+    const CALL = `/schedules/personal/delete-or-recover`;
 
 	try {
         const DATA = {

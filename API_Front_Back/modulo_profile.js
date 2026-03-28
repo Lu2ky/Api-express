@@ -8,8 +8,12 @@ const router = express.Router();
 app.get("/api/get-user-data/:idUser", async (req, res) => {
 	const ID_USER = req.params.idUser;
 
+	const TOKEN = req.header('Authorization');
+	const CALL = `/users/${ID_USER}`;
+
 	try {
-		const RESULT = await Con.getUserData(ID_USER);
+		//const RESULT = await Con.getUserData(ID_USER);
+		const RESULT = await Con.goGetFetcher(CALL, TOKEN)
 
 		return res.status(200).json({
 			success: RESULT != undefined,
@@ -30,16 +34,26 @@ app.post('/api/config-notification', async (req, res) =>{
 	const TIME_MUTE = req.body.antelacionNotis;
 	const CELLPHONE = req.body.telefono;
 
-	console.log(ID, MAIL, TIME_MUTE)
+	
+	const TOKEN = req.header('Authorization');
+	const CALL = `/users/${ID_USER}`;
+	const DATA = {
+		idUsuario: ID,
+		correo: MAIL,
+		antelacionNotis: TIME_MUTE,
+		telefono: CELLPHONE
+	}
 
 	try {
+		const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
+/*
 		const RESULT = await Con.configNotifications(
 			ID,
 			MAIL,
 			TIME_MUTE,
 			CELLPHONE
 		);
-
+*/
 		return res.status(200).json({
 			success: (RESULT != undefined),
 			data: RESULT
