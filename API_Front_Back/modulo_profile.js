@@ -1,6 +1,5 @@
 import express from "express";
 import { Connection } from "../Connection.js";
-import { PersonalAct } from "../PersonalAct.js";
 
 let Con = new Connection();
 const router = express.Router();
