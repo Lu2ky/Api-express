@@ -26,7 +26,7 @@ const worker = new Worker('reminderQueue', async (job) => {
     try {
     const response = await fetch(`http://${process.env.EMAIL_ADDR}:${process.env.EMAIL_PORT}/api/sendEmail`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify(emailData)
     });
 
@@ -50,9 +50,11 @@ const worker = new Worker('reminderQueue', async (job) => {
     };
 
     try {
-        await fetch(`http://${process.env.API_ADDR}:${process.env.API_PORT}/api/add-notification`, {
+        await fetch(`http://${process.env.API_ADDR}:${process.env.API_PORT}/api/v1/notifications`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json',
+				"X-API-Key": process.env.API_KEY 
+            },
             body: JSON.stringify(notiDate)
         });
         console.log("Notificación enviada");
