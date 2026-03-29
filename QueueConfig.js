@@ -15,7 +15,7 @@ export const redisConnection = {
     password: process.env.DB_PASS_REDIS,
     maxRetriesPerRequest: null
 };
-
+/*
 // Crear la cola
 const testQueue = new Queue('testConnection', { connection: redisConnection });
 
@@ -29,3 +29,23 @@ testQueue.client.then((client) => {
     });
 });
 
+*/
+export const reminderQueue = new Queue('reminderQueue', { connection: redisConnection });
+
+reminderQueue.client.then(async (client) => {
+    try {
+        // Al tener password, este 'ping' debería devolver 'PONG'
+        const respuesta = await client.ping();
+        console.log("--- RESULTADO DE AUTENTICACIÓN ---");
+        if (respuesta === 'PONG') {
+            console.log("¡CONTRASEÑA CORRECTA! Conexión total establecida.");
+            
+            // Opcional: Probar escritura
+            await client.set('auth_test', 'Exito');
+            console.log("Escritura permitida.");
+        }
+    } catch (error) {
+        console.error("ERROR DE AUTENTICACIÓN:", error.message);
+        console.log("Tip: Revisa que DB_PASSWORD_REDIS en tu .env sea la correcta.");
+    }
+});

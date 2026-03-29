@@ -17,6 +17,8 @@ export class Activity {
     }
 
     static hasCollisions(timesData, id, hStart, hEnd, dStart, dEnd){
+        
+        if (timesData === null) return false;
 
         if (timesData === null) return false;
 

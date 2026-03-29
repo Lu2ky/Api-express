@@ -13,10 +13,17 @@ import { promises } from "dns";
 import schedule from 'node-schedule';
 import e from "express";
 import { Queue } from 'bullmq';
-import { redisConnection } from '../QueueConfig.js'; 
+import { reminderQueue } from '../QueueConfig.js'; 
 import '../ReminderWorker.js';
 import {} from 'express';
 
+import modulo_official from './modulo_official.js';
+import modulo_personal from './modulo_personal.js';
+import modulo_comments from './modulo_comments.js';
+import modulo_profile from './modulo_profile.js';
+import modulo_reminders from './modulo_reminders.js';
+import modulo_notifications from './modulo_notifications.js';
+import modulo_auth from './modulo_auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -32,7 +39,7 @@ app.use(cors());
 app.use(express.json());
 
 let Con = new Connection();
-
+/*
 const reminderQueue = new Queue('reminderQueue', { connection: redisConnection });
 
 reminderQueue.client.then(async (client) => {
@@ -52,17 +59,26 @@ reminderQueue.client.then(async (client) => {
         console.log("Tip: Revisa que DB_PASSWORD_REDIS en tu .env sea la correcta.");
     }
 });
-
+*/
+app.use("/", modulo_official);
+app.use("/", modulo_personal);
+app.use("/", modulo_comments);
+app.use("/", modulo_profile);
+app.use("/", modulo_reminders);
+app.use("/", modulo_notifications);
+app.use("/", modulo_auth);
 //	--------------------------------------- ACTIVIDADES -------------------------------------- \\
 
 // Obtener horario oficial
+/*
 app.get("/api/official-schedule/:userId", async (req, res) => {
 	//	req.params permite obtener los valoeres dados por medio de la URL
 	const USER_ID = req.params.userId;
+	const TOKEN = req.header('Authorization');
 
 	try {
 		//Petición a la API de Go
-		let data = await Con.GetOfficialScheduleByUserId(USER_ID);
+		let data = await Con.GetOfficialScheduleByUserId(USER_ID, TOKEN);
 
 		//Procesamiento de los datos.
 		const ACTIVITIES = data.map(eachData => {
@@ -97,8 +113,9 @@ app.get("/api/official-schedule/:userId", async (req, res) => {
 		});
 	}
 });
-
+*/
 // Obtener horario personal
+/*
 app.get("/api/personal-schedule/:userId", async (req, res) => {
 	let data = await Con.GetPersonalScheduleByUserId(req.params.userId);
 
@@ -115,7 +132,9 @@ app.get("/api/personal-schedule/:userId", async (req, res) => {
 				[eachData.StartHour, eachData.EndHour, eachData.Day],
 				eachData.Tag,
 				eachData.Dt_Start.String,
-				eachData.Dt_End.String
+				eachData.Dt_End.String,
+				eachData,
+				1
 			);
 
 			return PersonalActivity.getData();
@@ -124,10 +143,10 @@ app.get("/api/personal-schedule/:userId", async (req, res) => {
 
 	return res.json(PersonalActivitys);
 });
-
+*/
 // Editar descripción de actividad personal
-app.post("/api/add-personal-activity", async (req, res) => {
-	/*
+/*app.post("/api/add-personal-activity", async (req, res) => {
+	
     data = {
 		id_user
 		
@@ -154,7 +173,7 @@ app.post("/api/add-personal-activity", async (req, res) => {
 			[ACT_ID, START_HOUR, END_HOUR, START_DATE, END_DATE]
 		]
     }
-  */
+
 	const ID_USER = req.body.id_user;
 
 	const ID_ACADEMIC_PER = req.body.id_academic_per;
@@ -216,8 +235,9 @@ app.post("/api/add-personal-activity", async (req, res) => {
 		});
 	}
 });
-
+*/
 //	Actualizar actividad personal
+/*
 app.post("/api/update-personal-activity", async (req, res) => {
 	/*
 		{
@@ -242,7 +262,7 @@ app.post("/api/update-personal-activity", async (req, res) => {
 			]
 			
 		}
-	*/
+	
 	const ID_USER = req.body.id_user;
 	const ID_CURSO = req.body.id_course;
 
@@ -309,7 +329,7 @@ app.post("/api/remove-personal-activity", async (req, res) => {
     data = {
       IdCurso: [ID]
     }
-  */
+  
 	const ID = req.body.IdPersonalSchedule;
 
 	try {
@@ -329,7 +349,8 @@ app.post("/api/remove-personal-activity", async (req, res) => {
 		});
 	}
 });
-
+*/
+/*
 // Obtener tipos de curso
 app.get("/api/course-types", async (req, res) => {
 	let data = await Con.GetTiposCurso();
@@ -355,9 +376,9 @@ app.get("/api/academic-periods", async (req, res) => {
 
 	return res.json(data);
 });
-
+*/
 //	--------------------------------------- COMENTARIOS -------------------------------------- \\
-
+/*
 //	Sacar los comentarios
 app.get("/api/get-personal-comments/:idUser", async (req, res) => {
 	const ID_USER = req.params.idUser;
@@ -476,9 +497,9 @@ app.post("/api/remove-comment", async (req, res) => {
 		});
 	}
 });
-
+*/
 //	--------------------------------------- TAGS -------------------------------------- \\
-
+/*
 // Obtener etiquetas por id usuario
 app.get("/api/tags-by-user/:userId", async (req, res) => {
 	try {
@@ -539,8 +560,9 @@ app.post("/api/delete-tag", async (req, res) => {
 		return res.status(500).json({success: false, error: error.message});
 	}
 });
-
+*/
 //	--------------------------------------- RECORDATORIOS -------------------------------------- \\
+/*
 app.get("/api/reminders-tags-by-user/:userId", async (req, res) => {
 	let data = await Con.getRemindersTags(req.params.userId);
 
@@ -624,8 +646,9 @@ app.get("/api/reminders-by-user/:userId", async (req, res) => {
 
 	return res.json(Reminders);
 });
-
+*/
 // Añadir recordatorio
+/*
 app.post("/api/add-reminder", async (req, res) => {
     const IDUSER = req.body.P_usuario;
     const TASK_NAME = req.body.P_nombre;
@@ -855,9 +878,10 @@ app.post('/api/update-tags-reminder', async (req, res) =>{
 	}
 
 });
-
+*/
 //	--------------------------------------- NOTIFICACIONES -------------------------------------- \\
 // Obtener notificaciones por id
+/*
 app.get("/api/notifications-by-user/:userId", async (req, res) => {
 	let data = await Con.getNotifications(req.params.userId);
 	console.log(data);
@@ -1370,7 +1394,7 @@ app.post('/api/stop-all-notifications', async (req, res) => {
         });
     }
 });
-
+*/
 // Revisar registros en la bd redis
 app.get('/api/debug-redis', async (req, res) => {
     try {
@@ -1392,7 +1416,7 @@ app.get('/api/debug-redis', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-
+/*
 // Reanudar notificaciones
 app.post('/api/restore-notifications', async (req, res) => {
     try {
@@ -1481,7 +1505,7 @@ function calcularFechaAlerta(vencimiento, antelacion) {
     
     return alerta;
 }
-
+*/
 // Llamado al puerto
 app.listen(PORT);
 
