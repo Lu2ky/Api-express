@@ -5,14 +5,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 import bcrypt from "bcrypt";
 
-//dotenv.config();	//PROD
-dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});	//LOCAL
+dotenv.config();	//PROD
+//dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});	//LOCAL
 
 const API_ADDR = process.env.API_ADDR
 const API_PORT = process.env.API_PORT
 
 // Para que ejecute una instancia local de la API de Go
-//const API_ADDR = "localhost";
+///const API_ADDR = "localhost";
 //const API_PORT = "8080";
 
 export class Connection {
@@ -31,7 +31,6 @@ export class Connection {
 			const rta = await fetch(URL, {
 				method: "GET",
 				headers: {
-					"Content-Type": "application/json",
 					"Authorization": token,
 					"X-API-Key": process.env.API_KEY
 				}

@@ -58,8 +58,6 @@ router.post("/api/auth/validate-user", async (req, res) => {
 	const PASS = req.body.pass;
 
     const hashedPass = await hashPassword(PASS)
-
-    const TOKEN = req.header('Authorization');
     const CALL = `/auth/login`;
 
     const DATA = {
@@ -68,7 +66,7 @@ router.post("/api/auth/validate-user", async (req, res) => {
     }
 
 	try {
-        const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
+        const RESULT = await Con.goPostFetcher(CALL, DATA);
 		//const RESULT = await Con.authuser(USER, PASS);
 		const success = RESULT != undefined;
 

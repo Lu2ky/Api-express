@@ -5,7 +5,7 @@ let Con = new Connection();
 const router = express.Router();
 
 //	Sacar la info del usuario
-app.get("/api/get-user-data/:idUser", async (req, res) => {
+router.get("/api/get-user-data/:idUser", async (req, res) => {
 	const ID_USER = req.params.idUser;
 
 	const TOKEN = req.header('Authorization');
@@ -28,7 +28,7 @@ app.get("/api/get-user-data/:idUser", async (req, res) => {
 });
 
 // Configurar la información del usuario
-app.post('/api/config-notification', async (req, res) =>{
+router.post('/api/config-notification', async (req, res) =>{
 	const ID = req.body.idUsuario;
 	const MAIL = req.body.correo;
 	const TIME_MUTE = req.body.antelacionNotis;
@@ -36,7 +36,7 @@ app.post('/api/config-notification', async (req, res) =>{
 
 	
 	const TOKEN = req.header('Authorization');
-	const CALL = `/users/${ID_USER}`;
+	const CALL = `/users/config`;
 	const DATA = {
 		idUsuario: ID,
 		correo: MAIL,

@@ -184,25 +184,26 @@ router.post("/api/add-reminder", async (req, res) => {
 	}
 
     try {
+		const CALL_USERDATA = `/users/${USER_CODE}`;
 
 		const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
-
-		const CALL_USERDATA = `/users/${USER_CODE}`;
 		const RESULT_USERDATA = await Con.goGetFetcher(CALL_USERDATA, TOKEN);
-	/*
+
+		
+/*	
         const RESULT = await Con.addReminder(
-			IDUSER, 
+			USER_ID, 
 			TASK_NAME, 
 			DESC, 
 			DATE, 
-			PRIORY,
+			PRIORITY,
 			TAG1,
 			TAG2,
 			TAG3,
 			TAG4,
 			TAG5
 		);
-		
+/*	
 		const url = `http://${process.env.API_ADDR}:${process.env.API_PORT}/api/v1/users/${USER_CODE}`;
         
         const response = await fetch(url, {
@@ -212,9 +213,12 @@ router.post("/api/add-reminder", async (req, res) => {
 				"X-API-Key": process.env.API_KEY
 			}
         });
-*/
-        const jsonResponse = await RESULT_USERDATA.json();
-        const USER_DATA = jsonResponse[0];
+*/	
+		console.log("RESULTAOS -----------------------")
+		console.log(RESULT);
+		console.log(RESULT_USERDATA);
+        //const jsonResponse = await RESULT_USERDATA.json();
+        const USER_DATA = RESULT_USERDATA[0];
 
 		const ID_TO_DO = RESULT.InsertedId;
 		const USER_NAME = USER_DATA.nombre;
@@ -313,7 +317,7 @@ router.post("/api/remove-reminder", async (req, res) => {
 
 	try {
 		//const RESULT = await Con.deleteReminder(ID);
-		const RESULT = await Con.goPostFetcher(DATA, CALL, TOKEN);
+		const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
 
 		const success = RESULT != undefined;
 

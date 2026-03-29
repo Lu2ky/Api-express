@@ -53,7 +53,6 @@ router.post("/api/add-personal-activity", async (req, res) => {
             end_hour
             day
 
-            times: [ACTIVITY TIMES]
             TIMES es un arreglo que contiene la información del tiempo de todas
             las actividades de un día concreto y tiene la siguiente estructura
         }
@@ -70,7 +69,7 @@ router.post("/api/add-personal-activity", async (req, res) => {
 
     const TOKEN = req.header('Authorization');
 
-	const TIMES_CALL = `schedules/activities/times`;
+	const TIMES_CALL = `/schedules/activities/times`;
 	const TIMES_BODY = {
 		idUsuario: ID_USER,
 		dia: DAY
@@ -234,7 +233,7 @@ router.post("/api/update-personal-activity", async (req, res) => {
 router.post("/api/remove-personal-activity", async (req, res) => {
     /*
         data = {
-            IdCurso: [ID]
+            IdPersonalSchedule: [ID]
         }
     */
 	const ID = req.body.IdPersonalSchedule;
@@ -243,7 +242,7 @@ router.post("/api/remove-personal-activity", async (req, res) => {
 
 	try {
         const DATA = {
-            IdCurso: ID
+            IdPersonalSchedule: ID
         }
 
         const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN)

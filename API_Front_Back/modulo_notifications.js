@@ -42,7 +42,7 @@ router.post('/api/add-notification', async (req, res) =>{
     const ISSUE_DATE = req.body.fechaEmision;
 
     const TOKEN = req.header('Authorization');
-    const CALL = `/notifications/users/${USER_ID}`;
+    const CALL = `/notifications`;
     const DATA =  {
         idToDoList: ID_TO_DO,
         nombre: NAME,
@@ -78,7 +78,14 @@ router.post('/api/add-notification', async (req, res) =>{
 // Bloquear notificaciones temporalmente
 router.post('/api/stop-all-notifications', async (req, res) => {
     try {
+        const TOKEN = req.header('Authorization');
         const { codUsuario } = req.body;
+
+        const AUTH  = await Con.goGetFetcher(`/users/${codUsuario}`, TOKEN);
+
+        if (!AUTH){
+            return res.status(401).json({ error: "Permiso denegado" });
+        }
 
         // Validación de entrada
         if (!codUsuario) {
@@ -143,9 +150,13 @@ router.post('/api/restore-notifications', async (req, res) => {
     
         const user = await Con.goGetFetcher(`/users/${codUsuario}`, TOKEN);
         
+        if (!user){
+            return res.status(400).json({ error: "El usuario no existe o el permiso fue denegado" });
+        }
+
         // Datos de Go 
         //const rawReminders = await Con.getReminders(codUsuario);
-        const rawReminders = await Con.goGetFetcher(`/reminders/users/${codUsuario};`, TOKEN);
+        const rawReminders = await Con.goGetFetcher(`/reminders/users/${codUsuario}`, TOKEN);
         const reminders = Array.isArray(rawReminders) ? rawReminders : [];
 
         if (reminders.length === 0) {
@@ -155,6 +166,8 @@ router.post('/api/restore-notifications', async (req, res) => {
         let count = 0;
         const ahora = new Date();
 
+        console.log(user);
+        
         for (const r of reminders) {
             // Limpieza de datos
             const idToDo = r.N_idToDoList;
@@ -177,13 +190,13 @@ router.post('/api/restore-notifications', async (req, res) => {
                 console.log(`Agendando: "${titulo}" | Alerta: ${fechaAlerta.toLocaleString()}`);
 
                 await scheduleEmailAndNotification(
-                    idToDo,             
-                    user.nombre,        
+                    idToDo,        
+                    user[0].nombre,        
                     titulo,               
                     desc,               
                     fechaRaw,              
-                    user.antelacionNotis, 
-                    user.correo,           
+                    user[0].antelacionNotis, 
+                    user[0].correo,           
                     codUsuario         
                 );
                 
