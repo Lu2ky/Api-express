@@ -32,7 +32,6 @@ router.post('/api/config-notification', async (req, res) =>{
 	const ID = req.body.idUsuario;
 	const MAIL = req.body.correo;
 	const TIME_MUTE = req.body.antelacionNotis;
-	const CELLPHONE = req.body.telefono;
 
 	
 	const TOKEN = req.header('Authorization');
