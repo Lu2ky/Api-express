@@ -96,6 +96,60 @@ router.post("/api/delete-tag", async (req, res) => {
 //  -------------------------- RECORDATORIOS ----------------------- \\
 
 router.get("/api/reminders-tags-by-user/:userId", async (req, res) => {
+
+	//Esta madre es para intentar asegurar que ambas consultas lleguen y no se pierdan por timeOuts o cosas por el estilo
+	async function goGetWithRetry(url, token, retries = 3, backoff = 100) {
+		try {
+			const RESPONSE = await Con.goGetFetcher(url, token);
+
+			return RESPONSE
+		} catch (err) {
+			if (retries > 0) {
+				console.warn(`Falló la petición. Reintentando en ${backoff}ms... (Quedan ${retries})`);
+				
+				await new Promise(resolve => setTimeout(resolve, backoff));
+				
+				return goGetWithRetry(url, token, retries - 1, backoff * 2);
+			} else {
+
+				throw new Error("Se agotaron los reintentos: " + err.message);
+			}
+		}
+	}
+
+	const USER_ID = req.params.userId;
+	const TOKEN = req.header('Authorization');
+    const CALL_TAGS = `/tags/users/${USER_ID}`;
+	const CALL_REMINDERS= `/reminders/users/${USER_ID}`;
+
+	const RESPONSE_TAGS = await goGetWithRetry(CALL_TAGS, TOKEN);
+	const RESPONSE_REMINDERS = await goGetWithRetry(CALL_REMINDERS, TOKEN);
+
+	const REMINDERS = RESPONSE_REMINDERS.filter(a => a.B_isDeleted == false);
+
+	//Procesar Tags
+	RESPONSE_TAGS.forEach(TAG => {
+		
+		if (TAG.B_isDeleted.Bool) return;
+
+		const REM_ID = TAG.N_idRecordatorio;
+		const REM = REMINDERS.find(R => R.N_idRecordatorio == REM_ID);
+
+		if (!REM) return;
+
+		if (REM.tags == undefined) REM.tags = [];
+		REM.tags.push({
+			tag_id: TAG.N_idEtiqueta,
+			tag_nombre: TAG.T_nombre
+		})
+
+	});
+	
+	console.log(REMINDERS);
+
+	return res.json(REMINDERS);
+
+	/*
 	//let data = await Con.getRemindersTags(req.params.userId);
 	const USER_ID = req.params.userId;
 	const TOKEN = req.header('Authorization');
@@ -151,6 +205,7 @@ router.get("/api/reminders-tags-by-user/:userId", async (req, res) => {
 	});
 
 	return res.json(reminders);
+	*/
 });
 
 // Añadir recordatorio
