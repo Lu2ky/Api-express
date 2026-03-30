@@ -36,12 +36,11 @@ router.post('/api/config-notification', async (req, res) =>{
 
 	
 	const TOKEN = req.header('Authorization');
-	const CALL = `/users/config`;
+	const CALL = `/notifications/mute`;
 	const DATA = {
 		idUsuario: ID,
 		correo: MAIL,
-		antelacionNotis: TIME_MUTE,
-		telefono: CELLPHONE
+		antelacionNotis: TIME_MUTE
 	}
 
 	try {
