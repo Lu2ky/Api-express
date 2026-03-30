@@ -15,21 +15,19 @@ router.get("/api/notifications-by-user/:userId", async (req, res) => {
 
     let data = await Con.goGetFetcher(CALL, TOKEN);
 
-    let notifications = data.map(eachData => {
-        if(eachData.estado != 1){
-            let notification = new Notification(
+    let notifications = data
+    .filter(eachData => eachData.estado !== 1) 
+    .map(eachData => {
+        let notification = new Notification(
             eachData.idNotificacion,
             eachData.idUsuario,
             eachData.idRecordatorio,
             eachData.nombre,
             eachData.descripcion,
-            eachData.fechaEmision,
+            eachData.fechaEmision
         );
-
         return notification.getData();
-        }
-
-    }).filter(notification => notification !== null);
+    });
 
     return res.json(notifications);
 });
@@ -190,8 +188,6 @@ router.post('/api/restore-notifications', async (req, res) => {
         let count = 0;
         const ahora = new Date();
 
-        console.log(user);
-        
         for (const r of reminders) {
             // Limpieza de datos
             const idToDo = r.N_idToDoList;
@@ -207,7 +203,7 @@ router.post('/api/restore-notifications', async (req, res) => {
 
             // LÓGICA DE TIEMPO 
             const fechaVencimiento = new Date(fechaRaw);
-            const fechaAlerta = calcularFechaAlerta(fechaVencimiento, user.antelacionNotis);
+            const fechaAlerta = calcularFechaAlerta(fechaVencimiento, user[0].antelacionNotis);
 
             if (!isDeleted && !isPending && fechaAlerta > ahora) {
                 

@@ -62,12 +62,24 @@ const worker = new Worker('reminderQueue', async (job) => {
         console.error("Error notificación:", err.message);
     }
 
-    // Guardar log de email
+    const logEmailData =  {
+        asunto: `Recordatorio: ${title}`, 
+        contenido: content, 
+        fechaEmision: dateStr, 
+        idToDoList: idToDo
+    };
+
     try {
-        await Con.addEmail(idToDo, `Recordatorio: ${title}`, content, dateStr);
-        console.log("Log guardado en BD.");
-    } catch (dbError) {
-        console.error("Error BD:", dbError.message);
+        await fetch(`http://${process.env.API_ADDR}:${process.env.API_PORT}/api/v1/emails`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json',
+				"X-API-Key": process.env.API_KEY 
+            },
+            body: JSON.stringify(logEmailData)
+        });
+        console.log("Log de correo enviado");
+    } catch (err) {
+        console.error("Error log de correo:", err.message);
     }
 
 }, { connection: redisConnection });
