@@ -14,20 +14,20 @@ router.get("/api/notifications-by-user/:userId", async (req, res) => {
     const CALL = `/notifications/users/${USER_ID}`;
 
     let data = await Con.goGetFetcher(CALL, TOKEN);
-    //let data = await Con.getNotifications(req.params.userId);
-    console.log(data);
 
     let notifications = data.map(eachData => {
-        let notification = new Notification(
+        if(eachData.estado != 1){
+            let notification = new Notification(
             eachData.idNotificacion,
             eachData.idUsuario,
             eachData.idRecordatorio,
             eachData.nombre,
             eachData.descripcion,
-            eachData.fechaEmision
+            eachData.fechaEmision,
         );
-        
+
         return notification.getData();
+        }
 
     }).filter(notification => notification !== null);
 
@@ -36,10 +36,8 @@ router.get("/api/notifications-by-user/:userId", async (req, res) => {
 
 // Añadir notificaciones
 router.post('/api/add-notification', async (req, res) =>{
+
     const ID_TO_DO = req.body.idToDoList;
-    const NAME = req.body.nombre;
-    const DESC = req.body.descripcion;
-    const ISSUE_DATE = req.body.fechaEmision;
 
     const TOKEN = req.header('Authorization');
     const CALL = `/notifications`;
@@ -60,6 +58,32 @@ router.post('/api/add-notification', async (req, res) =>{
             ISSUE_DATE
         );
 */
+        return res.status(200).json({
+            success: (RESULT != null),
+            data: RESULT
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            error: "Error interno del servidor"
+        });
+    }
+
+});
+
+// Añadir notificaciones
+router.post('/api/delete-notifications', async (req, res) =>{
+    const ID_NOTIFICATIONS = req.body.ids;
+
+    const TOKEN = req.header('Authorization');
+    const CALL = `/deleteNotifications`;
+    const DATA =  {
+        ids: ID_NOTIFICATIONS
+    };
+
+    try {
+        const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
+
         return res.status(200).json({
             success: (RESULT != null),
             data: RESULT
