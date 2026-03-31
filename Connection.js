@@ -12,7 +12,7 @@ const API_ADDR = process.env.API_ADDR
 const API_PORT = process.env.API_PORT
 
 // Para que ejecute una instancia local de la API de Go
-///const API_ADDR = "localhost";
+//const API_ADDR = "localhost";
 //const API_PORT = "8080";
 
 export class Connection {

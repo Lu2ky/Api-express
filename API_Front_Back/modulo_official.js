@@ -175,4 +175,29 @@ router.post('/api/import-schedule', async (req, res) =>{
 
 });
 
+// Agregar un periodo académico
+router.post("/api/academic-periods/insert", async (req, res) => {
+
+	const USER_ID = req.body.idUsuario;
+	const NAME = req.body.nombre;
+	const DATE_START = req.body.fechaInicio;
+	const DATE_END = req.body.fechaFinal;
+
+	const BODY = {
+		idUsuario: USER_ID,
+		nombre: NAME,
+		fechaInicio: DATE_START,
+		fechaFinal: DATE_END
+	}
+
+    const CALL = `/academic-periods/insert`;
+    const TOKEN = req.header('Authorization');
+
+	let RESULT = await Con.goPostFetcher(CALL, BODY, TOKEN)
+
+	return res.json({
+		success: RESULT != undefined
+	});
+});
+
 export default router;
