@@ -152,8 +152,12 @@ router.post('/api/import-schedule', async (req, res) =>{
 		temp = temp.charAt(0).toUpperCase() +temp.slice(1);
 		const PASS = temp + "@" + temp2
 		const HASH_PASS = await hashPassword(PASS)
-
-		await Con.goPostFetcher(`/users/${COD_USUARIO}`, HASH_PASS);
+		const CALL2 = "/auth/users"
+		const DATA2 = {
+			User: temp2,
+			Pass: HASH_PASS,
+		};
+		await Con.goPostFetcher(CALL2, DATA2, TOKEN);
 		//const RESULT1 = await Con.adduser(COD_USUARIO, PASS);
 		
 		return res.status(200).json({
