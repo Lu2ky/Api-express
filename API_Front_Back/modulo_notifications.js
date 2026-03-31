@@ -14,10 +14,10 @@ router.get("/api/notifications-by-user/:userId", async (req, res) => {
     const CALL = `/notifications/users/${USER_ID}`;
 
     let data = await Con.goGetFetcher(CALL, TOKEN);
-    //let data = await Con.getNotifications(req.params.userId);
-    console.log(data);
 
-    let notifications = data.map(eachData => {
+    let notifications = data
+    .filter(eachData => eachData.estado !== 1) 
+    .map(eachData => {
         let notification = new Notification(
             eachData.idNotificacion,
             eachData.idUsuario,
@@ -26,20 +26,16 @@ router.get("/api/notifications-by-user/:userId", async (req, res) => {
             eachData.descripcion,
             eachData.fechaEmision
         );
-        
         return notification.getData();
-
-    }).filter(notification => notification !== null);
+    });
 
     return res.json(notifications);
 });
 
 // Añadir notificaciones
 router.post('/api/add-notification', async (req, res) =>{
+
     const ID_TO_DO = req.body.idToDoList;
-    const NAME = req.body.nombre;
-    const DESC = req.body.descripcion;
-    const ISSUE_DATE = req.body.fechaEmision;
 
     const TOKEN = req.header('Authorization');
     const CALL = `/notifications`;
@@ -60,6 +56,32 @@ router.post('/api/add-notification', async (req, res) =>{
             ISSUE_DATE
         );
 */
+        return res.status(200).json({
+            success: (RESULT != null),
+            data: RESULT
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            error: "Error interno del servidor"
+        });
+    }
+
+});
+
+// Añadir notificaciones
+router.post('/api/delete-notifications', async (req, res) =>{
+    const ID_NOTIFICATIONS = req.body.ids;
+
+    const TOKEN = req.header('Authorization');
+    const CALL = `/notifications/delete`;
+    const DATA =  {
+        ids: ID_NOTIFICATIONS
+    };
+
+    try {
+        const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
+
         return res.status(200).json({
             success: (RESULT != null),
             data: RESULT
@@ -166,8 +188,6 @@ router.post('/api/restore-notifications', async (req, res) => {
         let count = 0;
         const ahora = new Date();
 
-        console.log(user);
-        
         for (const r of reminders) {
             // Limpieza de datos
             const idToDo = r.N_idToDoList;
@@ -183,7 +203,7 @@ router.post('/api/restore-notifications', async (req, res) => {
 
             // LÓGICA DE TIEMPO 
             const fechaVencimiento = new Date(fechaRaw);
-            const fechaAlerta = calcularFechaAlerta(fechaVencimiento, user.antelacionNotis);
+            const fechaAlerta = calcularFechaAlerta(fechaVencimiento, user[0].antelacionNotis);
 
             if (!isDeleted && !isPending && fechaAlerta > ahora) {
                 

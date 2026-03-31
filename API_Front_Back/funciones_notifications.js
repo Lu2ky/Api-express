@@ -5,10 +5,7 @@ export async function scheduleEmailAndNotification(idToDo, userName, title, cont
     // Lógica de fechas
     const ISO_DATE = dateStr.replace(" ", "T");
     const FINAL_DATE = new Date(ISO_DATE);
-    const [H, M, S] = advanceNotice.split(':').map(Number);
-    const MILISECONDS_TO_SUBTRACT = ((H * 3600) + (M * 60) + S) * 1000;
-
-    const ALERT_DATE = new Date(FINAL_DATE.getTime() - MILISECONDS_TO_SUBTRACT);
+    const ALERT_DATE = calcularFechaAlerta(FINAL_DATE, advanceNotice);
     const NOW = new Date();
 
     const delay = ALERT_DATE.getTime() - NOW.getTime();

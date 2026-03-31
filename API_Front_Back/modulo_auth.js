@@ -173,20 +173,8 @@ router.post('/api/send-code', async (req, res) => {
 
     try {
         
-        const RESPONSE_USERDATA = await Con.goGetFetcher(CALL);
- /*       
-        const url = `http://${process.env.API_ADDR}:${process.env.API_PORT}/api/v1/users/${USER_CODE}`;
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: { 
-                'Content-Type': 'application/json',
-                "X-API-Key": process.env.API_KEY
-            }
-        });
-*/
-        const jsonResponse = await RESPONSE_USERDATA.json();
-        const USER_DATA = jsonResponse[0];
+        const response = await Con.goGetFetcher(CALL);
+        const USER_DATA = response[0];
 
         console.log(USER_DATA);
         
@@ -219,19 +207,18 @@ router.post('/api/send-code', async (req, res) => {
 
 // Validar token
 router.post('/api/validate-token', async (req, res) =>{
-    const USER_TOKEN = req.body.token;
     const USER_ID = req.body.userId.toString();
-
-    const CALL = `tokens/get`;
+    const USER_TOKEN = req.body.token;
+    
+    const CALL = `/tokens/get`;
     const DATA = {
-        userId: USER_ID,
+        userId: `reset:${USER_ID}`,
         token: USER_TOKEN
     };
     
     try {
-        // Guardar token en la base de datos
+        // Consultar token en la base de datos
         const RESPONSE = await Con.goPostFetcher(CALL, DATA); 
-        //cont RESPONSE = await Con.getToken(`reset:${USER_ID}`, USER_TOKEN);
         const userId = RESPONSE.userId;
 
         // Si userId NO es null el token es válido
