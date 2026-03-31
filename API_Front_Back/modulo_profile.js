@@ -66,7 +66,7 @@ router.post('/api/config-notification', async (req, res) =>{
 
 });
 
-// --------------------------------------- GUARDAR PALETA ------------------------------------
+// -------------------------------------- PALETA ------------------------------------
 
 router.post('/api/save-palette', async (req, res) => {
 	const USER_ID = req.body.userId.toString();
@@ -100,7 +100,7 @@ router.post('/api/get-palette', async (req, res) =>{
 
 	const CALL = `/palette/get`;
 	const DATA = {
-		userId: `palette:${USER_ID}`,
+		userId: USER_ID,
 	};
 	
 	try {
@@ -109,6 +109,61 @@ router.post('/api/get-palette', async (req, res) =>{
 
 		return res.status(200).json({ 
 			palette: palette
+		});
+
+	} catch (error) {
+		console.error("Hubo un fallo en el proceso:", error.message);
+		return res.status(500).json({ 
+			success: false, 
+			error: "Error interno del servidor" 
+		});
+	}
+
+});
+
+// ------------------------------------- REGISTRO DE INCORPORACIÓN ------------------------------------
+// Guardar registro
+router.post('/api/save-onboarding', async (req, res) => {
+	const USER_ID = req.body.userId.toString();
+	const STATUS = req.body.status;
+
+	const TOKEN = req.header('Authorization');
+	const CALL = `/onboarding`;
+	const DATA = {
+		userId: USER_ID,
+		status: STATUS
+		}
+
+	try {
+
+		// Llamar método de guardar de la api de go
+		const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
+		return res.status(200).json({
+			success: (RESULT != undefined),
+			data: RESULT
+		});
+
+	} catch (error) {
+		console.error("Error en send-code:", error.message);
+		return res.status(500).json({ error: "Error interno del servidor" });
+	}
+});
+
+// Obtener registro de estado de tutorial por id
+router.post('/api/get-onboarding', async (req, res) =>{
+	const USER_ID = req.body.userId.toString();
+
+	const CALL = `/onboarding/get`;
+	const DATA = {
+		userId: USER_ID,
+	};
+	
+	try {
+		const RESPONSE = await Con.goPostFetcher(CALL, DATA); 
+		const status = RESPONSE.status;
+
+		return res.status(200).json({ 
+			status: status
 		});
 
 	} catch (error) {

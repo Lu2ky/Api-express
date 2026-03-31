@@ -158,8 +158,54 @@ router.post('/api/import-schedule', async (req, res) =>{
 			Pass: HASH_PASS,
 		};
 		await Con.goPostFetcher(CALL2, DATA2, TOKEN);
-		//const RESULT1 = await Con.adduser(COD_USUARIO, PASS);
+			
+		// Datos para obtener id del usuario
+		const CALL3 = `/users/${temp2}`;
+
+		// Obtener datos del usuario
+		const response = await Con.goGetFetcher(CALL3, TOKEN,)
+		const USER_DATA = response[0];
+		if (!USER_DATA || !USER_DATA.idUsuario) {
+            console.log("Respuesta de API sin datos de usuario:", response);
+            return res.status(404).json({ error: "Usuario no encontrado" });
+        }
+
+        const USER_ID = USER_DATA.idUsuario.toString();
+
+		// Datos de la paleta
+		const CALL4 = `/palette`;
+		const DATA4 = {
+		userId: USER_ID,
+		palette: "default"
+		}
+
+		// Guardar paleta
+		const RESULT4 = await Con.goPostFetcher(CALL4, DATA4, TOKEN);
+		const success4 = RESULT4 !== undefined || RESULT4?.status === 200;
+
+		if (success4) {
+			console.log("Paleta guardada correctamente");
+		} else {
+			console.log("El servidor no respondió con datos");
+		}
+
+		// Datos de registro de incorporación
+		const CALL5 = `/onboarding/`;
+		const DATA5 = {
+		userId: USER_ID,
+		status: "0"
+		}
 		
+		// Guardar registro de incorporación
+		const RESULT5 = await Con.goPostFetcher(CALL5, DATA5, TOKEN);
+		const success5 = RESULT5 !== undefined || RESULT5?.status === 200;
+
+		if (success5) {
+			console.log("Registro guardado correctamente");
+		} else {
+			console.log("El servidor no respondió con datos");
+		}
+
 		return res.status(200).json({
 			success: (RESULT != undefined),
 			data: RESULT

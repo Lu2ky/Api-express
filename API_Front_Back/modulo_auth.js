@@ -14,8 +14,9 @@ router.post("/api/auth/create-user", async (req, res) => {
     const hashedPass = await hashPassword(PASS)
 
     const TOKEN = req.header('Authorization');
-    const CALL = `/auth/users`;
 
+	// Datos del usuario a guardar
+    const CALL = `/auth/users`;
     const DATA = {
         User: USER,
 		Pass: hashedPass
@@ -23,12 +24,12 @@ router.post("/api/auth/create-user", async (req, res) => {
 
 	try {
         const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
-		//const RESULT = await Con.adduser(USER, PASS);
 		const success = RESULT != undefined;
 
 		return res.status(200).json({
 			success: success
 		});
+
 	} catch (error) {
 		return res.status(500).json({
 			error: "Error interno del servidor"
@@ -175,11 +176,9 @@ router.post('/api/send-code', async (req, res) => {
         
         const response = await Con.goGetFetcher(CALL);
         const USER_DATA = response[0];
-
-        console.log(USER_DATA);
-        
+ 
         if (!USER_DATA || !USER_DATA.idUsuario) {
-            console.log("Respuesta de API sin datos de usuario:", jsonResponse);
+            console.log("Respuesta de API sin datos de usuario:", response);
             return res.status(404).json({ error: "Usuario no encontrado" });
         }
 
@@ -212,7 +211,7 @@ router.post('/api/validate-token', async (req, res) =>{
     
     const CALL = `/tokens/get`;
     const DATA = {
-        userId: `reset:${USER_ID}`,
+        userId: USER_ID,
         token: USER_TOKEN
     };
     

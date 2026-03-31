@@ -334,17 +334,6 @@ router.post('/api/update-reminder', async (req, res) =>{
 	try {
 
 		const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
-/*
-		const RESULT = await Con.updateTagsReminder(
-			ID,
-			NEW_TAG1,
-			NEW_TAG2,
-			NEW_TAG3,
-			NEW_TAG4,
-			NEW_TAG5
-			
-		);
-*/
 		const success = RESULT != undefined;
 
 		return res.status(200).json({
