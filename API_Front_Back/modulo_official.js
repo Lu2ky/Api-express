@@ -193,7 +193,7 @@ router.post('/api/import-schedule', async (req, res) =>{
 		const CALL5 = `/onboarding/`;
 		const DATA5 = {
 		userId: USER_ID,
-		status: "0"
+		status: "0" // No ha hecho el tutorial
 		}
 		
 		// Guardar registro de incorporación
