@@ -74,7 +74,7 @@ router.post('/api/delete-notifications', async (req, res) =>{
     const ID_NOTIFICATIONS = req.body.ids;
 
     const TOKEN = req.header('Authorization');
-    const CALL = `/deleteNotifications`;
+    const CALL = `/notifications/delete`;
     const DATA =  {
         ids: ID_NOTIFICATIONS
     };
