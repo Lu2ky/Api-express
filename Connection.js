@@ -5,8 +5,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 import bcrypt from "bcrypt";
 
-dotenv.config();	//PROD
-//dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});	//LOCAL
+//dotenv.config();	//PROD
+dotenv.config({path: resolve(__dirname, "../../config/expressapiconfig.env")});	//LOCAL
 
 const API_ADDR = process.env.API_ADDR
 const API_PORT = process.env.API_PORT
