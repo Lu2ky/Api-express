@@ -363,11 +363,14 @@ router.post('/api/update-reminder', async (req, res) =>{
 // Eliminar recordatorio
 router.post("/api/remove-reminder", async (req, res) => {
 	const REMINDER_ID = req.body.N_idRecordatorio;
+	const USER_ID = req.body.idUsuario;
+
 	const TOKEN = req.header('Authorization');
     const CALL = `/reminders/delete-or-recover`;
 
 	const DATA = {
-		N_idRecordatorio: REMINDER_ID
+		N_idRecordatorio: REMINDER_ID,
+		P_usuario: USER_ID
 	}
 
 	try {
@@ -378,6 +381,35 @@ router.post("/api/remove-reminder", async (req, res) => {
 
 		return res.status(200).json({
 			success: success
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			error: "Error interno del servidor"
+		});
+	}
+});
+
+// Eliminar recordatorio
+router.post("/api/remove-multiple-reminders", async (req, res) => {
+	const ARRAY_REMINDERS_ID = req.body.idRecordatorios;
+	const USER_ID = req.body.idUsuario;
+
+	const REMINDERS_ID = ARRAY_REMINDERS_ID.toString();
+	const TOKEN = req.header('Authorization');
+    const CALL = `/reminders/delete/multiple`;
+
+	const DATA = {
+		N_idRecordatorios: REMINDERS_ID,
+		P_usuario: USER_ID
+	}
+
+	try {
+		//const RESULT = await Con.deleteReminder(ID);
+		const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
+
+		return res.status(200).json({
+			success: RESULT != undefined
 		});
 	} catch (error) {
 		console.error(error);
