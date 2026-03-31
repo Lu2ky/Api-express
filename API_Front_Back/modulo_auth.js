@@ -229,9 +229,8 @@ router.post('/api/validate-token', async (req, res) =>{
     };
     
     try {
-        // Guardar token en la base de datos
+        // Consultar token en la base de datos
         const RESPONSE = await Con.goPostFetcher(CALL, DATA); 
-        //cont RESPONSE = await Con.getToken(`reset:${USER_ID}`, USER_TOKEN);
         const userId = RESPONSE.userId;
 
         // Si userId NO es null el token es válido
