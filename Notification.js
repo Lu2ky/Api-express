@@ -7,16 +7,6 @@ export class Notification {
 	#issueDate;
 	#state;
 	
-	constructor(idNotification, idUser, idReminder, name, desc, issueDate){
-		this.#idNotification = idNotification;
-		this.#idUser = idUser;
-		this.#idReminder = idReminder;
-		this.#name = name;
-		this.#desc = desc;
-		this.#issueDate = issueDate;
-	
-	}
-
 	constructor(idNotification, idUser, idReminder, name, desc, issueDate, state){
 		this.#idNotification = idNotification;
 		this.#idUser = idUser;

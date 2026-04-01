@@ -3,8 +3,8 @@ import { reminderQueue } from "../QueueConfig.js"
 export async function scheduleEmailAndNotification(idToDo, userName, title, content, dateStr, advanceNotice, email, userCode) {
 
     // Lógica de fechas
-    const ISO_DATE = dateStr.replace(" ", "T");
-    const FINAL_DATE = new Date(ISO_DATE);
+    const isoStr = dateStr.replace(/\b(\d)\b/g, "0$1").replace(" ", "T");
+    const FINAL_DATE = new Date(isoStr);
     const ALERT_DATE = calcularFechaAlerta(FINAL_DATE, advanceNotice);
     const NOW = new Date();
 
