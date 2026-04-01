@@ -5,14 +5,16 @@ export class Notification {
 	#name;
 	#desc;
 	#issueDate;
+	#state;
 	
-	constructor(idNotification, idUser, idReminder, name, desc, issueDate){
+	constructor(idNotification, idUser, idReminder, name, desc, issueDate, state){
 		this.#idNotification = idNotification;
 		this.#idUser = idUser;
 		this.#idReminder = idReminder;
 		this.#name = name;
 		this.#desc = desc;
 		this.#issueDate = issueDate;
+		this.#state = state;
 	
 	}
 	
@@ -23,7 +25,8 @@ export class Notification {
 		N_idRecordatorio: this.#idReminder,
 		T_nombre: this.#name,
 		T_descripcion: this.#desc,
-		Dt_fechaEmision: this.#issueDate
+		Dt_fechaEmision: this.#issueDate,
+		B_estado: this.#state
 		
 		}
 	

@@ -16,7 +16,6 @@ router.get("/api/notifications-by-user/:userId", async (req, res) => {
     let data = await Con.goGetFetcher(CALL, TOKEN);
 
     let notifications = data
-    .filter(eachData => eachData.estado !== 1) 
     .map(eachData => {
         let notification = new Notification(
             eachData.idNotificacion,
@@ -24,7 +23,8 @@ router.get("/api/notifications-by-user/:userId", async (req, res) => {
             eachData.idRecordatorio,
             eachData.nombre,
             eachData.descripcion,
-            eachData.fechaEmision
+            eachData.fechaEmision,
+            eachData.estado
         );
         return notification.getData();
     });
