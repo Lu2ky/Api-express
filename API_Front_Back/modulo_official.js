@@ -78,6 +78,7 @@ router.get("/api/academic-periods", async (req, res) => {
     const TOKEN = req.header('Authorization');
 
 	let data = await Con.goGetFetcher(CALL, TOKEN)//await Con.GetAcademicPeriods();
+	data = data.filter(a => a.isDeleted == 0);
 
 	return res.json(data);
 });
