@@ -78,6 +78,7 @@ router.get("/api/academic-periods", async (req, res) => {
     const TOKEN = req.header('Authorization');
 
 	let data = await Con.goGetFetcher(CALL, TOKEN)//await Con.GetAcademicPeriods();
+	data = data.filter(a => a.isDeleted == 0);
 
 	return res.json(data);
 });
@@ -237,6 +238,54 @@ router.post("/api/academic-periods/insert", async (req, res) => {
 	}
 
     const CALL = `/academic-periods/insert`;
+    const TOKEN = req.header('Authorization');
+
+	let RESULT = await Con.goPostFetcher(CALL, BODY, TOKEN)
+
+	return res.json({
+		success: RESULT != undefined
+	});
+});
+
+// Editar un periodo académico
+router.post("/api/academic-periods/update", async (req, res) => {
+
+	const USER_ID = req.body.idUsuario;
+	const ACADEMIC_PERIOD_ID = req.body.idPeriodoAcademico;
+	const NAME = req.body.nombre;
+	const DATE_START = req.body.fechaInicio;
+	const DATE_END = req.body.fechaFinal;
+
+	const BODY = {
+		idUsuario: USER_ID,
+		idPeriodo: ACADEMIC_PERIOD_ID,
+		nombre: NAME,
+		fechaInicio: DATE_START,
+		fechaFinal: DATE_END
+	}
+
+    const CALL = `/academic-periods/update`;
+    const TOKEN = req.header('Authorization');
+
+	let RESULT = await Con.goPostFetcher(CALL, BODY, TOKEN)
+
+	return res.json({
+		success: RESULT != undefined
+	});
+});
+
+// Borrar un periodo académico
+router.post("/api/academic-periods/delete", async (req, res) => {
+
+	const USER_ID = req.body.idUsuario;
+	const ACADEMIC_PERIOD_ID = req.body.idPeriodoAcademico;
+
+	const BODY = {
+		idUsuario: USER_ID,
+		idPeriodo: ACADEMIC_PERIOD_ID
+	}
+
+    const CALL = `/academic-periods/delete`;
     const TOKEN = req.header('Authorization');
 
 	let RESULT = await Con.goPostFetcher(CALL, BODY, TOKEN)
