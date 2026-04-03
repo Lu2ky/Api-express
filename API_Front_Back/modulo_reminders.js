@@ -71,6 +71,7 @@ router.get("/api/tags-by-user-and-reminder/:userId/:reminderId", async (req, res
 router.post("/api/delete-tag", async (req, res) => {
 	try {
 		const TAG_ID = req.body.idTag;
+		const USER_ID = req.body.idUsuario;
 
         if (!TAG_ID) {
 			return res.status(400).json({success: false, error: "IdTag requerido"});
@@ -79,7 +80,8 @@ router.post("/api/delete-tag", async (req, res) => {
         const TOKEN = req.header('Authorization');
         const SERVICE = `/tags/delete`;
         const BODY = {
-            IdTag: TAG_ID
+            N_idEtiqueta: TAG_ID,
+			P_usuario: USER_ID
         }
 		
         const RESPONSE = await Con.goPostFetcher(SERVICE, BODY, TOKEN);
