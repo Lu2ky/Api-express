@@ -77,7 +77,7 @@ router.post("/api/delete-tag", async (req, res) => {
 		}
 
         const TOKEN = req.header('Authorization');
-        const SERVICE = `/tags/delete}`;
+        const SERVICE = `/tags/delete`;
         const BODY = {
             IdTag: TAG_ID
         }
