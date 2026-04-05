@@ -66,6 +66,7 @@ router.post("/api/add-personal-activity", async (req, res) => {
 	const STA_HOUR = req.body.start_hour;
 	const END_HOUR = req.body.end_hour;
 	const DAY = req.body.day;
+	const USER_CODE = req.body.codUsuario;
 
     const TOKEN = req.header('Authorization');
 
@@ -112,7 +113,8 @@ router.post("/api/add-personal-activity", async (req, res) => {
 			P_dia: DAY,
 			P_horaInicio: STA_HOUR,
 			P_horaFin: END_HOUR,
-			P_periodo: ID_ACADEMIC_PER
+			P_periodo: ID_ACADEMIC_PER,
+			codUsuario: USER_CODE
 		};
 
         const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
@@ -155,6 +157,7 @@ router.post("/api/update-personal-activity", async (req, res) => {
 	const STA_HOUR = req.body.start_hour;
 	const END_HOUR = req.body.end_hour;
 	const DAY = req.body.day;
+	const USER_CODE = req.body.codUsuario;
 
     const TOKEN = req.header('Authorization');
 
@@ -201,7 +204,8 @@ router.post("/api/update-personal-activity", async (req, res) => {
 			P_fechaFin: END_DATE,
 			P_horaInicio: STA_HOUR,
 			P_horaFin: END_HOUR,
-            P_dia: DAY
+            P_dia: DAY,
+			codUsuario: USER_CODE
 		};
 
         const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
@@ -237,12 +241,15 @@ router.post("/api/remove-personal-activity", async (req, res) => {
         }
     */
 	const ID = req.body.IdPersonalSchedule;
+	const USER_CODE = req.body.codUsuario;
+
     const TOKEN = req.header('Authorization');
     const CALL = `/schedules/personal/delete-or-recover`;
 
 	try {
         const DATA = {
-            IdPersonalSchedule: ID
+            IdPersonalSchedule: ID,
+			codUsuario: USER_CODE
         }
 
         const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN)

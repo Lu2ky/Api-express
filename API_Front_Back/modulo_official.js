@@ -228,12 +228,14 @@ router.post("/api/academic-periods/insert", async (req, res) => {
 	const NAME = req.body.nombre;
 	const DATE_START = req.body.fechaInicio;
 	const DATE_END = req.body.fechaFinal;
+	const USER_CODE = req.body.codUsuario;
 
 	const BODY = {
 		idUsuario: USER_ID,
 		nombre: NAME,
 		fechaInicio: DATE_START,
-		fechaFinal: DATE_END
+		fechaFinal: DATE_END,
+		codUsuario: USER_CODE,
 	}
 
     const CALL = `/academic-periods/insert`;

@@ -32,6 +32,7 @@ router.post('/api/config-notification', async (req, res) =>{
 	const ID = req.body.idUsuario;
 	const MAIL = req.body.correo;
 	const TIME_MUTE = req.body.antelacionNotis;
+	const USER_CODE = req.body.codUsuario;
 
 	
 	const TOKEN = req.header('Authorization');
@@ -39,7 +40,8 @@ router.post('/api/config-notification', async (req, res) =>{
 	const DATA = {
 		idUsuario: ID,
 		correo: MAIL,
-		antelacionNotis: TIME_MUTE
+		antelacionNotis: TIME_MUTE,
+		codUsuario: USER_CODE
 	}
 
 	try {
