@@ -12,7 +12,7 @@ export async function scheduleEmailAndNotification(idToDo, userName, title, cont
 
     if (delay > 0) {
         await reminderQueue.add('send-reminder', {
-            idToDo, userName, title, content, dateStr, email,
+            idToDo, userCode, userName, title, content, dateStr, email,
             finalDateStr: FINAL_DATE.toISOString()
         }, {
 			delay: delay,

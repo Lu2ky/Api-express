@@ -64,6 +64,8 @@ router.get("/api/get-personal-course-comments/:idUser/:idCourse", async (req, re
 router.post("/api/add-comment", async (req, res) => {
 	const N_ID_HORARIO = req.body.N_idHorario;
 	const T_COMENTARIO = req.body.T_comentario;
+	const { codUsuario } = req.body;
+	const { N_idCurso } = req.body;
 
     const TOKEN = req.header('Authorization');
     const CALL = `/comments/personal`;
@@ -71,7 +73,9 @@ router.post("/api/add-comment", async (req, res) => {
 	try {
         const DATA = {
             N_idHorario: N_ID_HORARIO,
-			T_comentario: T_COMENTARIO
+			T_comentario: T_COMENTARIO,
+			codUsuario: codUsuario,
+			N_idCurso: N_idCurso
         }
 
         const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN)
@@ -96,6 +100,8 @@ router.post("/api/add-comment", async (req, res) => {
 router.post("/api/update-comment", async (req, res) => {
 	const ID = req.body.N_idComentarios;
 	const NEW_COMMENT = req.body.T_comentario;
+	const { codUsuario } = req.body;
+	const { N_idCurso } = req.body;
 
     const TOKEN = req.header('Authorization');
     const CALL = `/comments/personal/update`;
@@ -109,7 +115,9 @@ router.post("/api/update-comment", async (req, res) => {
 
         const DATA = {
             N_idComentarios: ID,
-			T_comentario: NEW_COMMENT
+			T_comentario: NEW_COMMENT,
+			codUsuario: codUsuario,
+			N_idCurso: N_idCurso
         }
 
         const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
@@ -131,13 +139,18 @@ router.post("/api/update-comment", async (req, res) => {
 //  Quitar comentario
 router.post("/api/remove-comment", async (req, res) => {
 	const ID = req.body.N_idComentarios;
+	const { codUsuario } = req.body;
+	const { N_idCurso } = req.body;
+
     const TOKEN = req.header('Authorization');
     const CALL = `/comments/personal/delete`;
 
 	try {
 		
         const DATA = {
-            N_idComentarios: ID
+            N_idComentarios: ID,
+			codUsuario: codUsuario,
+			N_idCurso: N_idCurso
         }
 		
         const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN)

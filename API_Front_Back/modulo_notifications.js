@@ -36,14 +36,16 @@ router.get("/api/notifications-by-user/:userId", async (req, res) => {
 router.post('/api/add-notification', async (req, res) =>{
 
     const ID_TO_DO = req.body.idToDoList;
+    const USER_CODE = req.body.codUsuario;
 
     const TOKEN = req.header('Authorization');
     const CALL = `/notifications`;
     const DATA =  {
         idToDoList: ID_TO_DO,
-        nombre: NAME,
-        descripcion: DESC,
-        fechaEmision: ISSUE_DATE
+        nombre: "NAME",
+        descripcion: "DESC",
+        fechaEmision: "10-02-02 10:02:02",
+        codUsuario: USER_CODE
     };
 
     try {
@@ -69,14 +71,16 @@ router.post('/api/add-notification', async (req, res) =>{
 
 });
 
-// Añadir notificaciones
+// Leer notificaciones
 router.post('/api/delete-notifications', async (req, res) =>{
     const ID_NOTIFICATIONS = req.body.ids;
+    const USER_CODE = req.body.codUsuario;
 
     const TOKEN = req.header('Authorization');
     const CALL = `/notifications/delete`;
     const DATA =  {
-        ids: ID_NOTIFICATIONS
+        ids: ID_NOTIFICATIONS,
+        codUsuario: USER_CODE
     };
 
     try {

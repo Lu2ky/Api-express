@@ -5,7 +5,7 @@ import { Connection } from './Connection.js';
 const Con = new Connection();
 
 const worker = new Worker('reminderQueue', async (job) => {
-    const { idToDo, userName, title, content, dateStr, email, finalDateStr } = job.data;
+    const { idToDo, userCode, userName, title, content, dateStr, email, finalDateStr } = job.data;
     const FINAL_DATE = new Date(finalDateStr);
     
     console.log(`\n[Worker] Ejecutando avisos para: ${title}`);
@@ -46,7 +46,8 @@ const worker = new Worker('reminderQueue', async (job) => {
         idToDoList: idToDo,
         nombre: `Recordatorio: ${title}`,
         descripcion: content,
-        fechaEmision: new Date().toLocaleString('sv-SE').replace('T', ' ')
+        fechaEmision: new Date().toLocaleString('sv-SE').replace('T', ' '),
+        codUsuario: userCode
     };
 
     try {
@@ -57,7 +58,10 @@ const worker = new Worker('reminderQueue', async (job) => {
             },
             body: JSON.stringify(notiDate)
         });
-        console.log("Notificación enviada");
+    if (!response.ok) {
+        throw new Error(`Error en el servidor: ${response.status} ${response.statusText}`);
+    }
+        console.log("Notificación enviada correctamente");
     } catch (err) {
         console.error("Error notificación:", err.message);
     }

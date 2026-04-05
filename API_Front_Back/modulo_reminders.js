@@ -72,6 +72,7 @@ router.post("/api/delete-tag", async (req, res) => {
 	try {
 		const TAG_ID = req.body.idTag;
 		const USER_ID = req.body.idUsuario;
+		const USER_CODE = req.body.codUsuario;
 
         if (!TAG_ID) {
 			return res.status(400).json({success: false, error: "IdTag requerido"});
@@ -81,7 +82,9 @@ router.post("/api/delete-tag", async (req, res) => {
         const SERVICE = `/tags/delete`;
         const BODY = {
             N_idEtiqueta: TAG_ID,
-			P_usuario: USER_ID
+			P_usuario: USER_ID,
+			codUsuario: USER_CODE
+
         }
 		
         const RESPONSE = await Con.goPostFetcher(SERVICE, BODY, TOKEN);
@@ -237,7 +240,8 @@ router.post("/api/add-reminder", async (req, res) => {
 		P_tag2: TAG2,
 		P_tag3: TAG3,
 		P_tag4: TAG4,
-		P_tag5: TAG5
+		P_tag5: TAG5,
+		codUsuario: USER_CODE
 	}
 
     try {
@@ -315,6 +319,7 @@ router.post('/api/update-reminder', async (req, res) =>{
 	const NEW_TAG3 = req.body.P_tag3;
 	const NEW_TAG4 = req.body.P_tag4;
 	const NEW_TAG5 = req.body.P_tag5;
+	const USER_CODE = req.body.codUsuario;
 
 	const TOKEN = req.header('Authorization');
 	const CALL = `/reminders/update`;
@@ -330,7 +335,8 @@ router.post('/api/update-reminder', async (req, res) =>{
 		P_tag2: NEW_TAG2,
 		P_tag3: NEW_TAG3,
 		P_tag4: NEW_TAG4,
-		P_tag5: NEW_TAG5
+		P_tag5: NEW_TAG5,
+		codUsuario: USER_CODE,
 	}
 
 	try {
@@ -355,13 +361,15 @@ router.post('/api/update-reminder', async (req, res) =>{
 router.post("/api/remove-reminder", async (req, res) => {
 	const REMINDER_ID = req.body.N_idRecordatorio;
 	const USER_ID = req.body.idUsuario;
+	const USER_CODE = req.body.codUsuario;
 
 	const TOKEN = req.header('Authorization');
     const CALL = `/reminders/delete-or-recover`;
 
 	const DATA = {
 		N_idRecordatorio: REMINDER_ID,
-		P_usuario: USER_ID
+		P_usuario: USER_ID,
+		codUsuario: USER_CODE
 	}
 
 	try {
@@ -385,6 +393,7 @@ router.post("/api/remove-reminder", async (req, res) => {
 router.post("/api/remove-multiple-reminders", async (req, res) => {
 	const ARRAY_REMINDERS_ID = req.body.idRecordatorios;
 	const USER_ID = req.body.idUsuario;
+	const USER_CODE = req.body.codUsuario;
 
 	const REMINDERS_ID = ARRAY_REMINDERS_ID.toString();
 	const TOKEN = req.header('Authorization');
@@ -392,7 +401,8 @@ router.post("/api/remove-multiple-reminders", async (req, res) => {
 
 	const DATA = {
 		N_idRecordatorios: REMINDERS_ID,
-		P_usuario: USER_ID
+		P_usuario: USER_ID,
+		codUsuario: USER_CODE,
 	}
 
 	try {
