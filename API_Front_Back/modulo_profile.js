@@ -100,13 +100,14 @@ router.post('/api/save-palette', async (req, res) => {
 router.post('/api/get-palette', async (req, res) =>{
 	const USER_ID = req.body.userId.toString();
 
+	const TOKEN = req.header('Authorization');
 	const CALL = `/palette/get`;
 	const DATA = {
 		userId: USER_ID,
 	};
 	
 	try {
-		const RESPONSE = await Con.goPostFetcher(CALL, DATA); 
+		const RESPONSE = await Con.goPostFetcher(CALL, DATA, TOKEN); 
 		const palette = RESPONSE.palette;
 
 		return res.status(200).json({ 
