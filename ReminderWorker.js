@@ -5,11 +5,11 @@ import { Connection } from './Connection.js';
 const Con = new Connection();
 
 const worker = new Worker('reminderQueue', async (job) => {
-    const { idToDo, userCode, userName, title, content, dateStr, email, finalDateStr } = job.data;
+    console.log("\n[Worker] Ejecutando avisos");
+
+    const { toDoId, userId, userCode, userName, title, content, dateStr, email, finalDateStr } = job.data;
     const FINAL_DATE = new Date(finalDateStr);
     
-    console.log(`\n[Worker] Ejecutando avisos para: ${title}`);
-
     // Contenido de email
     const emailData = {
         user: userName,
@@ -30,37 +30,47 @@ const worker = new Worker('reminderQueue', async (job) => {
         body: JSON.stringify(emailData)
     });
 
-    const result = await response.json(); // Intentamos leer la respuesta real
+    const result = await response.json(); 
 
     if (response.ok) {
         console.log(`Correo aceptado por el servidor:`, result);
     } else {
         console.log(`El servidor de correo rechazó la petición:`, result);
     }
-} catch (err) {
-    console.error("Error físico de red al contactar el servicio de correo:", err.message);
-}
+    } catch (err) {
+        console.error("Error físico de red al contactar el servicio de correo:", err.message);
+    }
 
     // Contenido de notificación
     const notiDate = {
-        idToDoList: idToDo,
         nombre: `Recordatorio: ${title}`,
         descripcion: content,
         fechaEmision: new Date().toLocaleString('sv-SE').replace('T', ' '),
+        idToDoList: toDoId,
+        N_idUsuario: userId,
         codUsuario: userCode
+        
     };
 
+    console.log("DATOS A ENVIAR:", JSON.stringify(notiDate, null, 2));
+
     try {
-        await fetch(`http://${process.env.API_ADDR}:${process.env.API_PORT}/api/v1/notifications`, {
+        const response = await fetch(`http://${process.env.API_ADDR}:${process.env.API_PORT}/api/v1/notifications`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json',
-				"X-API-Key": process.env.API_KEY 
+				"X-API-Key": process.env.API_KEY,
+                'Connection': 'close'
             },
             body: JSON.stringify(notiDate)
         });
-    if (!response.ok) {
-        throw new Error(`Error en el servidor: ${response.status} ${response.statusText}`);
-    }
+        
+        const data = await response.json(); 
+            
+        if (!response.ok) {
+            console.error("Error detallado del servidor:", data);
+            throw new Error(`Servidor respondió: ${response.status} - ${data.error || response.statusText}`);
+        }
+
         console.log("Notificación enviada correctamente");
     } catch (err) {
         console.error("Error notificación:", err.message);
@@ -70,20 +80,30 @@ const worker = new Worker('reminderQueue', async (job) => {
         asunto: `Recordatorio: ${title}`, 
         contenido: content, 
         fechaEmision: dateStr, 
-        idToDoList: idToDo
+        idToDoList: toDoId
     };
 
     try {
-        await fetch(`http://${process.env.API_ADDR}:${process.env.API_PORT}/api/v1/emails`, {
+        const response = await fetch(`http://${process.env.API_ADDR}:${process.env.API_PORT}/api/v1/emails`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json',
-				"X-API-Key": process.env.API_KEY 
+				"X-API-Key": process.env.API_KEY,
+                'Connection': 'close'
             },
             body: JSON.stringify(logEmailData)
         });
+
+        const data = await response.json(); 
+            
+        if (!response.ok) {
+            console.error("Error detallado del servidor:", data);
+            throw new Error(`Servidor respondió: ${response.status} - ${data.error || response.statusText}`);
+        }
+
         console.log("Log de correo enviado");
     } catch (err) {
         console.error("Error log de correo:", err.message);
     }
 
 }, { connection: redisConnection });
+

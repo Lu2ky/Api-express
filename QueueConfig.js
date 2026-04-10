@@ -11,25 +11,13 @@ dotenv.config({ path: resolve(__dirname, "../../config/expressapiconfig.env") })
 
 export const redisConnection = {
     host: process.env.DB_ADDR_REDIS, 
-    port: process.env.DB_ADDR_PORT_REDIS,
+    port: parseInt(process.env.DB_ADDR_PORT_REDIS),
     password: process.env.DB_PASS_REDIS,
-    maxRetriesPerRequest: null
+    maxRetriesPerRequest: null,
+    enableReadyCheck: false
+    
 };
-/*
-// Crear la cola
-const testQueue = new Queue('testConnection', { connection: redisConnection });
 
-// Probar la conexión
-testQueue.client.then((client) => {
-    client.on('connect', () => {
-        console.log('[Redis] Conexión establecida con éxito en:', redisConnection.host);
-    });
-    client.on('error', (err) => {
-        console.error('[Redis] Error de conexión:', err.message);
-    });
-});
-
-*/
 export const reminderQueue = new Queue('reminderQueue', { connection: redisConnection });
 
 reminderQueue.client.then(async (client) => {

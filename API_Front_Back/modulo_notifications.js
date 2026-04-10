@@ -32,45 +32,6 @@ router.get("/api/notifications-by-user/:userId", async (req, res) => {
     return res.json(notifications);
 });
 
-// Añadir notificaciones
-router.post('/api/add-notification', async (req, res) =>{
-
-    const ID_TO_DO = req.body.idToDoList;
-    const USER_CODE = req.body.codUsuario;
-
-    const TOKEN = req.header('Authorization');
-    const CALL = `/notifications`;
-    const DATA =  {
-        idToDoList: ID_TO_DO,
-        nombre: "NAME",
-        descripcion: "DESC",
-        fechaEmision: "10-02-02 10:02:02",
-        codUsuario: USER_CODE
-    };
-
-    try {
-        const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
-        /*
-        const RESULT = await Con.addNotification(
-            ID_TO_DO,
-            NAME,
-            DESC,
-            ISSUE_DATE
-        );
-*/
-        return res.status(200).json({
-            success: (RESULT != null),
-            data: RESULT
-        });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            error: "Error interno del servidor"
-        });
-    }
-
-});
-
 // Leer notificaciones
 router.post('/api/delete-notifications', async (req, res) =>{
     const ID_NOTIFICATIONS = req.body.ids;
@@ -172,8 +133,6 @@ router.post('/api/restore-notifications', async (req, res) => {
         console.log(`\nRESTAURACIÓN: Usuario ${codUsuario} ---`);
 
         // Datos del Usuario 
-        //const user = await userData(codUsuario);
-    
         const user = await Con.goGetFetcher(`/users/${codUsuario}`, TOKEN);
         
         if (!user){
@@ -181,7 +140,6 @@ router.post('/api/restore-notifications', async (req, res) => {
         }
 
         // Datos de Go 
-        //const rawReminders = await Con.getReminders(codUsuario);
         const rawReminders = await Con.goGetFetcher(`/reminders/users/${codUsuario}`, TOKEN);
         const reminders = Array.isArray(rawReminders) ? rawReminders : [];
 
@@ -194,7 +152,8 @@ router.post('/api/restore-notifications', async (req, res) => {
 
         for (const r of reminders) {
             // Limpieza de datos
-            const idToDo = r.N_idToDoList;
+            const toDoId = r.N_idToDoList;
+            const reminderId = r.N_idRecordatorio;
             const titulo = r.T_nombre;
             const desc = r.T_descripcion.Valid ? r.T_descripcion.String : "";
             const fechaRaw = r.Dt_fechaVencimiento.Valid ? r.Dt_fechaVencimiento.String : null;
@@ -214,7 +173,9 @@ router.post('/api/restore-notifications', async (req, res) => {
                 console.log(`Agendando: "${titulo}" | Alerta: ${fechaAlerta.toLocaleString()}`);
 
                 await scheduleEmailAndNotification(
-                    idToDo,        
+                    toDoId,    
+                    reminderId,
+                    user[0].idUsuario,
                     user[0].nombre,        
                     titulo,               
                     desc,               

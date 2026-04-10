@@ -1,6 +1,6 @@
 import { reminderQueue } from "../QueueConfig.js"
 
-export async function scheduleEmailAndNotification(idToDo, userName, title, content, dateStr, advanceNotice, email, userCode) {
+export async function scheduleEmailAndNotification(toDoId, reminderId, userId, userName, title, content, dateStr, advanceNotice, email, userCode) {
 
     // Lógica de fechas
     const isoStr = dateStr.replace(/\b(\d)\b/g, "0$1").replace(" ", "T");
@@ -12,20 +12,41 @@ export async function scheduleEmailAndNotification(idToDo, userName, title, cont
 
     if (delay > 0) {
         await reminderQueue.add('send-reminder', {
-            idToDo, userCode, userName, title, content, dateStr, email,
+            toDoId, userId, userCode, userName, title, content, dateStr, email,
             finalDateStr: FINAL_DATE.toISOString()
         }, {
 			delay: delay,
-            jobId: `${userCode}-${idToDo}`,
+            jobId: `${userCode}-${reminderId}`,
             removeOnComplete: true,
             removeOnFail: false
         });
 
-        console.log(`[BullMQ] Recordatorio "${title}" agendada con ID: todo-${idToDo} (Faltan ${delay / 1000} seg).`);
+        console.log(`Recordatorio "${title}" agendada con ID: reminder-${reminderId} (Faltan ${delay / 1000} seg).`);
     } else {
         console.log("La hora de aviso ya pasó. No se puede programar.");
     }
 }
+
+// Eliminar notificación
+export const deleteNotification = async (userCode, reminderId) => {
+    try {
+        const targetJobId = `${userCode}-${reminderId}`;
+        const job = await reminderQueue.getJob(targetJobId);
+
+        if (job) {
+            await job.remove();
+            console.log(`Recordatorio eliminado: ${targetJobId}`);
+            return true;
+        }
+        
+        console.log(`No se encontró el job ${targetJobId} (tal vez ya se envió).`);
+        return false;
+    } catch (error) {
+        console.error(`Error al eliminar job ${userCode}-${reminderId}:`, error.message);
+        throw error;
+    }
+};
+
 //Calcula la fecha exacta de la notificación restando la antelación
 export function calcularFechaAlerta(vencimiento, antelacion) {
     if (!antelacion || !antelacion.includes(':')) return vencimiento;
@@ -39,3 +60,4 @@ export function calcularFechaAlerta(vencimiento, antelacion) {
     
     return alerta;
 }
+

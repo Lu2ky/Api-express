@@ -2,6 +2,7 @@ import express from "express";
 import { Reminder } from "../Reminder.js";
 import { Connection } from "../Connection.js";
 import { scheduleEmailAndNotification } from './funciones_notifications.js'
+import { deleteNotification } from './funciones_notifications.js'
 
 let Con = new Connection();
 const router = express.Router();
@@ -230,6 +231,7 @@ router.post("/api/add-reminder", async (req, res) => {
 
 	const TOKEN = req.header('Authorization');
     const CALL = `/reminders`;
+	const CALL_USERDATA = `/users/${USER_CODE}`;
 	const DATA = {
 		P_usuario: USER_ID,
 		P_nombre: TASK_NAME,
@@ -245,50 +247,28 @@ router.post("/api/add-reminder", async (req, res) => {
 	}
 
     try {
-		const CALL_USERDATA = `/users/${USER_CODE}`;
-
+		// Guardar recordatorio
 		const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
-		const RESULT_USERDATA = await Con.goGetFetcher(CALL_USERDATA, TOKEN);
+		if (!RESULT) {
+            return res.status(400).json({ success: false, message: "Error al insertar en DB" });
+        }
 
-		
-/*	
-        const RESULT = await Con.addReminder(
-			USER_ID, 
-			TASK_NAME, 
-			DESC, 
-			DATE, 
-			PRIORITY,
-			TAG1,
-			TAG2,
-			TAG3,
-			TAG4,
-			TAG5
-		);
-/*	
-		const url = `http://${process.env.API_ADDR}:${process.env.API_PORT}/api/v1/users/${USER_CODE}`;
-        
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: { 
-				'Content-Type': 'application/json',
-				"X-API-Key": process.env.API_KEY
-			}
-        });
-*/	
-		console.log("RESULTAOS -----------------------")
-		console.log(RESULT);
-		console.log(RESULT_USERDATA);
-        //const jsonResponse = await RESULT_USERDATA.json();
+		const TO_DO_ID = RESULT.toDoId;
+		const REMINDER_ID = RESULT.reminderId;
+
+		// Obtener datos del usuario
+		const RESULT_USERDATA = await Con.goGetFetcher(CALL_USERDATA, TOKEN);
         const USER_DATA = RESULT_USERDATA[0];
 
-		const ID_TO_DO = RESULT.InsertedId;
 		const USER_NAME = USER_DATA.nombre;
 		const ADVANCE_NOTICE = USER_DATA.antelacionNotis;
 		const CLIENT_EMAIL = USER_DATA.correo;
 
         if (RESULT) {
-            scheduleEmailAndNotification(
-                ID_TO_DO,    
+            await scheduleEmailAndNotification(
+                TO_DO_ID,
+				REMINDER_ID,
+				USER_ID,
                 USER_NAME, 
                 TASK_NAME, 
                 DESC,      
@@ -323,6 +303,7 @@ router.post('/api/update-reminder', async (req, res) =>{
 
 	const TOKEN = req.header('Authorization');
 	const CALL = `/reminders/update`;
+	const CALL_USERDATA = `/users/${USER_CODE}`;
 
 	const DATA = {
 		P_idToDo: TODO_ID,
@@ -340,13 +321,46 @@ router.post('/api/update-reminder', async (req, res) =>{
 	}
 
 	try {
-
+		// Actualizar recordatorio
 		const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
-		const success = RESULT != undefined;
 
+		if (!RESULT) {
+            return res.status(400).json({ success: false, message: "Error al actualizar en DB" });
+        }
+		
+		const REMINDER_ID = RESULT.reminderId;
+
+		// Obtener datos del usuario
+		const RESULT_USERDATA = await Con.goGetFetcher(CALL_USERDATA, TOKEN);
+        const USER_DATA = RESULT_USERDATA[0];
+
+		const USER_NAME = USER_DATA.nombre;
+		const USER_ID = USER_DATA.idUsuario;
+		const ADVANCE_NOTICE = USER_DATA.antelacionNotis;
+		const CLIENT_EMAIL = USER_DATA.correo;
+
+		// Eliminar programación antigua
+		await deleteNotification(USER_CODE, REMINDER_ID);
+		
+		// Programar de nuevo la notificación
+        if (RESULT) {
+            await scheduleEmailAndNotification(
+                TODO_ID,
+				REMINDER_ID,
+				USER_ID,
+                USER_NAME, 
+                NEW_NAME, 
+                NEW_DESC,      
+                NEW_DATE,      
+                ADVANCE_NOTICE,   
+                CLIENT_EMAIL,
+				USER_CODE
+            );
+        }
 		return res.status(200).json({
-			success: success
-		});
+            success: true,
+            message: "Recordatorio actualizado y reprogramado"
+        });
 	} catch (error) {
 		console.error(error);
 
@@ -359,43 +373,54 @@ router.post('/api/update-reminder', async (req, res) =>{
 
 // Eliminar recordatorio
 router.post("/api/remove-reminder", async (req, res) => {
-	const REMINDER_ID = req.body.N_idRecordatorio;
-	const USER_ID = req.body.idUsuario;
-	const USER_CODE = req.body.codUsuario;
+    const REMINDER_ID = req.body.N_idRecordatorio;
+    const USER_ID = req.body.idUsuario;
+    const USER_CODE = req.body.codUsuario;
 
-	const TOKEN = req.header('Authorization');
+    const TOKEN = req.header('Authorization');
     const CALL = `/reminders/delete-or-recover`;
 
-	const DATA = {
-		N_idRecordatorio: REMINDER_ID,
-		P_usuario: USER_ID,
-		codUsuario: USER_CODE
-	}
+    const DATA = {
+        N_idRecordatorio: REMINDER_ID,
+        P_usuario: USER_ID,
+        codUsuario: USER_CODE
+    };
 
-	try {
-		//const RESULT = await Con.deleteReminder(ID);
-		const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
+    try {
+        const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
 
-		const success = RESULT != undefined;
+		if (!RESULT) {
+			return res.status(400).json({
+				success: false,
+				message: "No se pudo eliminar el recordatorio en la base de datos"
+			});
+		}
+
+		await deleteNotification(USER_CODE, REMINDER_ID);
 
 		return res.status(200).json({
-			success: success
-		});
-	} catch (error) {
-		console.error(error);
-		return res.status(500).json({
-			error: "Error interno del servidor"
-		});
-	}
+			success: true,
+			message: "Tarea y recordatorio eliminados correctamente"
+    });
+
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).json({
+            error: "Error interno del servidor"
+        });
+    }
 });
 
 // Eliminar recordatorio
 router.post("/api/remove-multiple-reminders", async (req, res) => {
-	const ARRAY_REMINDERS_ID = req.body.idRecordatorios;
+	const REMINDERS_ID = req.body.idRecordatorios;
+	const ARRAY_REMINDERS_ID = String(REMINDERS_ID)
+        .split(',')
+        .map(id => id.trim())
+        .filter(id => id !== "");
 	const USER_ID = req.body.idUsuario;
 	const USER_CODE = req.body.codUsuario;
 
-	const REMINDERS_ID = ARRAY_REMINDERS_ID.toString();
 	const TOKEN = req.header('Authorization');
     const CALL = `/reminders/delete/multiple`;
 
@@ -405,19 +430,39 @@ router.post("/api/remove-multiple-reminders", async (req, res) => {
 		codUsuario: USER_CODE,
 	}
 
-	try {
-		//const RESULT = await Con.deleteReminder(ID);
+    try {
+
 		const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
 
+        if (!RESULT) {
+            return res.status(400).json({
+                success: false,
+                message: "No se pudo eliminar en la base de datos"
+            });
+        }
+
+		for (const ID of ARRAY_REMINDERS_ID) {
+            await deleteNotification(USER_CODE, ID);
+        }
+
+		if (!RESULT) {
+			return res.status(400).json({
+				success: false,
+				message: "No se pudo eliminar el recordatorio en la base de datos"
+			});
+		}
+
 		return res.status(200).json({
-			success: RESULT != undefined
-		});
-	} catch (error) {
-		console.error(error);
-		return res.status(500).json({
-			error: "Error interno del servidor"
-		});
-	}
+			success: true,
+			message: "Tareas y recordatorios eliminados correctamente"
+    });
+
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).json({
+            error: "Error interno del servidor"
+        });
+    }
 });
 
 export default router;
