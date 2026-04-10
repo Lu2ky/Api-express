@@ -13,7 +13,17 @@ router.get("/api/notifications-by-user/:userId", async (req, res) => {
     const TOKEN = req.header('Authorization');
     const CALL = `/notifications/users/${USER_ID}`;
 
+    if (!String(TOKEN || "").trim()) {
+        return res.status(401).json({ error: "Token de autenticación requerido" });
+    }
+
     let data = await Con.goGetFetcher(CALL, TOKEN);
+
+    if (!Array.isArray(data)) {
+        return res.status(502).json({
+            error: "No se pudo obtener notificaciones del servicio de datos"
+        });
+    }
 
     let notifications = data
     .map(eachData => {
