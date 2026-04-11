@@ -170,11 +170,12 @@ router.post("/api/auth/changepassword", async (req, res) => {
 
 router.post('/api/send-code', async (req, res) => {
     const USER_CODE = req.body.codUsuario;
-    const CALL = `/users/${USER_CODE}`
+    const CALL = `/users/${USER_CODE}`;
+	const TOKEN = req.header('Authorization');
 
     try {
         
-        const response = await Con.goGetFetcher(CALL);
+        const response = await Con.goGetFetcher(CALL, TOKEN);
         const USER_DATA = response[0];
  
         if (!USER_DATA || !USER_DATA.idUsuario) {
@@ -187,11 +188,11 @@ router.post('/api/send-code', async (req, res) => {
         const CLIENT_EMAIL = USER_DATA.correo;
 
         // Generar token
-        const TOKEN = Math.floor(100000 + Math.random() * 900000).toString();
+        const TOKEN2 = Math.floor(100000 + Math.random() * 900000).toString();
 
         await saveTokenAndSendEmail(
             USER_ID,    
-            TOKEN, 
+            TOKEN2, 
             USER_NAME,            
             CLIENT_EMAIL
         );

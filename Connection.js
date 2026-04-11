@@ -28,15 +28,24 @@ export class Connection {
 		console.log(URL);
 
 		try {
+			const headers = {
+				"X-API-Key": process.env.API_KEY
+			};
+
+			const safeToken = String(token || "").trim();
+			if (safeToken) {
+				headers["Authorization"] = safeToken;
+			}
+
 			const rta = await fetch(URL, {
 				method: "GET",
-				headers: {
-					"Authorization": token,
-					"X-API-Key": process.env.API_KEY
-				}
+				headers
 			});
 
-			if (!rta.ok) throw new Error(`Error: ${rta.status}, ${rta.text()}`);
+			if (!rta.ok) {
+				const detail = await rta.text();
+				throw new Error(`Error: ${rta.status}, ${detail}`);
+			}
 			const RESPONSE = await rta.json();
 			console.log(RESPONSE);
 
@@ -44,6 +53,7 @@ export class Connection {
 		} catch (error) {
 
 			console.error("ERROR EN LA CONEXION:", error);
+			return null;
 		}
 	}
 
@@ -54,17 +64,26 @@ export class Connection {
 		console.log(bodyData)
 
 		try {
+			const headers = {
+				"Content-Type": "application/json",
+				"X-API-Key": process.env.API_KEY
+			};
+
+			const safeToken = String(token || "").trim();
+			if (safeToken) {
+				headers["Authorization"] = safeToken;
+			}
+
 			const rta = await fetch(URL, {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					"Authorization": token,
-					"X-API-Key": process.env.API_KEY
-				},
+				headers,
 				body: JSON.stringify(bodyData)
 			});
 
-			if (!rta.ok) throw new Error(`Error: ${rta.status}, ${rta.text()}`);
+			if (!rta.ok) {
+				const detail = await rta.text();
+				throw new Error(`Error: ${rta.status}, ${detail}`);
+			}
 
 			const RESPONSE = await rta.json();
 			return RESPONSE;
@@ -72,6 +91,7 @@ export class Connection {
 		} catch (error) {
 
 			console.error("ERROR EN LA CONEXION:", error);
+			return null;
 		}
 	}
 }
