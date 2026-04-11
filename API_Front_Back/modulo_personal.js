@@ -25,11 +25,9 @@ router.get("/api/personal-schedule/:userId", async (req, res) => {
 				eachData.Activity,
 				eachData.Description.Valid ? eachData.Description.String : null,
 				[eachData.StartHour, eachData.EndHour, eachData.Day],
-				eachData.Tag,
+				"Personal",
 				eachData.Dt_Start.String,
-				eachData.Dt_End.String,
-				eachData,
-				1
+				eachData.Dt_End.String
 			);
 
 			return PersonalActivity.getData();
@@ -58,7 +56,6 @@ router.post("/api/add-personal-activity", async (req, res) => {
         }
     */
 	const ID_USER = req.body.id_user;
-	const ID_ACADEMIC_PER = req.body.id_academic_per;
 	const NAME = req.body.subject_name;
 	const DESC = req.body.description;
 	const STA_DATE = req.body.date_start;
@@ -80,6 +77,8 @@ router.post("/api/add-personal-activity", async (req, res) => {
 	//let TIMES = await Con.GetTimesData(ID_USER, DAY)
 	
     //Si no hay actividades, entonces lo ignora.
+	console.log("HERE AM I, DUDE, HERE'S THE ERROR AAA")
+	console.log(TIMES);
 	if (TIMES !== null){
 		TIMES = TIMES.map(element =>{
 
@@ -113,7 +112,6 @@ router.post("/api/add-personal-activity", async (req, res) => {
 			P_dia: DAY,
 			P_horaInicio: STA_HOUR,
 			P_horaFin: END_HOUR,
-			P_periodo: ID_ACADEMIC_PER,
 			codUsuario: USER_CODE
 		};
 
