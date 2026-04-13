@@ -183,7 +183,7 @@ router.post('/api/send-code', async (req, res) => {
             return res.status(404).json({ error: "Usuario no encontrado" });
         }
 
-        const USER_ID = USER_DATA.idUsuario.toString();
+        //const USER_ID = USER_DATA.idUsuario.toString();
         const USER_NAME = USER_DATA.nombre || "Usuario";
         const CLIENT_EMAIL = USER_DATA.correo;
 
@@ -191,7 +191,7 @@ router.post('/api/send-code', async (req, res) => {
         const TOKEN2 = Math.floor(100000 + Math.random() * 900000).toString();
 
         await saveTokenAndSendEmail(
-            USER_ID,    
+            USER_CODE,    
             TOKEN2, 
             USER_NAME,            
             CLIENT_EMAIL
