@@ -40,6 +40,7 @@ export const saveTokenAndSendEmail = async (userId, token, userName, email) => {
 			token: token
         }
 
+        console.log(DATA)
         await Con.goPostFetcher(CALL, DATA); 
 
         // Estructura de correo

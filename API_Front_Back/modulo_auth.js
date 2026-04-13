@@ -171,11 +171,11 @@ router.post("/api/auth/changepassword", async (req, res) => {
 router.post('/api/send-code', async (req, res) => {
     const USER_CODE = req.body.codUsuario;
     const CALL = `/users/${USER_CODE}`;
-	const TOKEN = req.header('Authorization');
+	//const TOKEN = req.header('Authorization');
 
     try {
         
-        const response = await Con.goGetFetcher(CALL, TOKEN);
+        const response = await Con.goGetFetcher(CALL);
         const USER_DATA = response[0];
  
         if (!USER_DATA || !USER_DATA.idUsuario) {
