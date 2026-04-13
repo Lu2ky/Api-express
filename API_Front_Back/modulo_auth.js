@@ -179,7 +179,7 @@ router.post('/api/send-code', async (req, res) => {
         console.log(USER_DATA);
         
         if (!USER_DATA || !USER_DATA.idUsuario) {
-            console.log("Respuesta de API sin datos de usuario:", jsonResponse);
+            console.log("Respuesta de API sin datos de usuario:", response);
             return res.status(404).json({ error: "Usuario no encontrado" });
         }
 

@@ -12,8 +12,15 @@ router.get("/api/get-user-data/:idUser", async (req, res) => {
 	const CALL = `/users/${ID_USER}`;
 
 	try {
+
+		const TOKEN_RESPONSE = await Con.goGetFetcher(`/auth/token`, TOKEN);
+
+		if (!TOKEN_RESPONSE.status){
+			throw new error("No existen los permisos necesarios");
+		}
+
 		//const RESULT = await Con.getUserData(ID_USER);
-		const RESULT = await Con.goGetFetcher(CALL, TOKEN)
+		const RESULT = await Con.goGetFetcher(CALL)
 
 		return res.status(200).json({
 			success: RESULT != undefined,

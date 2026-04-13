@@ -103,7 +103,7 @@ router.post('/api/stop-all-notifications', async (req, res) => {
         const TOKEN = req.header('Authorization');
         const { codUsuario } = req.body;
 
-        const AUTH  = await Con.goGetFetcher(`/users/${codUsuario}`, TOKEN);
+        const AUTH  = await Con.goGetFetcher(`/auth/token`, TOKEN);
 
         if (!AUTH){
             return res.status(401).json({ error: "Permiso denegado" });
@@ -170,15 +170,16 @@ router.post('/api/restore-notifications', async (req, res) => {
         // Datos del Usuario 
         //const user = await userData(codUsuario);
     
-        const user = await Con.goGetFetcher(`/users/${codUsuario}`, TOKEN);
-        
-        if (!user){
-            return res.status(400).json({ error: "El usuario no existe o el permiso fue denegado" });
-        }
+        const user = await Con.goGetFetcher(`/users/${codUsuario}`);
 
         // Datos de Go 
         //const rawReminders = await Con.getReminders(codUsuario);
         const rawReminders = await Con.goGetFetcher(`/reminders/users/${codUsuario}`, TOKEN);
+
+        if (!rawReminders){
+            return res.status(400).json({ error: "No hay recordatorios o el permiso fue denegado" });
+        }
+
         const reminders = Array.isArray(rawReminders) ? rawReminders : [];
 
         if (reminders.length === 0) {
