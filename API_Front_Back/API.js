@@ -29,8 +29,6 @@ const PORT = 28523;
 app.use(cors());
 app.use(express.json());
 
-let Con = new Connection();
-
 app.use("/", modulo_official);
 app.use("/", modulo_personal);
 app.use("/", modulo_comments);
