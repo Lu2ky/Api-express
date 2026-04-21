@@ -77,7 +77,6 @@ router.post('/api/stop-all-notifications', async (req, res) => {
     try {
         const TOKEN = req.header('Authorization');
         const { codUsuario } = req.body;
-        const { N_idUsuario } = req.body;
 
         const AUTH  = await Con.goGetFetcher(`/auth/token`, TOKEN);
 
@@ -119,9 +118,9 @@ router.post('/api/stop-all-notifications', async (req, res) => {
         const CALL = `/logs`;
 
         const DATA = {
-            N_idUsuario: N_idUsuario,
+            codUsuario: codUsuario,
             accion: "DETENER_NOTIFICACIONES",
-            descripcion: `Notificaciones detenidas | USUARIO ID: ${N_idUsuario}`
+            descripcion: `Notificaciones detenidas | USUARIO ID: ${codUsuario}`
         }
 
         const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
@@ -151,7 +150,6 @@ router.post('/api/stop-all-notifications', async (req, res) => {
 // Reanudar notificaciones
 router.post('/api/restore-notifications', async (req, res) => {
     const { codUsuario } = req.body;
-    const { N_idUsuario } = req.body;
 	const TOKEN = req.header('Authorization');
 
     try {
@@ -229,9 +227,9 @@ router.post('/api/restore-notifications', async (req, res) => {
         const CALL = `/logs`;
 
         const DATA = {
-            N_idUsuario: N_idUsuario,
+            codUsuario: codUsuario,
             accion: "RESTAURAR_NOTIFICACIONES",
-            descripcion: `Notificaciones restauradas | USUARIO ID: ${N_idUsuario}`
+            descripcion: `Notificaciones restauradas | USUARIO ID: ${codUsuario}`
         }
 
         const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);

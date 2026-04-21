@@ -21,7 +21,7 @@ export class Connection {
 	//	--- Fetcher --- //
 	async goGetFetcher(service, token = null) {
 
-		const URL = `http://${API_ADDR}:${API_PORT}/api/v1${service}`//"http://" + API_ADDR + ":" + API_PORT + service;
+		const URL = `http://${API_ADDR}:${API_PORT}/api/v1${service}`
 		console.log(API_ADDR);
 		console.log(API_PORT);
 		console.log(service);
