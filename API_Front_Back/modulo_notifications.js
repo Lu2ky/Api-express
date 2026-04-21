@@ -77,6 +77,7 @@ router.post('/api/stop-all-notifications', async (req, res) => {
     try {
         const TOKEN = req.header('Authorization');
         const { codUsuario } = req.body;
+        const { N_idUsuario } = req.body;
 
         const AUTH  = await Con.goGetFetcher(`/auth/token`, TOKEN);
 
@@ -113,6 +114,22 @@ router.post('/api/stop-all-notifications', async (req, res) => {
 
         console.log(`Limpieza terminada: ${count} tareas eliminadas para ${codUsuario} ---\n`);
 
+        // Log
+
+        const CALL = `/logs`;
+
+        const DATA = {
+            N_idUsuario: N_idUsuario,
+            accion: "DETENER_NOTIFICACIONES",
+            descripcion: `Notificaciones detenidas | USUARIO ID: ${N_idUsuario}`
+        }
+
+        const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
+		if (!RESULT) {
+            return res.status(400).json({ success: false, message: "Error al insertar en DB" });
+        }
+
+        // Salida
         res.json({ 
             success: true, 
             message: `Se han cancelado tus ${count} notificaciones pendientes.`,
@@ -134,6 +151,7 @@ router.post('/api/stop-all-notifications', async (req, res) => {
 // Reanudar notificaciones
 router.post('/api/restore-notifications', async (req, res) => {
     const { codUsuario } = req.body;
+    const { N_idUsuario } = req.body;
 	const TOKEN = req.header('Authorization');
 
     try {
@@ -206,6 +224,22 @@ router.post('/api/restore-notifications', async (req, res) => {
 
         console.log(`TERMINADO: ${count} restaurados ---\n`);
 
+        // Log
+
+        const CALL = `/logs`;
+
+        const DATA = {
+            N_idUsuario: N_idUsuario,
+            accion: "RESTAURAR_NOTIFICACIONES",
+            descripcion: `Notificaciones restauradas | USUARIO ID: ${N_idUsuario}`
+        }
+
+        const RESULT = await Con.goPostFetcher(CALL, DATA, TOKEN);
+		if (!RESULT) {
+            return res.status(400).json({ success: false, message: "Error al insertar en DB" });
+        }
+
+        // Salida
         res.json({ 
             success: true, 
             message: `Sincronización exitosa.`, 
