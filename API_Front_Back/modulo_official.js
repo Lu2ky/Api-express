@@ -30,7 +30,7 @@ router.get("/api/official-schedule/:userId", async (req, res) => {
 				[eachData.StartHour, eachData.EndHour, eachData.Day],
 				eachData.Tag,
 				eachData.Campus,
-				eachData.Credits,
+				eachData.Credits.Float64,
 				eachData.FechaInicio,
 				eachData.FechaFinal,
 				eachData.IdPeriodoAcademico,
