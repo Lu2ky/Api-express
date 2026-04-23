@@ -87,8 +87,8 @@ router.post('/api/import-schedule', async (req, res) =>{
 	const NOMBRE = req.body.nombre;
 	const SEMESTRE = req.body.semestre;
 	const PROGRAMA = req.body.programa;
-	const COD_USUARIO = req.body.codUsuario;
-	const NRC = req.body.nrc;
+	const COD_USUARIO = req.body.codUsuario.toString();
+	const NRC = req.body.nrc.toString();
 	const NOMBRE_CURSO = req.body.nombreCurso;
 	const DOCENTE = req.body.docente;
 	const CREDITOS = req.body.creditos;
@@ -159,12 +159,12 @@ router.post('/api/import-schedule', async (req, res) =>{
 			Pass: HASH_PASS,
 		};
 		await Con.goPostFetcher(CALL2, DATA2, TOKEN);
-			
+		console.log("CONTINUO?")
 		// Datos para obtener id del usuario
 		const CALL3 = `/users/${temp2}`;
 
 		// Obtener datos del usuario
-		const response = await Con.goGetFetcher(CALL3, TOKEN,)
+		const response = await Con.goGetFetcher(CALL3, TOKEN)
 		const USER_DATA = response[0];
 		if (!USER_DATA || !USER_DATA.idUsuario) {
             console.log("Respuesta de API sin datos de usuario:", response);
