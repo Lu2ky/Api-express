@@ -17,6 +17,10 @@ export class Activity {
     }
 
     static hasCollisions(timesData, id, hStart, hEnd, dStart, dEnd){
+        
+        if (timesData === null) return false;
+
+        if (timesData === null) return false;
 
         const between = (val, izq, der) => (val < Math.max(izq, der) && val > Math.min(izq, der));
         const dateToNumber = (date) => (parseInt((date.slice(0, 5)).replace(":", "")));
@@ -41,7 +45,9 @@ export class Activity {
         const D_END = new Date(dEnd)
 
         //for each activity time evaluate the collision
-        console.log(timesData.length)
+        console.log("VEA EL TIMES DATA")
+        console.log(timesData)
+        console.log(`${H_START} ${H_END} ${D_START} ${D_END}`)
 
         for (let i = 0; i < timesData.length; i++) {
 
@@ -53,9 +59,13 @@ export class Activity {
             const DATA_START_H = dateToNumber(timesData[i][1]);
             const DATA_END_H = dateToNumber(timesData[i][2]);
             const DATA_START_D = new Date(timesData[i][3]);
-            const DATA_END_D = new Date(timesData[i][2]);
+            const DATA_END_D = new Date(timesData[i][4]);
 
-            //console.log(DATA_DAY, DATA_START_H, DATA_END_H)
+
+            console.log(`${DATA_START_H} ${DATA_END_H} ${DATA_START_D} ${DATA_END_D}`)
+
+            console.log("VERIFICAR NULOS")
+            console.log(DATA_END_D < D_START || D_END < DATA_START_D)
             if (DATA_END_D < D_START || D_END < DATA_START_D) continue;
 
             //If the time span it's the same, then a collision exists
@@ -63,6 +73,9 @@ export class Activity {
 
             //Is there a limit from the activity to add inside the time span of the activity currently being checked? 
             if (between(H_START, DATA_START_H, DATA_END_H) || between(H_END , DATA_START_H, DATA_END_H)) return true;
+
+            //Is there a limit from the original activity inside the time span of the activity to add? 
+            if (between(DATA_START_H, H_START, H_END) || between(DATA_END_H, H_START, H_END)) return true;
         }
 
         return false;
