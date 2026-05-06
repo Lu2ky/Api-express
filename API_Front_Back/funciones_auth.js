@@ -34,11 +34,11 @@ export const saveTokenAndSendEmail = async (userId, token, userName, email) => {
         //console.log("user:", userId, " token:", token)
         //await Con.receiveTokenData(userId, token); 
         //console.log("Token guardado correctamente.");
-        const encoder = new TextEncoder();
+        const hashedToken = await hashPassword(token);
         const CALL = `/tokens`;
         const DATA = {
             userId: userId,
-			token: encoder.encode(token)
+			token: hashedToken
         }
 
         console.log(DATA)

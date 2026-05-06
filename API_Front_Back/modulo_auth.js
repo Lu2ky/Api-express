@@ -209,11 +209,11 @@ router.post('/api/send-code', async (req, res) => {
 router.post('/api/validate-token', async (req, res) =>{
     const USER_ID = req.body.userId.toString();
     const USER_TOKEN = req.body.token;
-    const encoder = new TextEncoder();
+	const hashedToken = await hashPassword(USER_TOKEN);
     const CALL = `/tokens/get`;
     const DATA = {
         userId: USER_ID,
-        token: encoder.encode(USER_TOKEN)
+        token: hashedToken
     };
     
     try {
